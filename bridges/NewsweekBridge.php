@@ -4,7 +4,7 @@ class NewsweekBridge extends BridgeAbstract {
 	const URI = 'https://www.newsweek.pl/autorzy/';
 	const DESCRIPTION = 'No description provided';
 	const MAINTAINER = 'No maintainer';
-	const CACHE_TIMEOUT = 1; // Can be omitted!
+	const CACHE_TIMEOUT = 3600; // Can be omitted!
 
 	const PARAMETERS = array
 	(
