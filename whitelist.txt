@@ -3,3 +3,4 @@ OpinieWPplBridge
 TygodnikPolsatNewsBridge
 GazetaplBridge
 NewsweekBridge
+BezprawnikBridge
