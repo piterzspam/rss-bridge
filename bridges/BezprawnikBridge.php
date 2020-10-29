@@ -24,6 +24,12 @@ class BezprawnikBridge extends BridgeAbstract {
 			),
 		)
 	);
+
+	public function getIcon()
+	{
+		return 'https://c.disquscdn.com/uploads/forums/349/4323/favicon.png';
+	}
+
 	public function collectData()
 	{
 		$url = $this->getInput('url');
