@@ -24,6 +24,11 @@ class NewsweekBridge extends BridgeAbstract {
 			),
 		)
 	);
+	public function getIcon()
+	{
+		return 'https://play-lh.googleusercontent.com/cLc9eiCOd37r4ikOCFMSyJQm0NYWU5DOCaWuF1FUJwrq-Gfuud3sqqJ5GkvV8zLFKGH1';
+	}
+
 	public function collectData()
 	{
 		$url = $this->getInput('url');
