@@ -4,3 +4,4 @@ TygodnikPolsatNewsBridge
 GazetaplBridge
 NewsweekBridge
 BezprawnikBridge
+FacebookBridge
