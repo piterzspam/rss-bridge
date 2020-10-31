@@ -6,3 +6,4 @@ NewsweekBridge
 BezprawnikBridge
 FacebookBridge
 FB2Bridge
+ToTylkoTeoriaBridge
