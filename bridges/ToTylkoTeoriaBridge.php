@@ -71,7 +71,7 @@ class ToTylkoTeoriaBridge extends BridgeAbstract {
 			$author = trim($author);
 			//tags
 			$tags = array();
-			foreach($article->find('DIV.author-description', 0)->find('A[rel="tag"]') as $tag_element)
+			foreach($article->find('SPAN.label-info', 0)->find('A[rel="tag"]') as $tag_element)
 			{
 				$tags[] = trim($tag_element->plaintext);
 			}
