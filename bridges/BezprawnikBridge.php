@@ -27,7 +27,7 @@ class BezprawnikBridge extends BridgeAbstract {
 
 	public function getIcon()
 	{
-		return 'https://c.disquscdn.com/uploads/forums/349/4323/favicon.png';
+		return 'https://ocs-pl.oktawave.com/v1/AUTH_2887234e-384a-4873-8bc5-405211db13a2/spidersweb/bp/fav/favicon-16x16.png';
 	}
 
 	public function collectData()

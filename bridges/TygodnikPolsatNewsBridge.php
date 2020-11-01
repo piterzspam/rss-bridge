@@ -24,6 +24,11 @@ class TygodnikPolsatNewsBridge extends BridgeAbstract {
 			),
 		)
 	);
+	public function getIcon()
+	{
+		return 'https://tygodnik.polsatnews.pl/favicon-16x16.png';
+	}
+
 	public function collectData()
 	{
 //		error_reporting(E_ERROR | E_WARNING | E_PARSE);
