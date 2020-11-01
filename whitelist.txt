@@ -7,3 +7,4 @@ BezprawnikBridge
 FacebookBridge
 FB2Bridge
 ToTylkoTeoriaBridge
+DziennikBridge
