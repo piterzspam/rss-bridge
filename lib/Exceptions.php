@@ -85,7 +85,13 @@ function buildBridgeException($e, $bridge){
 	// Build a GitHub compatible message
 	$body = 'Error message: `'
 	. $e->getMessage()
-	. "`\nQuery string: `"
+	. "\nError file: "
+	. $e->getFile()
+	. "\nError line: "
+	. $e->getLine()
+	. "\nError trace: \n"
+	. $e->getTraceAsString()
+	. "\n\nQuery string: `"
 	. (isset($_SERVER['QUERY_STRING']) ? $_SERVER['QUERY_STRING'] : '')
 	. "`\nVersion: `"
 	. Configuration::getVersion()
