@@ -55,6 +55,18 @@ class OnetBridge extends BridgeAbstract {
 		foreach($urls as $url)
 		{
 			$html = file_get_html($url);
+			if (is_bool($html))
+			{
+				$this->items[] = array(
+					'uri' => $url,
+					'title' => "file_get_html($url) jest boolem $html",
+					'timestamp' => '',
+					'author' => '',
+					'content' => '',
+					'categories' => ''
+				);
+				continue;
+			}
 			if (FALSE === is_null($html->find('SECTION#doc ARTICLE', 0)))
 			{
 				//artykul
@@ -123,8 +135,7 @@ class OnetBridge extends BridgeAbstract {
 				$href = 'https:'.$href;
 				$photo->setAttribute('src', $href);
 			}
-//			echo '<br>article:<br><br><br>';
-//			echo $article;
+//			echo '<br>article:<br><br><br>'; echo $article;
 
 			$this->items[] = array(
 				'uri' => $url,
