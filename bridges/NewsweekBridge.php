@@ -71,10 +71,24 @@ class NewsweekBridge extends BridgeAbstract {
 //		echo 'urls<br>';
 //		echo '<pre>'.var_export($urls, true).'</pre>';
 
+//		set_error_handler("myErrorHandler");
 		foreach($urls as $url)
 		{
+//			echo "<br>url: $url";
 
 			$html = file_get_html($url);
+			if (is_bool($html))
+			{
+				$this->items[] = array(
+					'uri' => $url,
+					'title' => "file_get_html($url) jest boolem $html",
+					'timestamp' => '',
+					'author' => '',
+					'content' => '',
+					'categories' => ''
+				);
+				continue;
+			}
 			if (FALSE === is_null($html->find('ARTICLE', 0)))
 			{
 				$article = $html->find('ARTICLE', 0);
@@ -141,6 +155,10 @@ class NewsweekBridge extends BridgeAbstract {
 				$this->deleteDescendantIfExists($article, 'DIV.contentPremium');
 			}
 			//tags
+//			$temp=$article->find('DIV.tags', 0);
+//			echo "temp:\n$temp";
+//			echo "article:\n$article";
+//			var_dump($temp);
 			$tags = array();
 			foreach($article->find('DIV.tags', 0)->find('A') as $tag_element)
 			{

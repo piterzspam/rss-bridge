@@ -54,7 +54,7 @@ class OnetBridge extends BridgeAbstract {
 		}
 		foreach($urls as $url)
 		{
-			$html = file_get_html($url);
+			$html = getSimpleHTMLDOM($url);
 			if (is_bool($html))
 			{
 				$this->items[] = array(

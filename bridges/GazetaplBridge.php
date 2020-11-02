@@ -53,8 +53,21 @@ class GazetaplBridge extends BridgeAbstract {
 
 		foreach($urls as $url)
 		{
-			$article_wrapper = getSimpleHTMLDOM($url)->find('SECTION#article_wrapper', 0);
+			$html = getSimpleHTMLDOM($url);
+			if (is_bool($html))
+			{
+				$this->items[] = array(
+					'uri' => $url,
+					'title' => "file_get_html($url) jest boolem $html",
+					'timestamp' => '',
+					'author' => '',
+					'content' => '',
+					'categories' => ''
+				);
+				continue;
+			}
 			
+			$article_wrapper = $html->find('SECTION#article_wrapper', 0);
 			foreach($article_wrapper->find('div.art_embed') as $art_embed)
 			{
 				$this->deleteAncestorIfDescendantExists($art_embed, 'SCRIPT[src*="video.onnetwork.tv"]');
