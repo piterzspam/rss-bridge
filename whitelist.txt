@@ -2,6 +2,7 @@ FacebookBridge
 FB2Bridge
 BezprawnikBridge
 DziennikBridge
+ForsalBridge
 GazetaplBridge
 GazetaprawnaBridge
 NewsweekBridge
