@@ -32,46 +32,46 @@ class BezprawnikBridge extends BridgeAbstract {
 
 	public function collectData()
 	{
-		$articles_list_url = $this->getInput('url');
-		$articles_list_url = preg_replace('/(.*\/author\/([a-z]+)-([a-z]+)\/).*/', '$1', $articles_list_url);
-		$number_of_wanted_articles = $this->getInput('wanted_number_of_articles');
-		while (count($this->items) < $number_of_wanted_articles)
+		$url_articles_list = $this->getInput('url');
+		$url_articles_list = preg_replace('/(.*\/author\/([a-z]+)-([a-z]+)\/).*/', '$1', $url_articles_list);
+		$GLOBALS['number_of_wanted_articles'] = $this->getInput('wanted_number_of_articles');
+		while (count($this->items) < $GLOBALS['number_of_wanted_articles'])
 		{
-			$articles_list_html = getSimpleHTMLDOM($articles_list_url);
-			if (0 !== count($found_urls = $articles_list_html->find("A.linkbg")))
+			$html_articles_list = getSimpleHTMLDOM($url_articles_list);
+			if (0 !== count($found_urls = $html_articles_list->find("A.linkbg")))
 				foreach($found_urls as $article__link)
-					if (count($this->items) < $number_of_wanted_articles)
+					if (count($this->items) < $GLOBALS['number_of_wanted_articles'])
 					{
-						$url = $article__link->getAttribute('href');
-						$this->addArticle($url);
+						$url_article = $article__link->getAttribute('href');
+						$this->addArticle($url_article);
 					}
 					else
 						break;
 			else
 				break;
 		
-			if (TRUE === is_null($articles_list_html->find('A.nextpostslink', 0)))
+			if (TRUE === is_null($html_articles_list->find('A.nextpostslink', 0)))
 				break;
 			else
 			{
-				$next_page_element = $articles_list_html->find('A.nextpostslink', 0);
-				$articles_list_url = $next_page_element->getAttribute('href');
+				$next_page_element = $html_articles_list->find('A.nextpostslink', 0);
+				$url_articles_list = $next_page_element->getAttribute('href');
 			}
 		}
 
 	}
 
-	private function addArticle($url)
+	private function addArticle($url_article)
 	{
-		$html = getSimpleHTMLDOMCached($url, 864000);
-		if (FALSE === is_null($html->find('ARTICLE', 0)))
+		$article_html = getSimpleHTMLDOMCached($url_article, (864000/(count($this->items)+1)*$GLOBALS['number_of_wanted_articles']));
+		if (FALSE === is_null($article_html->find('ARTICLE', 0)))
 		{
-			$article = $html->find('ARTICLE', 0);
+			$article = $article_html->find('ARTICLE', 0);
 		}
 		else
 		{
 			$this->items[] = array(
-				'uri' => $url,
+				'uri' => $url_article,
 				'title' => 'ERROR - html->find(ARTICLE, 0) jest puste',
 				'timestamp' => '',
 				'author' => '',
@@ -103,7 +103,7 @@ class BezprawnikBridge extends BridgeAbstract {
 		$this->deleteAncestorIfChildMatches($article, array('ul', 'li', 'h3', 'A[href^="https://bezprawnik.pl/"]'));
 		
 		$this->items[] = array(
-			'uri' => $url,
+			'uri' => $url_article,
 			'title' => $title,
 			'timestamp' => $date,
 			'author' => $author,

@@ -31,35 +31,30 @@ class NewsweekBridge extends BridgeAbstract {
 
 	public function collectData()
 	{
-		$url = $this->getInput('url');
-		$author = preg_replace('/.*\/autorzy\/([a-z]+)-([a-z]+).*/', '$1 $2', $url);
-		$url = preg_replace('/(.*\/autorzy\/[a-z]+-[a-z]+).*/', '$1', $url);
-		$author = ucwords($author);
-		$wanted_number_of_articles = $this->getInput('wanted_number_of_articles');
+		$url_articles_list = $this->getInput('url');
+		$url_articles_list = preg_replace('/(.*\/autorzy\/[a-z]+-[a-z]+).*/', '$1', $url_articles_list);
+		$GLOBALS['number_of_wanted_articles'] = $this->getInput('wanted_number_of_articles');
 		
 		$urls = array();
-		$html = getSimpleHTMLDOM($url);
-		foreach($html->find('DIV.authorArticles DIV.smallItem A') as $A)
+		$html_articles_list = getSimpleHTMLDOM($url_articles_list);
+		foreach($html_articles_list->find('DIV.authorArticles DIV.smallItem A') as $A)
 		{
-			if (count($urls) < $wanted_number_of_articles)
+			if (count($urls) < $GLOBALS['number_of_wanted_articles'])
 				$urls[] = $A->getAttribute('href');
 		}
 
 		$page_number = 0;
-		while (count($urls) < $wanted_number_of_articles)
+		while (count($urls) < $GLOBALS['number_of_wanted_articles'])
 		{
-			$current_url = $url.'?ajax=1&page='.$page_number;
-			$html = getSimpleHTMLDOM($current_url);
-//			echo '<br><br>html:<br>';
-//			echo $html;
+			$current_url = $url_articles_list.'?ajax=1&page='.$page_number;
+			$html_articles_list = getSimpleHTMLDOM($current_url);
 
-			if (0 !== ($url_counter = count($found_urls = $html->find("DIV.smallItem A"))))
+			if (0 !== ($url_counter = count($found_urls = $html_articles_list->find("DIV.smallItem A"))))
 			{
-				foreach($found_urls as $article__link)
+				foreach($found_urls as $article_link)
 				{
-					$link = $article__link->getAttribute('href');
-					if (count($urls) < $wanted_number_of_articles && FALSE === in_array($link, $urls))
-						$urls[] = $link;
+					if (count($urls) < $GLOBALS['number_of_wanted_articles'] && FALSE === in_array($link, $urls))
+						$urls[] = $article_link->getAttribute('href');
 				}
 				$page_number++;
 			}
@@ -68,34 +63,48 @@ class NewsweekBridge extends BridgeAbstract {
 				break;
 			}
 		}
-//		echo 'urls<br>';
-//		echo '<pre>'.var_export($urls, true).'</pre>';
 
-//		set_error_handler("myErrorHandler");
-		foreach($urls as $url)
+		foreach($urls as $url_article_link)
 		{
-//			echo "<br>url: $url";
-
-			$html = getSimpleHTMLDOM($url);
-			if (is_bool($html))
+			$article_html = getSimpleHTMLDOMCached($url_article_link, (864000/(count($this->items)+1)*$GLOBALS['number_of_wanted_articles']));
+			if (is_bool($article_html))
 			{
 				$this->items[] = array(
-					'uri' => $url,
-					'title' => "getSimpleHTMLDOM($url) jest boolem $html",
+					'uri' => $url_article_link,
+					'title' => "getSimpleHTMLDOM($url_article_link) jest booleml",
 					'timestamp' => '',
 					'author' => '',
-					'content' => '',
+					'content' => $article_html,
 					'categories' => ''
 				);
 				continue;
 			}
-			if (FALSE === is_null($html->find('ARTICLE', 0)))
+			if (FALSE === is_null($article_html->find('ARTICLE', 0)))
 			{
-				$article = $html->find('ARTICLE', 0);
+				$article = $article_html->find('ARTICLE', 0);
 			}
 			else
 			{
 				break;
+			}
+
+			//author
+			$author = $article->find('H4.name', 0)->plaintext;
+			//tags
+			$tags = array();
+			foreach($article->find('DIV.tags', 0)->find('A') as $tag_element)
+			{
+				$tags[] = trim($tag_element->plaintext);
+				$tag_element->outertext = '';
+			}
+			//date
+			$date = $article->find('SPAN.articleDates', 0)->innertext;
+			$date = str_replace('Data publikacji: ', '', $date);
+			//title
+			$title = trim($article->find('H1.detailTitle', 0)->innertext);
+			if (FALSE === is_null($article_html->find('H1.detailTitle', 0)->find('SPAN.label', 0)))
+			{
+				$title = '[OPINIA] '.$title;
 			}
 
 			//zamiana ramek na linki
@@ -154,26 +163,6 @@ class NewsweekBridge extends BridgeAbstract {
 				}
 				$this->deleteDescendantIfExists($article, 'DIV.contentPremium');
 			}
-			//tags
-//			$temp=$article->find('DIV.tags', 0);
-//			echo "temp:\n$temp";
-//			echo "article:\n$article";
-//			var_dump($temp);
-			$tags = array();
-			foreach($article->find('DIV.tags', 0)->find('A') as $tag_element)
-			{
-				$tags[] = trim($tag_element->plaintext);
-				$tag_element->outertext = '';
-			}
-			//date
-			$date = $article->find('SPAN.articleDates', 0)->innertext;
-			$date = str_replace('Data publikacji: ', '', $date);
-			//title
-			$title = trim($article->find('H1.detailTitle', 0)->innertext);
-			if (FALSE === is_null($html->find('H1.detailTitle', 0)->find('SPAN.label', 0)))
-			{
-				$title = '[OPINIA] '.$title;
-			}
 
 			$this->deleteAllDescendantsIfExist($article, 'comment');
 			$this->deleteAllDescendantsIfExist($article, 'script');
@@ -187,16 +176,14 @@ class NewsweekBridge extends BridgeAbstract {
 
 
 			$this->items[] = array(
-				'uri' => $url,
+				'uri' => $url_article_link,
 				'title' => $title,
 				'timestamp' => $date,
 				'author' => $author,
 				'content' => $article,
 				'categories' => $tags
 			);
-
-//			echo '<br><br><br>article<br>';
-//			echo $article;
+//			echo '<br><br><br>article<br>'.$article;
 		}
 	}
 

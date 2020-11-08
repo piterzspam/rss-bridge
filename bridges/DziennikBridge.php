@@ -46,38 +46,22 @@ class DziennikBridge extends BridgeAbstract {
 */
 	public function collectData()
 	{
+		$url_articles_list = $this->getInput('url');
+		$GLOBALS['number_of_wanted_articles'] = $this->getInput('wanted_number_of_articles');
 
-		$wanted_number_of_articles = $this->getInput('wanted_number_of_articles');
-		$url = $this->getInput('url');
-		$author = preg_replace('/.*\/autor\/[0-9]+,([a-z]+)-([a-z]+).*/', '$1 $2', $url);
-		$author = ucwords($author);
-
-		$urls = array();
-		$titles = array();
-		while (count($this->items) < $wanted_number_of_articles)
+		while (count($this->items) < $GLOBALS['number_of_wanted_articles'])
 		{
-			$html = getSimpleHTMLDOM($url);
-//			echo '<br><br>html:<br>'; echo $html;
-			//Czy liczba linków niezerowa
-//			echo '<br><br>test1: '.$url;
-//			echo '<br><br>test2: '.$url;
-			if (0 !== ($url_counter = count($found_urls = $html->find('DIV.boxArticleList', 0)->find('A[href][title]'))))
+			$html_articles_list = getSimpleHTMLDOM($url_articles_list);
+			if (0 !== count($found_urls = $html_articles_list->find('DIV.boxArticleList', 0)->find('A[href][title]')))
 			{
-				foreach($found_urls as $article__link)
+				foreach($found_urls as $article_link)
 				{
-//					echo '<br><br>article__link: '.$article__link;
-					$title = $article__link->getAttribute('title');
-					$href = $article__link->getAttribute('href');
-//					echo '<br><br>title: '.$title;
-//					echo '<br><br>href: '.$href;
-					//Czy pobierać ten artykuł
-					$array = $this->meetsConditions($title, $href);
-//					echo '<br><br>href: '.$href;
-					if ($array['boolMeetsConditions'] === TRUE && count($this->items) < $wanted_number_of_articles)
+					$title = $article_link->getAttribute('title');
+					$href = $article_link->getAttribute('href');
+
+					if ($this->meetsConditions($title, $href) === TRUE && count($this->items) < $GLOBALS['number_of_wanted_articles'])
 					{
-						$urls[] = $href;
-						$titles[] = $title;
-						$this->addArticle($array['html'], $title, $url, $author);
+						$this->addArticle($href);
 					}
 				}
 			}
@@ -85,21 +69,26 @@ class DziennikBridge extends BridgeAbstract {
 			{
 				break;
 			}
-			$url = $html->find('A.next', 0)->getAttribute('href');
+			$url_articles_list = $html_articles_list->find('A.next', 0)->getAttribute('href');
 		}
 
 //		echo 'urls:<br>';
 //		echo '<pre>'.var_export($urls, true).'</pre>';
 	}
 
-	private function addArticle($html, $title, $url, $author)
+	private function addArticle($url_article)
 	{
-		$article = $html->find('ARTICLE.articleDetail', 0);
+		$article_html = getSimpleHTMLDOMCached($url_article, (864000/(count($this->items)+1)*$GLOBALS['number_of_wanted_articles']));
+		$article = $article_html->find('ARTICLE.articleDetail', 0);
 
 		//date
-		$article_data = $html->find('SCRIPT[type="application/ld+json"]', 0)->innertext;
+		$article_data = $article_html->find('SCRIPT[type="application/ld+json"]', 0)->innertext;
 		$json_decoded = (array)json_decode($article_data);
 		$date = $json_decoded['datePublished'];
+		//author
+		$author = $article_html->find('SPAN[itemprop="name"]', 0)->plaintext;
+		//title
+		$title = $article_html->find('H1.mainTitle', 0)->plaintext;
 		//tags
 		$tags = array();
 		foreach($article->find('DIV.relatedTopicWrapper', 0)->find('A') as $tag_element)
@@ -135,21 +124,13 @@ class DziennikBridge extends BridgeAbstract {
 			$title = str_replace('[OPINIA]', '', $title);
 			$title = '[OPINIA] '.$title;
 		}
-		if (FALSE === $this->isArticleFree($html))
+		if (FALSE === $this->isArticleFree($url_article))
 		{
 			$title = '[PREMIUM] '.$title;
 		}
 
-
-//		echo 'article:<br>';
-//		echo $article;
-
-//		echo 'article_data4:<br><pre>'.var_export((array)json_decode($article_data), TRUE).'</pre>';
-//		echo 'article_data5:<br><pre>'.var_dump(json_decode(html_entity_decode($article_data))).'</pre>';
-
-
 		$this->items[] = array(
-			'uri' => $url,
+			'uri' => $url_article,
 			'title' => $title,
 			'timestamp' => $date,
 			'author' => $author,
@@ -157,61 +138,48 @@ class DziennikBridge extends BridgeAbstract {
 			'categories' => $tags
 		);
 	}
-	private function meetsConditions($title, $url)
+
+	private function meetsConditions($title, $url_article)
 	{
 		$only_opinions = $this->getInput('tylko_opinie');
 		$only_free = $this->getInput('tylko_darmowe');
-		$html = getSimpleHTMLDOM($url);
 
 		if(FALSE === $only_opinions && FALSE === $only_free)
-			return array('boolMeetsConditions' => TRUE, 'html' => $html);
+			return TRUE;
 		else if(FALSE === $only_opinions && TRUE === $only_free)
 		{
-			if ($this->isArticleFree($html))
-				return array('boolMeetsConditions' => TRUE, 'html' => $html);
+			if ($this->isArticleFree($url_article))
+				return TRUE;
 		}
 		else if(TRUE === $only_opinions && FALSE === $only_free)
 		{
 			if ($this->isArticleOpinion($title))
-				return array('boolMeetsConditions' => TRUE, 'html' => $html);
+				return TRUE;
 		}
 		else if(TRUE === $only_opinions && TRUE === $only_free)
 		{
-			if ($this->isArticleOpinion($title) && $this->isArticleFree($html))
-				return array('boolMeetsConditions' => TRUE, 'html' => $html);
+			if ($this->isArticleOpinion($title) && $this->isArticleFree($url_article))
+				return TRUE;
 		}
-		return array(
-			'boolMeetsConditions' => FALSE,
-			'html' => $html
-		);
+		return FALSE;
 	}
-	private function isArticleFree($html)
+
+	private function isArticleFree($url_article)
 	{
-		$article = $html->find('ARTICLE.articleDetail', 0);
+		$article_html = getSimpleHTMLDOMCached($url_article, (864000/(count($this->items)+1)*$GLOBALS['number_of_wanted_articles']));
+		$article = $article_html->find('ARTICLE.articleDetail', 0);
 		//Jeżeli element istneje (FALSE === is_null), to jest to artykul platny
 		if (is_null($article->find('A[id][href*="edgp.gazetaprawna.pl"]', 0)))
-		{
-//			echo "<br>Article is free <br>";
 			return TRUE;
-		}
 		else
-		{
-//			echo "<br>Article is not free <br>";
 			return FALSE;	
-		}
 	}
 	private function isArticleOpinion($title)
 	{
 		if (FALSE !== strpos($title, '[OPINIA]'))
-		{
-//			echo "<br>Article is opinion <br>";
 			return TRUE;
-		}
 		else
-		{
-//			echo "<br>Article is not opinion <br>";
 			return FALSE;
-		}
 	}
 
 	private function deleteDescendantIfExists($ancestor, $descendant_string)

@@ -31,74 +31,83 @@ class TygodnikPolsatNewsBridge extends BridgeAbstract {
 
 	public function collectData()
 	{
-//		error_reporting(E_ERROR | E_WARNING | E_PARSE);
 //		Ramka FB: https://tygodnik.polsatnews.pl/news/2020-05-08/jan-komasa-bohater-jest-zly-bo-z-biednej-rodziny-wywiad/
 //		Ramka YT: https://tygodnik.polsatnews.pl/news/2020-05-08/jan-komasa-bohater-jest-zly-bo-z-biednej-rodziny-wywiad/
 //		Brak autora: https://tygodnik.polsatnews.pl/piotr-witwicki-wywiady-bezunikow/
 //		Brak div.article__comments i div.article__related: https://tygodnik.polsatnews.pl/news/2020-07-10/zdalna-dehumanizacja-zaremba-o-przyszlosci-uczelni/
-//		error_reporting(E_ALL & ~E_NOTICE);
-		$author = $this->getInput('author');
-		$wanted_number_of_articles = $this->getInput('wanted_number_of_articles');
+		$GLOBALS['author'] = $this->getInput('author');
+		$GLOBALS['number_of_wanted_articles'] = $this->getInput('wanted_number_of_articles');
 
 		$main_page_url = 'https://tygodnik.polsatnews.pl/';
 
 //		ini_set('user_agent','Mozilla/4.0 (compatible; MSIE 6.0)');
 		$html_main_page = getSimpleHTMLDOM($main_page_url);
 
-		$urls = array();
 
 		foreach($html_main_page->find('a.article__link') as $article__link)
 		{
-			if (count($urls) < $wanted_number_of_articles && $article__link->find('DIV.article__author', 0)->plaintext === $author)
-				$urls[] = $article__link->getAttribute('href');
+			if (FALSE === is_null($author_element = $article__link->find('DIV.article__author', 0)))
+			{
+				if (count($this->items) < $GLOBALS['number_of_wanted_articles'] && $author_element->plaintext === $GLOBALS['author'])
+				{
+					$href = $article__link->getAttribute('href');
+					$this->addArticle($href);
+				}
+			}
 		}
 
-		$url = $html_main_page->find('BUTTON.pager__button', 0)->getAttribute('data-url');
-		while (count($urls) < $wanted_number_of_articles)
+		$next_page_url = $html_main_page->find('BUTTON.pager__button', 0)->getAttribute('data-url');
+		while (count($this->items) < $GLOBALS['number_of_wanted_articles'])
 		{
-			$html = getSimpleHTMLDOM($url);
-			foreach($html->find('A.article__link') as $article__link)
+			$html_next_page = getSimpleHTMLDOM($next_page_url);
+			foreach($html_next_page->find('A.article__link') as $article__link)
 			{
-				if (count($urls) < $wanted_number_of_articles && $article__link->find('DIV.article__author', 0)->plaintext === $author)
-					$urls[] = $article__link->getAttribute('href');
+				if (count($this->items) < $GLOBALS['number_of_wanted_articles'] && $article__link->find('DIV.article__author', 0)->plaintext === $GLOBALS['author'])
+				{
+					$href = $article__link->getAttribute('href');
+					$this->addArticle($href);
+				}
 			}
-			if (FALSE === is_null($html->find('BUTTON.pager__button', 0)))
-				$url = $html->find('BUTTON.pager__button', 0)->getAttribute('data-url');
+			if (FALSE === is_null($html_next_page->find('BUTTON.pager__button', 0)))
+				$next_page_url = $html_next_page->find('BUTTON.pager__button', 0)->getAttribute('data-url');
 			else
 				break;
 		}
+	}
 
-		foreach($urls as $url)
+	private function addArticle($url_article)
+	{
+		$article_html = getSimpleHTMLDOMCached($url_article, (864000/(count($this->items)+1)*$GLOBALS['number_of_wanted_articles']));
+		$article_target = $article_html->find('article.article--target', 0);
+
+		//title
+		$title = $article_target->find('H1.article__title', 0)->plaintext;
+		//timestamp
+		$timestamp = $article_target->find('TIME.article__time', 0)->getAttribute('datetime');
+		//author
+		$author = $article_target->find('DIV.article__author', 0)->plaintext;
+
+
+		foreach($article_target->find('p') as $paragraph)
 		{
-			$html = file_get_html($url);
-			$article_target = $html->find('article.article--target', 0);
-			foreach($article_target->childNodes() as $elem)
-			{
-				if ($elem->tag === 'script')
-					$elem->outertext = '';
-			}
-			
-
-			foreach($article_target->find('p') as $paragraph)
-			{
-				$this->deleteAncestorIfDescendantExists($paragraph, 'SPAN.article__more');
-				$this->deleteAncestorIfContainsText($paragraph, 'ZOBACZ: ');
-			}
-			
-			$this->deleteDescendantIfExists($article_target, 'UL.menu__list');
-			$this->deleteDescendantIfExists($article_target, 'DIV.article__comments');
-			$this->deleteDescendantIfExists($article_target, 'DIV.article__related');
-			$this->deleteDescendantIfExists($article_target, 'DIV.article__share');
-			$this->deleteDescendantIfExists($article_target, 'DIV#fb-root');
-
-			$this->items[] = array(
-				'uri' => $url,
-				'title' => $article_target->find('H1.article__title', 0)->plaintext,
-				'timestamp' => $article_target->find('TIME.article__time', 0)->getAttribute('datetime'),
-				'author' => $article_target->find('DIV.article__author', 0)->plaintext,
-				'content' => $article_target
-			);
+			$this->deleteAncestorIfDescendantExists($paragraph, 'SPAN.article__more');
+			$this->deleteAncestorIfContainsText($paragraph, 'ZOBACZ: ');
 		}
+
+		$this->deleteAllDescendantsIfExist($article_target, 'script');
+		$this->deleteDescendantIfExists($article_target, 'UL.menu__list');
+		$this->deleteDescendantIfExists($article_target, 'DIV.article__comments');
+		$this->deleteDescendantIfExists($article_target, 'DIV.article__related');
+		$this->deleteDescendantIfExists($article_target, 'DIV.article__share');
+		$this->deleteDescendantIfExists($article_target, 'DIV#fb-root');
+
+		$this->items[] = array(
+			'uri' => $url_article,
+			'title' => $title,
+			'timestamp' => $timestamp,
+			'author' => $author,
+			'content' => $article_target
+		);
 	}
 
 	private function deleteDescendantIfExists($ancestor, $descendant_string)
@@ -118,5 +127,10 @@ class TygodnikPolsatNewsBridge extends BridgeAbstract {
 		if (FALSE === is_null($ancestor))
 			if (FALSE !== strpos($ancestor->plaintext, $descendant_string))
 				$ancestor->outertext = '';
+	}
+	private function deleteAllDescendantsIfExist($ancestor, $descendant_string)
+	{
+		foreach($ancestor->find($descendant_string) as $descendant)
+			$descendant->outertext = '';
 	}
 }

@@ -30,93 +30,99 @@ class GazetaplBridge extends BridgeAbstract {
 //		Warning: https://wiadomosci.gazeta.pl/wiadomosci/7,114884,26406112,dr-hab-wigura-najwiekszym-problemem-nowej-solidarnosci-jest.html
 //		Twitter frame: https://wiadomosci.gazeta.pl/wiadomosci/7,114884,25947207,trzaskowski-za-kidawe-blonska-kiedys-bylo-tusku-musisz.html
 //		error_reporting(E_ALL & ~E_NOTICE & ~E_WARNING);
-		error_reporting(E_ALL & ~E_WARNING);
-		$url = $this->getInput('url');
-		$wanted_number_of_articles = $this->getInput('wanted_number_of_articles');
-
-		$urls = array();
-		while (count($urls) < $wanted_number_of_articles)
+//		error_reporting(E_ALL & ~E_WARNING);
+		$url_articles_list = $this->getInput('url');
+		$GLOBALS['number_of_wanted_articles'] = $this->getInput('wanted_number_of_articles');
+		while (count($this->items) < $GLOBALS['number_of_wanted_articles'])
 		{
-			$html = getSimpleHTMLDOM($url);
-
-			foreach($html->find('LI.entry') as $entry)
+			$html_articles_list = getSimpleHTMLDOM($url_articles_list);
+			if (0 !== count($found_urls = $html_articles_list->find('LI.entry')))
 			{
-				if (count($urls) < $wanted_number_of_articles)
-					$urls[] = $entry->find('A', 0)->getAttribute('href');
+				foreach($found_urls as $article_link)
+				{
+					if (count($this->items) < $GLOBALS['number_of_wanted_articles'])
+					{
+						$href = $article_link->find('A', 0)->getAttribute('href');
+						$this->addArticle($href);
+					}
+				}
+			}
+			else
+			{
+				break;
 			}
 
-			if (FALSE === is_null($html->find('A.next', 0)))
-				$url = $html->find('A.next', 0)->getAttribute('href');
+			if (FALSE === is_null($html_articles_list->find('A.next', 0)))
+				$url_articles_list = $html_articles_list->find('A.next', 0)->getAttribute('href');
 			else
 				break;
 		}
+	}
 
-		foreach($urls as $url)
+	private function addArticle($url_article)
+	{
+		$article_html = getSimpleHTMLDOMCached($url_article, (864000/(count($this->items)+1)*$GLOBALS['number_of_wanted_articles']));
+		if (is_bool($article_html))
 		{
-			$html = getSimpleHTMLDOM($url);
-			if (is_bool($html))
-			{
-				$this->items[] = array(
-					'uri' => $url,
-					'title' => "file_get_html($url) jest boolem $html",
-					'timestamp' => '',
-					'author' => '',
-					'content' => '',
-					'categories' => ''
-				);
-				continue;
-			}
-			
-			$article_wrapper = $html->find('SECTION#article_wrapper', 0);
-			foreach($article_wrapper->find('div.art_embed') as $art_embed)
-			{
-				$this->deleteAncestorIfDescendantExists($art_embed, 'SCRIPT[src*="video.onnetwork.tv"]');
-				
-				if (FALSE === is_null($art_embed->find('A[href*="twitter.com/user/status/"]', 0)))
-				{
-					$twitter_url = $art_embed->find('a', 0)->getAttribute('href');
-					$twitter_element = $this->getTwitterElement($twitter_url);
-					$art_embed->outertext = $twitter_element->outertext;
-				}
-			}
-			foreach($article_wrapper->find('P.art_paragraph A[href*="?tag="]') as $paragraph)
-			{
-				$paragraph->parent->innertext = $paragraph->parent->plaintext;
-			}
-
-			$tags = array();
-			foreach($article_wrapper->find('LI.tags_item') as $tags_item)
-			{
-				$tags[] = trim($tags_item->plaintext);
-			}
-
-			$this->deleteAllDescendantsIfExist($article_wrapper, 'comment');
-			$this->deleteAllDescendantsIfExist($article_wrapper, 'SCRIPT');
-			$this->deleteAllDescendantsIfExist($article_wrapper, 'DIV[id^="banC"]');
-
-			$this->deleteDescendantIfExists($article_wrapper, 'DIV#sitePath');
-			$this->deleteDescendantIfExists($article_wrapper, 'DIV.left_aside');
-			$this->deleteDescendantIfExists($article_wrapper, 'DIV.ban000_wrapper');
-			$this->deleteDescendantIfExists($article_wrapper, 'DIV.ban001_wrapper');
-			$this->deleteDescendantIfExists($article_wrapper, 'DIV.right_aside');
-			$this->deleteDescendantIfExists($article_wrapper, 'DIV.top_section_bg');
-			$this->deleteDescendantIfExists($article_wrapper, 'DIV.bottom_section_bg');
-			$this->deleteDescendantIfExists($article_wrapper, 'DIV#adUnit-007-CONTENTBOARD');
-			$this->deleteDescendantIfExists($article_wrapper, 'DIV.related_image_number_of_photo');
-			$this->deleteDescendantIfExists($article_wrapper, 'DIV.related_image_open');
-			$this->deleteDescendantIfExists($article_wrapper, 'SECTION.tags');
-			
-
 			$this->items[] = array(
-				'uri' => $url,
-				'title' => trim($article_wrapper->find('H1#article_title', 0)->plaintext),
-				'timestamp' => $article_wrapper->find('TIME', 0)->getAttribute('datetime'),
-				'author' => $article_wrapper->find('A[rel="author"]', 0)->plaintext,
-				'content' => $article_wrapper,
-				'categories' => $tags
+				'uri' => $url_article,
+				'title' => "file_get_html($url_article) jest boolem $article_html",
+				'timestamp' => '',
+				'author' => '',
+				'content' => '',
+				'categories' => ''
 			);
+			return;
+		}
+		
+		$article_wrapper = $article_html->find('SECTION#article_wrapper', 0);
+		foreach($article_wrapper->find('div.art_embed') as $art_embed)
+		{
+			$this->deleteAncestorIfDescendantExists($art_embed, 'SCRIPT[src*="video.onnetwork.tv"]');
+			
+			if (FALSE === is_null($art_embed->find('A[href*="twitter.com/user/status/"]', 0)))
+			{
+				$twitter_url = $art_embed->find('a', 0)->getAttribute('href');
+				$twitter_element = $this->getTwitterElement($twitter_url);
+				$art_embed->outertext = $twitter_element->outertext;
+			}
+		}
+		foreach($article_wrapper->find('P.art_paragraph A[href*="?tag="]') as $paragraph)
+		{
+			$paragraph->parent->innertext = $paragraph->parent->plaintext;
 		}
 
+		$tags = array();
+		foreach($article_wrapper->find('LI.tags_item') as $tags_item)
+		{
+			$tags[] = trim($tags_item->plaintext);
+		}
+
+		$this->deleteAllDescendantsIfExist($article_wrapper, 'comment');
+		$this->deleteAllDescendantsIfExist($article_wrapper, 'SCRIPT');
+		$this->deleteAllDescendantsIfExist($article_wrapper, 'DIV[id^="banC"]');
+
+		$this->deleteDescendantIfExists($article_wrapper, 'DIV#sitePath');
+		$this->deleteDescendantIfExists($article_wrapper, 'DIV.left_aside');
+		$this->deleteDescendantIfExists($article_wrapper, 'DIV.ban000_wrapper');
+		$this->deleteDescendantIfExists($article_wrapper, 'DIV.ban001_wrapper');
+		$this->deleteDescendantIfExists($article_wrapper, 'DIV.right_aside');
+		$this->deleteDescendantIfExists($article_wrapper, 'DIV.top_section_bg');
+		$this->deleteDescendantIfExists($article_wrapper, 'DIV.bottom_section_bg');
+		$this->deleteDescendantIfExists($article_wrapper, 'DIV#adUnit-007-CONTENTBOARD');
+		$this->deleteDescendantIfExists($article_wrapper, 'DIV.related_image_number_of_photo');
+		$this->deleteDescendantIfExists($article_wrapper, 'DIV.related_image_open');
+		$this->deleteDescendantIfExists($article_wrapper, 'SECTION.tags');
+		
+
+		$this->items[] = array(
+			'uri' => $url_article,
+			'title' => trim($article_wrapper->find('H1#article_title', 0)->plaintext),
+			'timestamp' => $article_wrapper->find('TIME', 0)->getAttribute('datetime'),
+			'author' => $article_wrapper->find('A[rel="author"]', 0)->plaintext,
+			'content' => $article_wrapper,
+			'categories' => $tags
+		);
 	}
 
 	private function getTwitterElement($twitter_url)

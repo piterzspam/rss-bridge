@@ -26,25 +26,25 @@ class OnetBridge extends BridgeAbstract {
 	);
 	public function collectData()
 	{
-		$url = $this->getInput('url');
-		$author = preg_replace('/.*\/autorzy\/([a-z]+)-([a-z]+).*/', '$1 $2', $url);
-		$url = preg_replace('/(.*\/autorzy\/[a-z]+-[a-z]+).*/', '$1', $url);
-		$author = ucwords($author);
-		$wanted_number_of_articles = $this->getInput('wanted_number_of_articles');
+		$url_articles_list = $this->getInput('url');
+		$url_articles_list = preg_replace('/(.*\/autorzy\/[a-z]+-[a-z]+).*/', '$1', $url_articles_list);
+		$GLOBALS['number_of_wanted_articles'] = $this->getInput('wanted_number_of_articles');
 
-		$page_number = 0;
 		$urls = array();
-		while (count($urls) < $wanted_number_of_articles)
+		$page_number = 0;
+		while (count($urls) < $GLOBALS['number_of_wanted_articles'])
 		{
-			$current_url = $url.'?ajax=1&page='.$page_number;
-			$html = getSimpleHTMLDOM($current_url);
-			$this->deleteAllDescendantsIfExist($html, 'DIV.breadcrumbs');
+			$current_url = $url_articles_list.'?ajax=1&page='.$page_number;
+			$html_articles_list = getSimpleHTMLDOM($current_url);
+			$this->deleteAllDescendantsIfExist($html_articles_list, 'DIV.breadcrumbs');
 
-			if (0 !== ($url_counter = count($found_urls = $html->find("DIV.listItem A[href][title]"))))
+			if (0 !== ($url_counter = count($found_urls = $html_articles_list->find("DIV.listItem A[href][title]"))))
 			{
 				foreach($found_urls as $article__link)
-					if (count($urls) < $wanted_number_of_articles)
+				{
+					if (count($urls) < $GLOBALS['number_of_wanted_articles'])
 						$urls[] = $article__link->getAttribute('href');
+				}
 				$page_number++;
 			}
 			else
@@ -52,36 +52,49 @@ class OnetBridge extends BridgeAbstract {
 				break;
 			}
 		}
-		foreach($urls as $url)
+		foreach($urls as $url_article_link)
 		{
-			$html = getSimpleHTMLDOM($url);
-			if (is_bool($html))
+			$article_html = getSimpleHTMLDOMCached($url_article_link, (864000/(count($this->items)+1)*$GLOBALS['number_of_wanted_articles']));
+			if (is_bool($article_html))
 			{
 				$this->items[] = array(
-					'uri' => $url,
-					'title' => "file_get_html($url) jest boolem $html",
+					'uri' => $url_article_link,
+					'title' => "getSimpleHTMLDOM($url_article_link) jest booleml",
 					'timestamp' => '',
 					'author' => '',
-					'content' => '',
+					'content' => $article_html,
 					'categories' => ''
 				);
 				continue;
 			}
-			if (FALSE === is_null($html->find('SECTION#doc ARTICLE', 0)))
+			if (FALSE === is_null($article_html->find('SECTION#doc ARTICLE', 0)))
 			{
 				//artykul
-				$article = $html->find('SECTION#doc ARTICLE', 0);
+				$article = $article_html->find('SECTION#doc ARTICLE', 0);
 			}
-			else if (FALSE === is_null($html->find('DIV#doc DIV.videoAdultOverlay', 0)))
+			else if (FALSE === is_null($article_html->find('DIV#doc DIV.videoAdultOverlay', 0)))
 			{
 				//wideo
-				$article = $html->find('DIV#doc DIV.videoAdultOverlay', 0);
+				$article = $article_html->find('DIV#doc DIV.videoAdultOverlay', 0);
 			}
-			else if (FALSE === is_null($html->find('DIV#doc ARTICLE.articleDetail', 0)))
+			else if (FALSE === is_null($article_html->find('DIV#doc ARTICLE.articleDetail', 0)))
 			{
 				//podcast
-				$article = $html->find('DIV#doc ARTICLE.articleDetail', 0);
+				$article = $article_html->find('DIV#doc ARTICLE.articleDetail', 0);
 			}
+			//tags
+			$tags = array();
+			foreach($article->find('DIV#relatedTopics SPAN.relatedTopic') as $tag_element)
+			{
+				$tags[] = str_replace(', ', '', $tag_element->plaintext);
+			}
+			$this->deleteDescendantIfExists($article, 'DIV#relatedTopics');
+			//title
+			$title = trim($article->find('H1.mainTitle', 0)->plaintext);
+			//timestamp
+			$timestamp = $article->find('META[itemprop="datePublished"]', 0)->getAttribute('content');
+			//author
+			$author = $article->find('DIV.authDesc SPAN.name', 0)->plaintext;
 
 			$this->deleteAllDescendantsIfExist($article, 'comment');
 			$this->deleteAllDescendantsIfExist($article, 'ASIDE');
@@ -107,13 +120,6 @@ class OnetBridge extends BridgeAbstract {
 				$this->deleteAncestorIfContainsText($paragraph, 'Cieszymy się, że jesteś z nami. Zapisz się na newsletter Onetu, aby otrzymywać od nas najbardziej wartościowe treści');
 			}
 
-			$tags = array();
-			foreach($article->find('DIV#relatedTopics SPAN.relatedTopic') as $tag_element)
-			{
-				$tags[] = str_replace(', ', '', $tag_element->plaintext);
-			}
-			$this->deleteDescendantIfExists($article, 'DIV#relatedTopics');
-
 			foreach($article->find('DIV.embeddedApp') as $embeddedApp)
 			{
 				$a = $embeddedApp->find('A', 0);
@@ -138,10 +144,9 @@ class OnetBridge extends BridgeAbstract {
 //			echo '<br>article:<br><br><br>'; echo $article;
 
 			$this->items[] = array(
-				'uri' => $url,
-				'title' => trim($article->find('H1.mainTitle', 0)->plaintext),
-				'timestamp' => $article->find('META[itemprop="datePublished"]', 0)->getAttribute('content'),
-//				'author' => $article->find('DIV.authDesc SPAN.name', 0)->plaintext,
+				'uri' => $url_article_link,
+				'title' => $title,
+				'timestamp' => $timestamp,
 				'author' => $author,
 				'content' => $article,
 				'categories' => $tags
@@ -174,14 +179,14 @@ class OnetBridge extends BridgeAbstract {
 			$descendant->outertext = '';
 	}
 
-	private function redirectUrl($url)
+	private function redirectUrl($social_url)
 	{
 		$twitter_proxy = 'nitter.net';
 		$instagram_proxy = 'bibliogram.art';
 		$facebook_proxy = 'mbasic.facebook.com';
-		$url = preg_replace('/.*[\.\/]twitter\.com(.*)/', 'https://'.$twitter_proxy.'${1}', $url);
-		$url = preg_replace('/.*[\.\/]instagram\.com(.*)/', 'https://'.$instagram_proxy.'${1}', $url);
-		$url = preg_replace('/.*[\.\/]facebook\.com(.*)/', 'https://'.$facebook_proxy.'${1}', $url);
-		return $url;
+		$social_url = preg_replace('/.*[\.\/]twitter\.com(.*)/', 'https://'.$twitter_proxy.'${1}', $social_url);
+		$social_url = preg_replace('/.*[\.\/]instagram\.com(.*)/', 'https://'.$instagram_proxy.'${1}', $social_url);
+		$social_url = preg_replace('/.*[\.\/]facebook\.com(.*)/', 'https://'.$facebook_proxy.'${1}', $social_url);
+		return $social_url;
 	}
 }
