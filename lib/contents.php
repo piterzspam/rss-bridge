@@ -286,7 +286,7 @@ function getSimpleHTMLDOM($url,
  * @return string Contents as simplehtmldom object.
  */
 function getSimpleHTMLDOMCached($url,
-	$duration = 86400,
+	$duration = 864000,
 	$header = array(),
 	$opts = array(),
 	$lowercase = true,
@@ -303,7 +303,7 @@ function getSimpleHTMLDOMCached($url,
 	$cacheFac->setWorkingDir(PATH_LIB_CACHES);
 	$cache = $cacheFac->create(Configuration::getConfig('cache', 'type'));
 	$cache->setScope('pages');
-	$cache->purgeCache(86400); // 24 hours (forced)
+	$cache->purgeCache(864000); // 24 hours (forced)
 
 	$params = array($url);
 	$cache->setKey($params);
