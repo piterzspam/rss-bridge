@@ -32,74 +32,84 @@ class BezprawnikBridge extends BridgeAbstract {
 
 	public function collectData()
 	{
-		$url = $this->getInput('url');
-		$author = preg_replace('/.*\/author\/([a-z]+)-([a-z]+).*/', '$1 $2', $url);
-		$url = preg_replace('/(.*\/author\/[a-z]+-[a-z]+).*/', '$1/', $url);
-		$author = ucwords($author);
-		$wanted_number_of_articles = $this->getInput('wanted_number_of_articles');
-		
-		$urls = array();
-		$page_number = 1;
-		while (count($urls) < $wanted_number_of_articles)
+		$articles_list_url = $this->getInput('url');
+		$articles_list_url = preg_replace('/(.*\/author\/([a-z]+)-([a-z]+)\/).*/', '$1', $articles_list_url);
+		$number_of_wanted_articles = $this->getInput('wanted_number_of_articles');
+		while (count($this->items) < $number_of_wanted_articles)
 		{
-			$current_url = $url.'page/'.$page_number;
-			$html = getSimpleHTMLDOM($current_url);
-
-			if (0 !== ($url_counter = count($found_urls = $html->find("A.linkbg"))))
-			{
+			$articles_list_html = getSimpleHTMLDOM($articles_list_url);
+			if (0 !== count($found_urls = $articles_list_html->find("A.linkbg")))
 				foreach($found_urls as $article__link)
-					if (count($urls) < $wanted_number_of_articles)
-						$urls[] = $article__link->getAttribute('href');
-				$page_number++;
-			}
+					if (count($this->items) < $number_of_wanted_articles)
+					{
+						$url = $article__link->getAttribute('href');
+						$this->addArticle($url);
+					}
+					else
+						break;
+			else
+				break;
+		
+			if (TRUE === is_null($articles_list_html->find('A.nextpostslink', 0)))
+				break;
 			else
 			{
-				break;
+				$next_page_element = $articles_list_html->find('A.nextpostslink', 0);
+				$articles_list_url = $next_page_element->getAttribute('href');
 			}
 		}
 
-		foreach($urls as $url)
-		{
+	}
 
-			$html = file_get_html($url);
-			if (FALSE === is_null($html->find('ARTICLE', 0)))
-			{
-				$article = $html->find('ARTICLE', 0);
-			}
-			else
-			{
-				break;
-			}
-			//date
-			$date = $article->find('DIV.article-cover', 0)->find('DIV.absolute', 0)->find('SPAN', 0)->plaintext;
-			//title
-			$title = $article->find('DIV.article-cover', 0)->find('DIV.absolute', 0)->find('H1.thin', 0)->plaintext;
-			//tags
-			$tags = array();
-			foreach($article->find('DIV.tagi', 0)->find('A[rel="tag"]') as $tag_element)
-			{
-				$tags[] = trim($tag_element->plaintext);
-			}
-			$this->deleteAllDescendantsIfExist($article, 'A.kategoria');
-			$this->deleteAllDescendantsIfExist($article, 'A.interakcje');
-			$this->deleteAllDescendantsIfExist($article, 'DIV.tagi');
-			$this->deleteAllDescendantsIfExist($article, 'DIV.left-fix');
-			$this->deleteAllDescendantsIfExist($article, 'DIV.facebook-box');
-			$this->deleteAllDescendantsIfExist($article, 'DIV#discussion');
-			$this->deleteAllDescendantsIfExist($article, 'DIV.autor-mobile-img');
-			$this->deleteAllDescendantsIfExist($article, 'FIGURE.wp-caption.alignright[style="width: 170px"]');
-			$this->deleteAllDescendantsIfExist($article, 'DIV[id^="div-gpt-ad"]');
-			$this->deleteAncestorIfChildMatches($article, array('ul', 'li', 'h3', 'A[href^="https://bezprawnik.pl/"]'));
-			
+	private function addArticle($url)
+	{
+		$html = getSimpleHTMLDOMCached($url, 864000);
+		if (FALSE === is_null($html->find('ARTICLE', 0)))
+		{
+			$article = $html->find('ARTICLE', 0);
+		}
+		else
+		{
 			$this->items[] = array(
 				'uri' => $url,
-				'title' => $title,
-				'timestamp' => $date,
-				'author' => $author,
-				'content' => $article,
-				'categories' => $tags
+				'title' => 'ERROR - html->find(ARTICLE, 0) jest puste',
+				'timestamp' => '',
+				'author' => '',
+				'content' => '',
+				'categories' => ''
 			);
 		}
+		//author
+		$author = $article->find('P.autor-mobile', 0)->plaintext;
+		//date
+		$date = $article->find('DIV.article-cover', 0)->find('DIV.absolute', 0)->find('SPAN', 0)->plaintext;
+		//title
+		$title = $article->find('DIV.article-cover', 0)->find('DIV.absolute', 0)->find('H1.thin', 0)->plaintext;
+		//tags
+		$tags = array();
+		foreach($article->find('DIV.tagi', 0)->find('A[rel="tag"]') as $tag_element)
+		{
+			$tags[] = trim($tag_element->plaintext);
+		}
+		$this->deleteAllDescendantsIfExist($article, 'A.kategoria');
+		$this->deleteAllDescendantsIfExist($article, 'A.interakcje');
+		$this->deleteAllDescendantsIfExist($article, 'DIV.tagi');
+		$this->deleteAllDescendantsIfExist($article, 'DIV.left-fix');
+		$this->deleteAllDescendantsIfExist($article, 'DIV.facebook-box');
+		$this->deleteAllDescendantsIfExist($article, 'DIV#discussion');
+		$this->deleteAllDescendantsIfExist($article, 'DIV.autor-mobile-img');
+		$this->deleteAllDescendantsIfExist($article, 'FIGURE.wp-caption.alignright[style="width: 170px"]');
+		$this->deleteAllDescendantsIfExist($article, 'DIV[id^="div-gpt-ad"]');
+		$this->deleteAncestorIfChildMatches($article, array('ul', 'li', 'h3', 'A[href^="https://bezprawnik.pl/"]'));
+		
+		$this->items[] = array(
+			'uri' => $url,
+			'title' => $title,
+			'timestamp' => $date,
+			'author' => $author,
+			'content' => $article,
+			'categories' => $tags
+		);
 	}
 
 	private function deleteDescendantIfExists($ancestor, $descendant_string)
