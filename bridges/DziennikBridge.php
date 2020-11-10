@@ -83,7 +83,7 @@ class DziennikBridge extends BridgeAbstract {
 			$url_articles_list = $html_articles_list->find('A.next', 0)->getAttribute('href');
 		}
 		$end_collectData = microtime(TRUE);
-		echo "<br>Whole script " . ($end_collectData - $start_collectData) . " seconds to complete.";
+//		echo "<br>Whole script " . ($end_collectData - $start_collectData) . " seconds to complete.";
 
 //		echo 'urls:<br>';
 //		echo '<pre>'.var_export($urls, true).'</pre>';
