@@ -38,6 +38,7 @@ class DziennikBridge extends BridgeAbstract {
 			),
 		)
 	);
+
 /*
 	public function getIcon()
 	{
@@ -46,22 +47,32 @@ class DziennikBridge extends BridgeAbstract {
 */
 	public function collectData()
 	{
+		$start_collectData = microtime(TRUE);
 		$url_articles_list = $this->getInput('url');
 		$GLOBALS['number_of_wanted_articles'] = $this->getInput('wanted_number_of_articles');
 
 		while (count($this->items) < $GLOBALS['number_of_wanted_articles'])
 		{
+//			$start_request = microtime(TRUE);
 			$html_articles_list = getSimpleHTMLDOM($url_articles_list);
+//			$end_request = microtime(TRUE);
+//			echo "<br>List page took " . ($end_request - $start_request) . " seconds to complete - url: $url_articles_list.";*/
 			if (0 !== count($found_urls = $html_articles_list->find('DIV.boxArticleList', 0)->find('A[href][title]')))
 			{
 				foreach($found_urls as $article_link)
 				{
-					$title = $article_link->getAttribute('title');
-					$href = $article_link->getAttribute('href');
-
-					if ($this->meetsConditions($title, $href) === TRUE && count($this->items) < $GLOBALS['number_of_wanted_articles'])
+					if (count($this->items) < $GLOBALS['number_of_wanted_articles'])
 					{
-						$this->addArticle($href);
+						$href = $article_link->getAttribute('href');
+						$href = $href.".amp";
+//						$start_request = microtime(TRUE);
+						$article_html = getSimpleHTMLDOMCached($href, (864000/(count($this->items)+1)*$GLOBALS['number_of_wanted_articles']));
+//						$end_request = microtime(TRUE);
+//						echo "<br>Article  took " . ($end_request - $start_request) . " seconds to complete - url: $href.";
+						if ($this->meetsConditions($article_html) === TRUE)
+						{
+							$this->addArticle($href, $article_html);
+						}
 					}
 				}
 			}
@@ -71,36 +82,38 @@ class DziennikBridge extends BridgeAbstract {
 			}
 			$url_articles_list = $html_articles_list->find('A.next', 0)->getAttribute('href');
 		}
+		$end_collectData = microtime(TRUE);
+		echo "<br>Whole script " . ($end_collectData - $start_collectData) . " seconds to complete.";
 
 //		echo 'urls:<br>';
 //		echo '<pre>'.var_export($urls, true).'</pre>';
 	}
 
-	private function addArticle($url_article)
+	private function addArticle($href, $article_html)
 	{
-		$article_html = getSimpleHTMLDOMCached($url_article, (864000/(count($this->items)+1)*$GLOBALS['number_of_wanted_articles']));
-		$article = $article_html->find('ARTICLE.articleDetail', 0);
-
+		$article = $article_html->find('article', 0);
 		//date
 		$article_data = $article_html->find('SCRIPT[type="application/ld+json"]', 0)->innertext;
 		$json_decoded = (array)json_decode($article_data);
 		$date = $json_decoded['datePublished'];
 		//author
-		$author = $article_html->find('SPAN[itemprop="name"]', 0)->plaintext;
+		$author = $article_html->find('SPAN.author', 0)->plaintext;
 		//title
-		$title = $article_html->find('H1.mainTitle', 0)->plaintext;
-		//tags
-		$tags = array();
-		foreach($article->find('DIV.relatedTopicWrapper', 0)->find('A') as $tag_element)
-		{
-			$tags[] = trim($tag_element->getAttribute('title'));
-		}
-
+		$title = $article_html->find('H1.headline', 0)->plaintext;
 
 		$this->deleteAllDescendantsIfExist($article, 'comment');
 		$this->deleteAllDescendantsIfExist($article, 'script');
-		$this->deleteAllDescendantsIfExist($article, 'DIV.social-container');
-		$this->deleteAllDescendantsIfExist($article, 'DIV.infor-ad');
+		$this->deleteAllDescendantsIfExist($article, 'DIV.social-box');
+		$this->deleteAllDescendantsIfExist($article, 'DIV#lightbox');
+		$this->deleteAllDescendantsIfExist($article, 'DIV#lightbox2');
+		$this->deleteAllDescendantsIfExist($article, 'DIV.adBoxTop');
+		$this->deleteAllDescendantsIfExist($article, 'DIV.adBox');
+		$this->deleteAllDescendantsIfExist($article, 'DIV.widget.video');
+		$this->deleteAllDescendantsIfExist($article, 'amp-analytics');
+		$this->deleteAllDescendantsIfExist($article, 'DIV.listArticle');
+		
+
+/*
 		$this->deleteAllDescendantsIfExist($article, 'DIV.bottomAdsBox');
 		$this->deleteAllDescendantsIfExist($article, 'DIV#googleAdsCont');
 		$this->deleteAllDescendantsIfExist($article, 'DIV#relatedTopics');
@@ -114,68 +127,74 @@ class DziennikBridge extends BridgeAbstract {
 		$this->deleteAllDescendantsIfExist($article, 'DIV.videoScrollClass');
 		$this->deleteAllDescendantsIfExist($article, 'DIV.frameWrap');
 		$this->deleteAllDescendantsIfExist($article, 'DIV#adoceangplyncgfnrlgo');
-
+*/
 		foreach($article->find('P.hyphenate  A[id][href*="/tagi/"][title]') as $paragraph)
 		{
 			$paragraph->parent->innertext = $paragraph->parent->plaintext;
 		}
-		if ($this->isArticleOpinion($title))
+		foreach($article->find('amp-img') as $ampimg)
+		{
+			$ampimg->tag = "img";
+		}
+		if ($this->isArticleOpinion($article_html))
 		{
 			$title = str_replace('[OPINIA]', '', $title);
 			$title = '[OPINIA] '.$title;
 		}
-		if (FALSE === $this->isArticleFree($url_article))
+		if (FALSE === $this->isArticleFree($article_html))
 		{
 			$title = '[PREMIUM] '.$title;
 		}
 
 		$this->items[] = array(
-			'uri' => $url_article,
+			'uri' => $href,
 			'title' => $title,
 			'timestamp' => $date,
 			'author' => $author,
-			'content' => $article,
-			'categories' => $tags
+			'content' => $article
 		);
+//		$end_addArticle = microtime(TRUE); echo "$url_article - the code took " . ($end_addArticle - $start_addArticle) . " seconds to complete.";
 	}
 
-	private function meetsConditions($title, $url_article)
+	private function meetsConditions($article_html)
 	{
 		$only_opinions = $this->getInput('tylko_opinie');
 		$only_free = $this->getInput('tylko_darmowe');
+		$isArticleFree = $this->isArticleFree($article_html);
+		$isArticleOpinion = $this->isArticleOpinion($article_html);
 
 		if(FALSE === $only_opinions && FALSE === $only_free)
 			return TRUE;
 		else if(FALSE === $only_opinions && TRUE === $only_free)
 		{
-			if ($this->isArticleFree($url_article))
+			if ($isArticleFree)
 				return TRUE;
 		}
 		else if(TRUE === $only_opinions && FALSE === $only_free)
 		{
-			if ($this->isArticleOpinion($title))
+			if ($isArticleOpinion)
 				return TRUE;
 		}
 		else if(TRUE === $only_opinions && TRUE === $only_free)
 		{
-			if ($this->isArticleOpinion($title) && $this->isArticleFree($url_article))
+			if ($isArticleOpinion && $isArticleFree)
 				return TRUE;
 		}
 		return FALSE;
 	}
 
-	private function isArticleFree($url_article)
+	private function isArticleFree($article_html)
 	{
-		$article_html = getSimpleHTMLDOMCached($url_article, (864000/(count($this->items)+1)*$GLOBALS['number_of_wanted_articles']));
-		$article = $article_html->find('ARTICLE.articleDetail', 0);
+		$article = $article_html->find('ARTICLE', 0);
 		//Jeżeli element istneje (FALSE === is_null), to jest to artykul platny
 		if (is_null($article->find('A[id][href*="edgp.gazetaprawna.pl"]', 0)))
 			return TRUE;
 		else
 			return FALSE;	
 	}
-	private function isArticleOpinion($title)
+	private function isArticleOpinion($article_html)
 	{
+		$title = $article_html->find('H1.headline', 0)->plaintext;
 		if (FALSE !== strpos($title, '[OPINIA]'))
 			return TRUE;
 		else
