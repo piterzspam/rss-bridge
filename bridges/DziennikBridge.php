@@ -47,30 +47,26 @@ class DziennikBridge extends BridgeAbstract {
 */
 	public function collectData()
 	{
-		$start_collectData = microtime(TRUE);
 		$url_articles_list = $this->getInput('url');
 		$GLOBALS['number_of_wanted_articles'] = $this->getInput('wanted_number_of_articles');
 
+		$titles = array();
 		while (count($this->items) < $GLOBALS['number_of_wanted_articles'])
 		{
-//			$start_request = microtime(TRUE);
 			$html_articles_list = getSimpleHTMLDOM($url_articles_list);
-//			$end_request = microtime(TRUE);
-//			echo "<br>List page took " . ($end_request - $start_request) . " seconds to complete - url: $url_articles_list.";*/
 			if (0 !== count($found_urls = $html_articles_list->find('DIV.boxArticleList', 0)->find('A[href][title]')))
 			{
 				foreach($found_urls as $article_link)
 				{
 					if (count($this->items) < $GLOBALS['number_of_wanted_articles'])
 					{
+						$title = $article_link->getAttribute('title');
 						$href = $article_link->getAttribute('href');
 						$href = $href.".amp";
-//						$start_request = microtime(TRUE);
 						$article_html = getSimpleHTMLDOMCached($href, (864000/(count($this->items)+1)*$GLOBALS['number_of_wanted_articles']));
-//						$end_request = microtime(TRUE);
-//						echo "<br>Article  took " . ($end_request - $start_request) . " seconds to complete - url: $href.";
-						if ($this->meetsConditions($article_html) === TRUE)
+						if ($this->meetsConditions($article_html) === TRUE && FALSE === in_array($title, $titles))
 						{
+							$titles[] = $title;
 							$this->addArticle($href, $article_html);
 						}
 					}
@@ -82,24 +78,16 @@ class DziennikBridge extends BridgeAbstract {
 			}
 			$url_articles_list = $html_articles_list->find('A.next', 0)->getAttribute('href');
 		}
-		$end_collectData = microtime(TRUE);
-//		echo "<br>Whole script " . ($end_collectData - $start_collectData) . " seconds to complete.";
-
-//		echo 'urls:<br>';
-//		echo '<pre>'.var_export($urls, true).'</pre>';
 	}
 
 	private function addArticle($href, $article_html)
 	{
 		$article = $article_html->find('article', 0);
-		//date
 		$article_data = $article_html->find('SCRIPT[type="application/ld+json"]', 0)->innertext;
-		$json_decoded = (array)json_decode($article_data);
-		$date = $json_decoded['datePublished'];
-		//author
-		$author = $article_html->find('SPAN.author', 0)->plaintext;
-		//title
-		$title = $article_html->find('H1.headline', 0)->plaintext;
+		$article_data_parsed = $this->parse_article_data(json_decode($article_data));
+		$date = $article_data_parsed["datePublished"];
+		$title = $article_data_parsed["headline"];
+		$author = $article_data_parsed["author"]["name"];
 
 		$this->deleteAllDescendantsIfExist($article, 'comment');
 		$this->deleteAllDescendantsIfExist($article, 'script');
@@ -111,40 +99,19 @@ class DziennikBridge extends BridgeAbstract {
 		$this->deleteAllDescendantsIfExist($article, 'DIV.widget.video');
 		$this->deleteAllDescendantsIfExist($article, 'amp-analytics');
 		$this->deleteAllDescendantsIfExist($article, 'DIV.listArticle');
-		
+		$this->clearParagraphsFromTaglinks($article, 'P.hyphenate', array('/dziennik\.pl\/tagi\//'));
 
-/*
-		$this->deleteAllDescendantsIfExist($article, 'DIV.bottomAdsBox');
-		$this->deleteAllDescendantsIfExist($article, 'DIV#googleAdsCont');
-		$this->deleteAllDescendantsIfExist($article, 'DIV#relatedTopics');
-		$this->deleteAllDescendantsIfExist($article, 'DIV.detailAllBoxes');
-		$this->deleteAllDescendantsIfExist($article, 'FIGURE.seeAlso');
-		$this->deleteAllDescendantsIfExist($article, 'DIV.commentsBox');
-		$this->deleteAllDescendantsIfExist($article, 'DIV.nextClick-article');
-		$this->deleteAllDescendantsIfExist($article, 'DIV.streamNews');
-		$this->deleteAllDescendantsIfExist($article, 'DIV#banner_art_video_out');
-		$this->deleteAllDescendantsIfExist($article, 'DIV#widgetStop');
-		$this->deleteAllDescendantsIfExist($article, 'DIV.videoScrollClass');
-		$this->deleteAllDescendantsIfExist($article, 'DIV.frameWrap');
-		$this->deleteAllDescendantsIfExist($article, 'DIV#adoceangplyncgfnrlgo');
-*/
-		foreach($article->find('P.hyphenate  A[id][href*="/tagi/"][title]') as $paragraph)
-		{
-			$paragraph->parent->innertext = $paragraph->parent->plaintext;
-		}
+//		foreach($article->find('P.hyphenate  A[id][href*="/tagi/"][title]') as $paragraph)
+//			$paragraph->parent->innertext = $paragraph->parent->plaintext;
 		foreach($article->find('amp-img') as $ampimg)
-		{
 			$ampimg->tag = "img";
-		}
 		if ($this->isArticleOpinion($article_html))
 		{
 			$title = str_replace('[OPINIA]', '', $title);
 			$title = '[OPINIA] '.$title;
 		}
 		if (FALSE === $this->isArticleFree($article_html))
-		{
 			$title = '[PREMIUM] '.$title;
-		}
 
 		$this->items[] = array(
 			'uri' => $href,
@@ -153,8 +120,37 @@ class DziennikBridge extends BridgeAbstract {
 			'author' => $author,
 			'content' => $article
 		);
-//		$end_addArticle = microtime(TRUE); echo "$url_article - the code took " . ($end_addArticle - $start_addArticle) . " seconds to complete.";
 	}
+
+	private function clearParagraphsFromTaglinks($article, $paragrapghSearchString, $regexArray)
+	{
+		foreach($article->find($paragrapghSearchString) as $paragraph)
+			foreach($paragraph->find('A') as $a_element)
+				foreach($regexArray as $regex)
+					if(1 === preg_match($regex, $a_element->href))
+						$a_element->outertext = $a_element->plaintext;
+	}
+
+	
+	private function parse_article_data($article_data)
+	{
+		if (TRUE === is_object($article_data))
+		{
+			$article_data = (array)$article_data;
+			foreach ($article_data as $key => $value)
+				$article_data[$key] = $this->parse_article_data($value);
+			return $article_data;
+		}
+		else if (TRUE === is_array($article_data))
+		{
+			foreach ($article_data as $key => $value)
+				$article_data[$key] = $this->parse_article_data($value);
+			return $article_data;
+		}
+		else
+			return $article_data;
+	}
+	
 
 	private function meetsConditions($article_html)
 	{
