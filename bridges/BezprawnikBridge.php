@@ -43,6 +43,7 @@ class BezprawnikBridge extends BridgeAbstract {
 					if (count($this->items) < $GLOBALS['number_of_wanted_articles'])
 					{
 						$url_article = $article__link->getAttribute('href');
+						$url_article = $url_article."amp/";
 						$this->addArticle($url_article);
 					}
 					else
@@ -64,44 +65,24 @@ class BezprawnikBridge extends BridgeAbstract {
 	private function addArticle($url_article)
 	{
 		$article_html = getSimpleHTMLDOMCached($url_article, (864000/(count($this->items)+1)*$GLOBALS['number_of_wanted_articles']));
-		if (FALSE === is_null($article_html->find('ARTICLE', 0)))
-		{
-			$article = $article_html->find('ARTICLE', 0);
-		}
-		else
-		{
-			$this->items[] = array(
-				'uri' => $url_article,
-				'title' => 'ERROR - html->find(ARTICLE, 0) jest puste',
-				'timestamp' => '',
-				'author' => '',
-				'content' => '',
-				'categories' => ''
-			);
-		}
-		//author
-		$author = $article->find('P.autor-mobile', 0)->plaintext;
-		//date
-		$date = $article->find('DIV.article-cover', 0)->find('DIV.absolute', 0)->find('SPAN', 0)->plaintext;
-		//title
-		$title = $article->find('DIV.article-cover', 0)->find('DIV.absolute', 0)->find('H1.thin', 0)->plaintext;
-		//tags
-		$tags = array();
-		foreach($article->find('DIV.tagi', 0)->find('A[rel="tag"]') as $tag_element)
-		{
-			$tags[] = trim($tag_element->plaintext);
-		}
-		$this->deleteAllDescendantsIfExist($article, 'A.kategoria');
-		$this->deleteAllDescendantsIfExist($article, 'A.interakcje');
-		$this->deleteAllDescendantsIfExist($article, 'DIV.tagi');
-		$this->deleteAllDescendantsIfExist($article, 'DIV.left-fix');
-		$this->deleteAllDescendantsIfExist($article, 'DIV.facebook-box');
-		$this->deleteAllDescendantsIfExist($article, 'DIV#discussion');
-		$this->deleteAllDescendantsIfExist($article, 'DIV.autor-mobile-img');
-		$this->deleteAllDescendantsIfExist($article, 'FIGURE.wp-caption.alignright[style="width: 170px"]');
-		$this->deleteAllDescendantsIfExist($article, 'DIV[id^="div-gpt-ad"]');
-		$this->deleteAncestorIfChildMatches($article, array('ul', 'li', 'h3', 'A[href^="https://bezprawnik.pl/"]'));
+		$article = $article_html->find('article', 0);
+		$article_data = $article_html->find('SCRIPT[type="application/ld+json"]', 0)->innertext;
+		$article_data_parsed = $this->parse_article_data(json_decode($article_data));
+//		$title = $article_data_parsed["@graph"][2]["name"];
+//		$date = $article_data_parsed["@graph"][2]["datePublished"];
+		$author = $article_data_parsed["@graph"][3]["name"];
+		$title = $article_html->find('META[property="og:title"]', 0)->content;
+		$date = $article_html->find('META[property="article:published_time]', 0)->content;
 		
+		$tags = array();
+		foreach($article_html->find('META[property="article:tag"]') as $tag_element) $tags[] = $tag_element->content;
+		$this->deleteAllDescendantsIfExist($article, 'comment');
+		$this->deleteAllDescendantsIfExist($article, 'amp-ad');
+		$this->deleteAllDescendantsIfExist($article, 'FIGURE[id^="attachment_"]');
+		$this->deleteAllDescendantsIfExist($article, 'FOOTER');
+		$this->clearParagraphsFromTaglinks($article, 'P', array('/bezprawnik.pl\/tag\//'));
+		foreach($article->find('amp-img') as $ampimg) $ampimg->tag = "img";
+
 		$this->items[] = array(
 			'uri' => $url_article,
 			'title' => $title,
@@ -110,6 +91,35 @@ class BezprawnikBridge extends BridgeAbstract {
 			'content' => $article,
 			'categories' => $tags
 		);
+	}
+
+	
+	private function parse_article_data($article_data)
+	{
+		if (TRUE === is_object($article_data))
+		{
+			$article_data = (array)$article_data;
+			foreach ($article_data as $key => $value)
+				$article_data[$key] = $this->parse_article_data($value);
+			return $article_data;
+		}
+		else if (TRUE === is_array($article_data))
+		{
+			foreach ($article_data as $key => $value)
+				$article_data[$key] = $this->parse_article_data($value);
+			return $article_data;
+		}
+		else
+			return $article_data;
+	}
+
+	private function clearParagraphsFromTaglinks($article, $paragrapghSearchString, $regexArray)
+	{
+		foreach($article->find($paragrapghSearchString) as $paragraph)
+			foreach($paragraph->find('A') as $a_element)
+				foreach($regexArray as $regex)
+					if(1 === preg_match($regex, $a_element->href))
+						$a_element->outertext = $a_element->plaintext;
 	}
 
 	private function deleteDescendantIfExists($ancestor, $descendant_string)
