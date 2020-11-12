@@ -61,10 +61,12 @@ class ForsalBridge extends BridgeAbstract {
 					{
 						//link to articles
 						$url_article_link = $a_element->href;
-						if ($this->meetsConditions($url_article_link) === TRUE && count($this->items) < $GLOBALS['number_of_wanted_articles'])
+						$url_article_link = $url_article_link.".amp";
+						$article_html = getSimpleHTMLDOMCached($url_article_link, (864000/(count($this->items)+1)*$GLOBALS['number_of_wanted_articles']));
+						if (TRUE === $this->meetsConditions($article_html))
 						{
 //							echo "<br>url_article_link: $url_article_link";
-							$this->addArticle($url_article_link);
+							$this->addArticle($url_article_link, $article_html);
 						}
 					}
 				}
@@ -77,122 +79,125 @@ class ForsalBridge extends BridgeAbstract {
 		}
 	}
 
-	private function addArticle($url_article_link)
+	private function hex_dump($data, $newline="\n")
 	{
-		$article_html = getSimpleHTMLDOMCached($url_article_link, (864000/(count($this->items)+1)*$GLOBALS['number_of_wanted_articles']));
-		$article = $article_html->find('ARTICLE.articleDetail', 0);
+		static $from = '';
+		static $to = '';
+	
+		static $width = 16; # number of bytes per line
 
-		//author
-		$author = $article->find('SPAN.name', 0)->plaintext;
-		//title
-		$title = $article->find('H1.mainTitle', 0)->plaintext;
-		//title
-		if ($this->isArticleOpinion($url_article_link))
+		static $pad = '.'; # padding for non-visible characters
+
+		if ($from==='')
 		{
-			$title = str_replace('[OPINIA]', '', $title);
-			$title = '[OPINIA] '.$title;
+			for ($i=0; $i<=0xFF; $i++)
+			{
+				$from .= chr($i);
+				$to .= ($i >= 0x20 && $i <= 0x7E) ? chr($i) : $pad;
+			}
 		}
-		if ($this->isArticleFree($url_article_link))
+
+		$hex = str_split(bin2hex($data), $width*2);
+		$chars = str_split(strtr($data, $from, $to), $width);
+
+		$offset = 0;
+		foreach ($hex as $i => $line)
+		{
+			echo sprintf('%6X',$offset).' : '.implode(' ', str_split($line,2)) . ' [' . $chars[$i] . ']' . $newline;
+			$offset += $width;
+		}
+	}
+	private function addArticle($url_article_link, $article_html)
+	{
+		$article = $article_html->find('article', 0);
+		$article_data = $article_html->find('SCRIPT[type="application/ld+json"]', 0)->innertext;
+		$article_data = str_replace('"width": ,'."\n", '"width": "",'."\n", $article_data);
+		$article_data = str_replace('"height": '."\n", '"height": ""'."\n", $article_data);
+
+		$article_data_parsed = $this->parse_article_data(json_decode($article_data));
+		$date = trim($article_data_parsed["datePublished"]);
+		$title = trim($article_data_parsed["headline"]);
+		$author = trim($article_data_parsed["author"]["name"]);
+
+		if ($this->isArticleOpinion($article_html))
+			$title = '[OPINIA] '.str_replace('[OPINIA]', '', $title);
+		if ($this->isArticleFree($article_html))
 			$title = '[FREE] '.$title;
 		else
 			$title = '[PREMIUM] '.$title;
-		//date
-		$article_data = $article_html->find('SCRIPT[type="application/ld+json"]', 0)->innertext;
-		$json_decoded = (array)json_decode($article_data);
-		$date = $json_decoded['datePublished'];
-		//tags
-		$tags = array();
-		if (FALSE === is_null($article->find('DIV#relatedTopics', 0)))
-			foreach($article->find('DIV#relatedTopics', 0)->find('A') as $tag_element)
-				$tags[] = trim($tag_element->title);
+		foreach($article->find('amp-img') as $ampimg)
+			$ampimg->tag = "img";
 
 		$this->deleteAllDescendantsIfExist($article, 'comment');
-		$this->deleteAllDescendantsIfExist($article, 'script');
-		$this->deleteAllDescendantsIfExist($article, 'DIV.social-container');
+		$this->deleteAllDescendantsIfExist($article, 'DIV.social-box');
+		$this->deleteAllDescendantsIfExist($article, 'amp-image-lightbox');
+		$this->deleteAllDescendantsIfExist($article, 'DIV.adBoxTop');
+		$this->deleteAllDescendantsIfExist($article, 'DIV.adBox');
 		$this->deleteAllDescendantsIfExist($article, 'DIV.widget.video');
-		$this->deleteAllDescendantsIfExist($article, 'DIV.inforAdsRectSrod');
-		$this->deleteAllDescendantsIfExist($article, 'DIV.widgetStop');
-		$this->deleteAllDescendantsIfExist($article, 'DIV.bottomAdsBox');
-		$this->deleteAllDescendantsIfExist($article, 'DIV#relatedTopics');
-		$this->deleteAllDescendantsIfExist($article, 'DIV.detailAllBoxes');
-		$this->deleteAllDescendantsIfExist($article, 'DIV.infor-ad');
-		$this->deleteAllDescendantsIfExist($article, 'DIV.commentsBox');
-		$this->deleteAllDescendantsIfExist($article, 'DIV.plistaDetailDesktop');
-		$this->deleteAllDescendantsIfExist($article, 'DIV.streamNews');
-		$this->deleteAllDescendantsIfExist($article, 'DIV.frameWrap');
-		$this->deleteAllDescendantsIfExist($article, 'DIV#adoceangplwdqlgnngfg');
-		$this->deleteAllDescendantsIfExist($article, 'DIV.afterDetailModules');
-		$this->deleteAllDescendantsIfExist($article, 'DIV.widgetStop');
-		$this->deleteAllDescendantsIfExist($article, 'DIV#banner_art_video_out');
+		$this->clearParagraphsFromTaglinks($article, 'P.hyphenate', array('/forsal\.pl\/tagi\//'));
 
-		foreach($article->find('IMG[data-original][src^="data:image"]') as $img)
-		{
-			$img->src=$img->getAttribute('data-original');
-		}
-
-		foreach($article->find('P') as $paragraph)
-		{
-			if (FALSE === is_null($descendant = $paragraph->find('A[href*="forsal.pl/tagi/"]', 0)))
-			{
-				$paragraph->innertext = $paragraph->plaintext;
-				continue;
-			}
-			else if (FALSE === is_null($descendant = $paragraph->find('A[href*="/tematy/"]', 0)))
-			{
-				$paragraph->innertext = $paragraph->plaintext;
-				continue;
-			}
-			else if (FALSE === is_null($a_elem = $paragraph->find('A', 0)))
-			{
-				$href = $a_elem->getAttribute('href');
-				if (preg_match("/.*forsal\.pl\/[a-z]+$/", $href))
-				{
-					$paragraph->innertext = $paragraph->plaintext;
-					continue;
-				}
-			}
-		}
 		
 		$this->items[] = array(
 			'uri' => $url_article_link,
 			'title' => $title,
 			'timestamp' => $date,
 			'author' => $author,
-			'content' => $article,
-			'categories' => $tags
+			'content' => $article
 		);
 	}
+	private function clearParagraphsFromTaglinks($article, $paragrapghSearchString, $regexArray)
+	{
+		foreach($article->find($paragrapghSearchString) as $paragraph)
+			foreach($paragraph->find('A') as $a_element)
+				foreach($regexArray as $regex)
+					if(1 === preg_match($regex, $a_element->href))
+						$a_element->outertext = $a_element->plaintext;
+	}
 
-	private function meetsConditions($url_article)
+	
+	private function parse_article_data($article_data)
+	{
+		if (TRUE === is_object($article_data))
+		{
+			$article_data = (array)$article_data;
+			foreach ($article_data as $key => $value)
+				$article_data[$key] = $this->parse_article_data($value);
+			return $article_data;
+		}
+		else if (TRUE === is_array($article_data))
+		{
+			foreach ($article_data as $key => $value)
+				$article_data[$key] = $this->parse_article_data($value);
+			return $article_data;
+		}
+		else
+			return $article_data;
+	}
+
+	private function meetsConditions($article_html)
 	{
 		$only_opinions = $this->getInput('tylko_opinie');
 		$only_free = $this->getInput('tylko_darmowe');
-		$isArticleFree = $this->isArticleFree($url_article);
-		$isArticleOpinion = $this->isArticleOpinion($url_article);
+		$isArticleFree = $this->isArticleFree($article_html);
+		$isArticleOpinion = $this->isArticleOpinion($article_html);
 
 		if(FALSE === $only_opinions && FALSE === $only_free)
 			return TRUE;
 		else if(FALSE === $only_opinions && TRUE === $only_free)
-		{
 			if ($isArticleFree)
 				return TRUE;
-		}
 		else if(TRUE === $only_opinions && FALSE === $only_free)
-		{
 			if ($isArticleOpinion)
 				return TRUE;
-		}
 		else if(TRUE === $only_opinions && TRUE === $only_free)
-		{
 			if ($isArticleOpinion && $isArticleFree)
 				return TRUE;
-		}
-		return FALSE;
+		else
+			return FALSE;
 	}
 
-	private function isArticleFree($url_article)
+	private function isArticleFree($article_html)
 	{
-		$article_html = getSimpleHTMLDOMCached($url_article, (864000/(count($this->items)+1)*$GLOBALS['number_of_wanted_articles']));
 		//Jeżeli element istneje (FALSE === is_null), to jest to artykul platny
 		$premium_element = $article_html->find('A[id][href*="edgp.gazetaprawna.pl"]', 0);
 		if (FALSE === is_null($premium_element))
@@ -201,18 +206,9 @@ class ForsalBridge extends BridgeAbstract {
 			return TRUE;
 	}
 
-	private function isArticleOpinion($url_article)
+	private function isArticleOpinion($article_html)
 	{
-		$article_html = getSimpleHTMLDOMCached($url_article, (864000/(count($this->items)+1)*$GLOBALS['number_of_wanted_articles']));
-//		echo "<br><br>HEADER:<br>".$article_html->find('HEADER', 0);
-//		echo "<br><br>url_article:<br>".$url_article;
-//		echo "<br><br>mainTitle:<br>".$article_html->find('H1.mainTitle', 0);
-//		echo "<br><br>mainTitle:<br>".$article_html->find('H1', 0);
-//		echo "<br><br>mainTitle:<br>".$article_html->find('H1[data-scroll="tytul"]', 0);
-//		echo "<br><br>HEADER.articleTop:<br>".$article_html->find('HEADER.articleTop', 0);
-//		echo "<br><br>article_html:<br>".$article_html;
-
-		$title = $article_html->find('H1.mainTitle', 0)->plaintext;
+		$title = $article_html->find('H1.headline', 0)->plaintext;
 		if (FALSE !== strpos($title, '[OPINIA]'))
 			return TRUE;
 		else
