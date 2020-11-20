@@ -63,6 +63,8 @@ class ForsalBridge extends BridgeAbstract {
 						$url_article_link = $a_element->href;
 						$url_article_link = $url_article_link.".amp";
 						$article_html = getSimpleHTMLDOMCached($url_article_link, (864000/(count($this->items)+1)*$GLOBALS['number_of_wanted_articles']));
+						$GLOBALS['is_article_free'] = $this->isArticleFree($article_html);
+						$GLOBALS['is_article_opinion'] = $this->isArticleOpinion($article_html);
 						if (TRUE === $this->meetsConditions($article_html))
 						{
 //							echo "<br>url_article_link: $url_article_link";
@@ -119,15 +121,21 @@ class ForsalBridge extends BridgeAbstract {
 		$title = trim($article_data_parsed["headline"]);
 		$author = trim($article_data_parsed["author"]["name"]);
 
-		if ($this->isArticleOpinion($article_html))
+		if ($GLOBALS['is_article_opinion'])
 			$title = '[OPINIA] '.str_replace('[OPINIA]', '', $title);
-		if ($this->isArticleFree($article_html))
+
+		if ($GLOBALS['is_article_free'])
 			$title = '[FREE] '.$title;
 		else
 			$title = '[PREMIUM] '.$title;
 		foreach($article->find('amp-img') as $ampimg)
 			$ampimg->tag = "img";
 
+		foreach($article->find('amp-img, img') as $photo_element)
+		{
+			if(isset($photo_element->width)) $photo_element->width = NULL;
+			if(isset($photo_element->height)) $photo_element->height = NULL;
+		}
 		$this->deleteAllDescendantsIfExist($article, 'comment');
 		$this->deleteAllDescendantsIfExist($article, 'DIV.social-box');
 		$this->deleteAllDescendantsIfExist($article, 'amp-image-lightbox');
@@ -136,7 +144,7 @@ class ForsalBridge extends BridgeAbstract {
 		$this->deleteAllDescendantsIfExist($article, 'DIV.widget.video');
 		$this->clearParagraphsFromTaglinks($article, 'P.hyphenate', array('/forsal\.pl\/tagi\//'));
 
-		
+
 		$this->items[] = array(
 			'uri' => $url_article_link,
 			'title' => $title,
@@ -178,19 +186,17 @@ class ForsalBridge extends BridgeAbstract {
 	{
 		$only_opinions = $this->getInput('tylko_opinie');
 		$only_free = $this->getInput('tylko_darmowe');
-		$isArticleFree = $this->isArticleFree($article_html);
-		$isArticleOpinion = $this->isArticleOpinion($article_html);
 
 		if(FALSE === $only_opinions && FALSE === $only_free)
 			return TRUE;
 		else if(FALSE === $only_opinions && TRUE === $only_free)
-			if ($isArticleFree)
+			if ($GLOBALS['is_article_free'])
 				return TRUE;
 		else if(TRUE === $only_opinions && FALSE === $only_free)
-			if ($isArticleOpinion)
+			if ($GLOBALS['is_article_opinion'])
 				return TRUE;
 		else if(TRUE === $only_opinions && TRUE === $only_free)
-			if ($isArticleOpinion && $isArticleFree)
+			if ($GLOBALS['is_article_opinion'] && $GLOBALS['is_article_free'])
 				return TRUE;
 		else
 			return FALSE;
@@ -199,7 +205,7 @@ class ForsalBridge extends BridgeAbstract {
 	private function isArticleFree($article_html)
 	{
 		//Jeżeli element istneje (FALSE === is_null), to jest to artykul platny
-		$premium_element = $article_html->find('A[id][href*="edgp.gazetaprawna.pl"]', 0);
+		$premium_element = $article_html->find('A[href*="edgp.gazetaprawna.pl"]', 0);
 		if (FALSE === is_null($premium_element))
 			return FALSE;
 		else
