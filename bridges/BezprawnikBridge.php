@@ -77,12 +77,19 @@ class BezprawnikBridge extends BridgeAbstract {
 		$tags = array();
 		foreach($article_html->find('META[property="article:tag"]') as $tag_element) $tags[] = $tag_element->content;
 		$this->deleteAllDescendantsIfExist($article, 'comment');
+		$this->deleteAllDescendantsIfExist($article, 'noscript');
 		$this->deleteAllDescendantsIfExist($article, 'amp-ad');
 		$this->deleteAllDescendantsIfExist($article, 'FIGURE[id^="attachment_"]');
 		$this->deleteAllDescendantsIfExist($article, 'FOOTER');
+		$this->deleteAllDescendantsIfExist($article, 'DIV.hide-for-medium.photobg');
 		$this->clearParagraphsFromTaglinks($article, 'P', array('/bezprawnik.pl\/tag\//'));
 		foreach($article->find('amp-img') as $ampimg) $ampimg->tag = "img";
-
+		foreach($article->find('amp-img, img') as $photo_element)
+		{
+			if(isset($photo_element->width)) $photo_element->width = NULL;
+			if(isset($photo_element->height)) $photo_element->height = NULL;
+			if(isset($photo_element->srcset)) $photo_element->srcset = NULL;
+		}
 		$this->items[] = array(
 			'uri' => $url_article,
 			'title' => $title,
