@@ -22,6 +22,13 @@ class GazetaprawnaBridge extends BridgeAbstract {
 				'type' => 'text',
 				'required' => true
 			),
+			'tylko_opinie' => array
+			(
+				'name' => 'Tylko opinie',
+				'type' => 'checkbox',
+				'required' => false,
+				'title' => 'Tylko opinie'
+			),
 			'tylko_darmowe' => array
 			(
 				'name' => 'Tylko darmowe',
@@ -51,10 +58,6 @@ class GazetaprawnaBridge extends BridgeAbstract {
 			{
 				foreach($found_urls as $h3_element)
 				{
-					if ($h3_element->class === "gold")
-						$isPremium = TRUE;
-					else
-						$isPremium = FALSE;
 					if (count($this->items) < $GLOBALS['number_of_wanted_articles'])
 					{
 						//link to articles
@@ -62,10 +65,11 @@ class GazetaprawnaBridge extends BridgeAbstract {
 						$url_article_link = $a_element->href;
 						$amp_url = preg_replace('/.*\/artykuly\/(.*)/', "https://www.gazetaprawna.pl/amp/$1", $url_article_link);
 //						echo "amp_url: $amp_url<br>";
-						$article_html = getSimpleHTMLDOMCached($amp_url, (864000/(count($this->items)+1)*$GLOBALS['number_of_wanted_articles']));
-						if ($this->meetsConditions($article_html) === TRUE && count($this->items) < $GLOBALS['number_of_wanted_articles'])
+						$GLOBALS['is_article_free'] = $this->isArticleFree($h3_element);
+						$GLOBALS['is_article_opinion'] = $this->isArticleOpinion($h3_element);
+						if ($this->meetsConditions() === TRUE && count($this->items) < $GLOBALS['number_of_wanted_articles'])
 						{
-							$this->addArticle($article_html, $amp_url, $isPremium);
+							$this->addArticle($amp_url);
 						}
 					}
 				}
@@ -78,8 +82,10 @@ class GazetaprawnaBridge extends BridgeAbstract {
 		}
 	}
 
-	private function addArticle($article_html, $url, $isPremium)
+	private function addArticle($amp_url)
 	{
+		$article_html = getSimpleHTMLDOMCached($amp_url, (864000/(count($this->items)+1)*$GLOBALS['number_of_wanted_articles']));
+
 //		echo "url_article_link: $url<br>";
 		$article = $article_html->find('article', 0);
 		$article_data = $article_html->find('SCRIPT[type="application/ld+json"]', 0)->innertext;
@@ -87,10 +93,14 @@ class GazetaprawnaBridge extends BridgeAbstract {
 		$date = trim($article_data_parsed["datePublished"]);
 		$title = trim($article_data_parsed["headline"]);
 		$author = trim($article_data_parsed["author"]["0"]["name"]);
-		if ($isPremium)
-			$title = '[PREMIUM] '.$title;
-		else
+
+		if ($GLOBALS['is_article_opinion'])
+			$title = '[OPINIA] '.str_replace('[OPINIA]', '', $title);
+
+		if ($GLOBALS['is_article_free'])
 			$title = '[FREE] '.$title;
+		else
+			$title = '[PREMIUM] '.$title;
 //		echo "<br><br><br>article_data_parsed:<pre>";var_dump($article_data_parsed);echo "</pre>";
 
 		//tags
@@ -112,8 +122,14 @@ class GazetaprawnaBridge extends BridgeAbstract {
 		foreach($article->find('amp-img') as $ampimg)
 			$ampimg->tag = "img";
 
+		foreach($article->find('amp-img, img') as $photo_element)
+		{
+			if(isset($photo_element->width)) $photo_element->width = NULL;
+			if(isset($photo_element->height)) $photo_element->height = NULL;
+		}
+
 		$this->items[] = array(
-			'uri' => $url,
+			'uri' => $amp_url,
 			'title' => $title,
 			'timestamp' => $date,
 			'author' => $author,
@@ -154,22 +170,56 @@ class GazetaprawnaBridge extends BridgeAbstract {
 		}
 	}
 
-	private function meetsConditions($article_html)
+	private function meetsConditions()
 	{
+		$only_opinions = $this->getInput('tylko_opinie');
+		if (TRUE === is_null($only_opinions)) $only_opinions = FALSE;
 		$only_free = $this->getInput('tylko_darmowe');
-		$isArticleFree = $this->isArticleFree($article_html);
+		if (TRUE === is_null($only_free)) $only_free = FALSE;
 
-		if(FALSE === $only_free)
+		if(FALSE === $only_opinions && FALSE === $only_free)
+		{
 			return TRUE;
-		else if(TRUE === $only_free && TRUE === $isArticleFree)
-			return TRUE;
-		return FALSE;
+		}
+		else if(FALSE === $only_opinions && TRUE === $only_free)
+		{
+			if ($GLOBALS['is_article_free'])
+				return TRUE;
+		}
+		else if(TRUE === $only_opinions && FALSE === $only_free)
+		{
+			if ($GLOBALS['is_article_opinion'])
+				return TRUE;
+		}
+		else if(TRUE === $only_opinions && TRUE === $only_free)
+		{
+			if ($GLOBALS['is_article_opinion'] && $GLOBALS['is_article_free'])
+				return TRUE;
+		}
+		else
+		{
+			return FALSE;
+		}
 	}
-	private function isArticleFree($article_html)
+
+	private function isArticleFree($h3_element)
 	{
-		return TRUE;
+		if ($h3_element->class === "open")
+			return TRUE;
+		else if ($h3_element->class === "gold")
+			return FALSE;
+		else 
+			return FALSE;
 	}
 
+	private function isArticleOpinion($h3_element)
+	{
+		$title = $h3_element->plaintext;
+		if (FALSE !== strpos($title, '[OPINIA]'))
+			return TRUE;
+		else
+			return FALSE;
+	}
 	private function deleteDescendantIfExists($ancestor, $descendant_string)
 	{
 		if (FALSE === is_null($descendant = $ancestor->find($descendant_string, 0)))
