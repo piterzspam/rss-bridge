@@ -64,7 +64,9 @@ class DziennikBridge extends BridgeAbstract {
 						$href = $article_link->getAttribute('href');
 						$href = $href.".amp";
 						$article_html = getSimpleHTMLDOMCached($href, (864000/(count($this->items)+1)*$GLOBALS['number_of_wanted_articles']));
-						if ($this->meetsConditions($article_html) === TRUE && FALSE === in_array($title, $titles))
+						$GLOBALS['is_article_free'] = $this->isArticleFree($article_html);
+						$GLOBALS['is_article_opinion'] = $this->isArticleOpinion($article_html);
+						if ($this->meetsConditions() === TRUE && FALSE === in_array($title, $titles))
 						{
 							$titles[] = $title;
 							$this->addArticle($href, $article_html);
@@ -85,9 +87,10 @@ class DziennikBridge extends BridgeAbstract {
 		$article = $article_html->find('article', 0);
 		$article_data = $article_html->find('SCRIPT[type="application/ld+json"]', 0)->innertext;
 		$article_data_parsed = $this->parse_article_data(json_decode($article_data));
-		$date = $article_data_parsed["datePublished"];
-		$title = $article_data_parsed["headline"];
-		$author = $article_data_parsed["author"]["name"];
+		
+		$date = trim($article_data_parsed["datePublished"]);
+		$title = trim($article_data_parsed["headline"]);
+		$author = trim($article_data_parsed["author"]["name"]);
 
 		$this->deleteAllDescendantsIfExist($article, 'comment');
 		$this->deleteAllDescendantsIfExist($article, 'script');
@@ -101,16 +104,23 @@ class DziennikBridge extends BridgeAbstract {
 		$this->deleteAllDescendantsIfExist($article, 'DIV.listArticle');
 		$this->clearParagraphsFromTaglinks($article, 'P.hyphenate', array('/dziennik\.pl\/tagi\//'));
 
-//		foreach($article->find('P.hyphenate  A[id][href*="/tagi/"][title]') as $paragraph)
-//			$paragraph->parent->innertext = $paragraph->parent->plaintext;
 		foreach($article->find('amp-img') as $ampimg)
 			$ampimg->tag = "img";
-		if ($this->isArticleOpinion($article_html))
+		foreach($article->find('amp-img, img') as $photo_element)
+		{
+			if(isset($photo_element->width)) $photo_element->width = NULL;
+			if(isset($photo_element->height)) $photo_element->height = NULL;
+		}
+
+		if ($GLOBALS['is_article_opinion'])
 		{
 			$title = str_replace('[OPINIA]', '', $title);
 			$title = '[OPINIA] '.$title;
 		}
-		if (FALSE === $this->isArticleFree($article_html))
+
+		if ($GLOBALS['is_article_free'])
+			$title = '[FREE] '.$title;
+		else
 			$title = '[PREMIUM] '.$title;
 
 		$this->items[] = array(
@@ -152,31 +162,36 @@ class DziennikBridge extends BridgeAbstract {
 	}
 	
 
-	private function meetsConditions($article_html)
+	private function meetsConditions()
 	{
 		$only_opinions = $this->getInput('tylko_opinie');
+		if (TRUE === is_null($only_opinions)) $only_opinions = FALSE;
 		$only_free = $this->getInput('tylko_darmowe');
-		$isArticleFree = $this->isArticleFree($article_html);
-		$isArticleOpinion = $this->isArticleOpinion($article_html);
+		if (TRUE === is_null($only_free)) $only_free = FALSE;
 
 		if(FALSE === $only_opinions && FALSE === $only_free)
+		{
 			return TRUE;
+		}
 		else if(FALSE === $only_opinions && TRUE === $only_free)
 		{
-			if ($isArticleFree)
+			if ($GLOBALS['is_article_free'])
 				return TRUE;
 		}
 		else if(TRUE === $only_opinions && FALSE === $only_free)
 		{
-			if ($isArticleOpinion)
+			if ($GLOBALS['is_article_opinion'])
 				return TRUE;
 		}
 		else if(TRUE === $only_opinions && TRUE === $only_free)
 		{
-			if ($isArticleOpinion && $isArticleFree)
+			if ($GLOBALS['is_article_opinion'] && $GLOBALS['is_article_free'])
 				return TRUE;
 		}
-		return FALSE;
+		else
+		{
+			return FALSE;
+		}
 	}
 
 	private function isArticleFree($article_html)
