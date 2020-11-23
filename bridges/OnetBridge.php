@@ -26,7 +26,7 @@ class OnetBridge extends BridgeAbstract {
 	);
 
 	
-		public function collectData()
+	public function collectData()
 	{
 		$url_articles_list = $this->getInput('url');
 		$url_articles_list = preg_replace('/(.*\/autorzy\/[a-z]+-[a-z]+).*/', '$1', $url_articles_list);
@@ -106,6 +106,7 @@ class OnetBridge extends BridgeAbstract {
 //https://wiadomosci-onet-pl.cdn.ampproject.org/v/s/wiadomosci.onet.pl/tylko-w-onecie/wybory-w-usa-2020-andrzej-stankiewicz-dzis-jest-czas-wielkiej-smuty-w-pis/fcktclw.amp?amp_js_v=0.1
 //Gliński tłumaczy się kryteriami obiektywnymi.
 			$this->clearParagraphsFromTaglinks($article, 'P.hyphenate', array('/onet\.pl\/[^\/]*$/'));
+			$this->deleteAncestorIfChildMatches($article, array('ul', 'li', 'A[href*="onet.pl"][target="_top"]'));
 			
 			foreach($article->find('P.hyphenate') as $paragraph)
 			{
@@ -117,30 +118,16 @@ class OnetBridge extends BridgeAbstract {
 			{
 				$this->deleteAncestorIfContainsText($li, 'Więcej informacji i podcastów znajdziesz na stronie głównej Onet.pl');
 			}
-			$this->fromatAampLinks($article);
+			$this->formatAampLinks($article);
 
-			foreach($article->find('amp-iframe') as $amp_iframe)
-			{
-				if(isset($amp_iframe->src))
-				{
-					$src = $amp_iframe->src;
-					$amp_iframe->outertext = '<br><a href='.$src.'>'
-					.'<strong>'
-					."Ramka - ".$src
-					.'</strong>'
-					.'<br><br>';
-//					$amp_iframe->width = NULL;
-//				<a href=https://audio.onet.pl/ id=9f265bf6-a07c-432e-8647-3c18ab80ff46 target=_top><strong>audio.onet.pl</strong></a>
 
-				}
-			}
 /*			foreach ($article->find('A') as $a_element)
 			{
 				echo htmlspecialchars($a_element->outertext)."<br><br>";
 			}
 */
 			$this->items[] = array(
-				'uri' => $amp_url,
+				'uri' => $url_article_link,
 				'title' => $title,
 				'timestamp' => $date,
 				'author' => $author,
@@ -150,41 +137,57 @@ class OnetBridge extends BridgeAbstract {
 //		echo "<br>Wszystkie $all_articles_counter artykulow zajelo $all_articles_time, <br>średnio ".$all_articles_time/$all_articles_counter ."<br>";
 	}
 
-	private function fromatAampLinks($article)
+	private function formatAampLinks($article)
 	{
+		foreach($article->find('amp-iframe') as $amp_iframe)
+		{
+			if(FALSE === is_null($src = ($amp_iframe->getAttribute('src'))))
+			{
+				$src = $amp_iframe->src;
+				$amp_iframe->outertext = 
+				'<strong><br>'
+				.'<a href='.$src.'>'
+				."Ramka - ".$src.'<br>'
+				.'</a>'
+				.'<br></strong>';
+			}
+		}
 		foreach($article->find('amp-twitter') as $amp_twitter)
 		{
 			if(FALSE === is_null($data_tweetid = ($amp_twitter->getAttribute('data-tweetid'))))
 			{
 				$twitter_url = 'https://twitter.com/anyuser/status/'.$data_tweetid;
-				$amp_twitter->outertext = $this->getTwitterElement($twitter_url);
+				$twitter_proxy_url = $this->redirectUrl($twitter_url);
+				$amp_twitter->outertext = 
+					'<strong><br>'
+					.'<a href='.$twitter_url.'>'
+					."Ramka - ".$twitter_url.'<br>'
+					.'</a>'
+					.'<a href='.$twitter_proxy_url.'>'
+					."Ramka - ".$twitter_proxy_url.'<br>'
+					.'</a>'
+					.'<br></strong>';
+			}
+		}
+		foreach($article->find('amp-youtube') as $amp_youtube)
+		{
+			if(FALSE === is_null($data_videoid = ($amp_youtube->getAttribute('data-videoid'))))
+			{
+				$youtube_url = 'https://www.youtube.com/watch?v='.$data_videoid;
+				$youtue_proxy_url = $this->redirectUrl($youtube_url);
+				$amp_youtube->outertext = 
+					'<strong><br>'
+					.'<a href='.$youtube_url.'>'
+					."Ramka - ".$youtube_url.'<br>'
+					.'</a>'
+					.'<a href='.$youtue_proxy_url.'>'
+					."Ramka - ".$youtue_proxy_url.'<br>'
+					.'</a>'
+					.'<br></strong>';
 			}
 		}
 	}
 
-	private function getTwitterElement($twitter_url)
-	{
-		$twitter_proxy = 'nitter.net';
-		$twitter_url = str_replace('twitter.com', $twitter_proxy, $twitter_url);
-		$html_twitter = getSimpleHTMLDOM($twitter_url);
-		$main_tweet = $html_twitter->find('DIV#m.main-tweet', 0);
-		foreach($main_tweet->find('a') as $element)
-		{
-			$element_url = $element->getAttribute('href');
-			if(strpos($element_url, '/') === 0)
-			{
-				$element_url = "https://".$twitter_proxy.$element_url;
-				$element->setAttribute('href', $element_url);
-			}
-		}
-		$date_text = $main_tweet->find('p.tweet-published', 0)->plaintext;
-		$main_tweet->find('p.tweet-published', 0)->outertext = '<a href="'.$twitter_url.'" title="'.$date_text.'">'.$date_text.'</a>';
-		$main_tweet->find('SPAN.tweet-date', 0)->outertext = '';
-		$main_tweet->find('DIV.tweet-stats', 0)->outertext = '';
-		$main_tweet->find('A.fullname', 0)->outertext = '';
-		$main_tweet->outertext = $main_tweet->outertext.'<br>';
-		return $main_tweet;
-	}
 	private function clearParagraphsFromTaglinks($article, $paragrapghSearchString, $regexArray)
 	{
 		foreach($article->find($paragrapghSearchString) as $paragraph)
@@ -242,9 +245,31 @@ class OnetBridge extends BridgeAbstract {
 		$twitter_proxy = 'nitter.net';
 		$instagram_proxy = 'bibliogram.art';
 		$facebook_proxy = 'mbasic.facebook.com';
+		$youtube_proxy = 'invidious.snopyta.org';
 		$social_url = preg_replace('/.*[\.\/]twitter\.com(.*)/', 'https://'.$twitter_proxy.'${1}', $social_url);
 		$social_url = preg_replace('/.*[\.\/]instagram\.com(.*)/', 'https://'.$instagram_proxy.'${1}', $social_url);
 		$social_url = preg_replace('/.*[\.\/]facebook\.com(.*)/', 'https://'.$facebook_proxy.'${1}', $social_url);
+		$social_url = preg_replace('/.*[\.\/]youtube\.com(.*)/', 'https://'.$youtube_proxy.'${1}', $social_url);
 		return $social_url;
+	}
+
+	private function deleteAncestorIfChildMatches($element, $hierarchy)
+	{
+		$last = count($hierarchy)-1;
+		$counter = 0;
+		foreach($element->find($hierarchy[$last]) as $found)
+		{			
+			$counter++;
+			$iterator = $last-1;
+			while ($iterator >= 0 && $found->parent->tag === $hierarchy[$iterator])
+			{
+				$found = $found->parent;
+				$iterator--;
+			}
+			if ($iterator === -1)
+			{
+				$found->outertext = '';
+			}
+		}
 	}
 }
