@@ -29,12 +29,16 @@ class GazetaprawnaBridge extends BridgeAbstract {
 				'required' => false,
 				'title' => 'Tylko opinie'
 			),
-			'tylko_darmowe' => array
+			'type' => array
 			(
-				'name' => 'Tylko darmowe',
-				'type' => 'checkbox',
-				'required' => false,
-				'title' => 'Tylko darmowe'
+				'name' => 'Czy płatne?',
+				'type' => 'list',
+				'required' => true,
+				'values' => array(
+    			    'Tylko darmowe' => 'free',
+    			    'Tylko premium' => 'premium',
+    			    'Darmowe i premium' => 'both'
+    			 )
 			),
 		)
 	);
@@ -172,34 +176,49 @@ class GazetaprawnaBridge extends BridgeAbstract {
 
 	private function meetsConditions()
 	{
-		$only_opinions = $this->getInput('tylko_opinie');
-		if (TRUE === is_null($only_opinions)) $only_opinions = FALSE;
-		$only_free = $this->getInput('tylko_darmowe');
-		if (TRUE === is_null($only_free)) $only_free = FALSE;
+		$wanted_only_opinions = $this->getInput('tylko_opinie');
+		if (TRUE === is_null($wanted_only_opinions)) $wanted_only_opinions = FALSE;
+		$wanted_article_type = $this->getInput('type');
+		if (TRUE === is_null($wanted_article_type)) $wanted_article_type = "both";
 
-		if(FALSE === $only_opinions && FALSE === $only_free)
+		if ($wanted_article_type === 'both')
 		{
-			return TRUE;
-		}
-		else if(FALSE === $only_opinions && TRUE === $only_free)
-		{
-			if ($GLOBALS['is_article_free'])
+			if ($wanted_only_opinions)
+			{
+				if ($GLOBALS['is_article_opinion'])
+					return TRUE;
+				else
+					return FALSE;
+			}
+			else
 				return TRUE;
 		}
-		else if(TRUE === $only_opinions && FALSE === $only_free)
+		else if ($wanted_article_type === 'free' && $GLOBALS['is_article_free'] === TRUE)
 		{
-			if ($GLOBALS['is_article_opinion'])
+			if ($wanted_only_opinions)
+			{
+				if ($GLOBALS['is_article_opinion'])
+					return TRUE;
+				else
+					return FALSE;
+			}
+			else
 				return TRUE;
 		}
-		else if(TRUE === $only_opinions && TRUE === $only_free)
+		else if ($wanted_article_type === 'premium' && $GLOBALS['is_article_free'] === FALSE)
 		{
-			if ($GLOBALS['is_article_opinion'] && $GLOBALS['is_article_free'])
+			if ($wanted_only_opinions)
+			{
+				if ($GLOBALS['is_article_opinion'])
+					return TRUE;
+				else
+					return FALSE;
+			}
+			else
 				return TRUE;
 		}
 		else
-		{
 			return FALSE;
-		}
 	}
 
 	private function isArticleFree($h3_element)
