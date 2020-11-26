@@ -50,7 +50,15 @@ class GazetaprawnaBridge extends BridgeAbstract {
 */
 	public function collectData()
 	{
+		include 'myFunctions.php';
 		$GLOBALS['number_of_wanted_articles'] = $this->getInput('wanted_number_of_articles');
+		$GLOBALS['my_debug'] = FALSE;
+//		$GLOBALS['my_debug'] = TRUE;
+		if (TRUE === $GLOBALS['my_debug'])
+		{
+			$GLOBALS['all_articles_time'] = 0;
+			$GLOBALS['all_articles_counter'] = 0;
+		}
 		$url_articles_list = $this->getInput('url');
 		$url_articles_list = preg_replace('/(.*\/autor\/[0-9]+,([a-z]+)-([a-z]+)).*/', '$1', $url_articles_list);
 
@@ -67,13 +75,12 @@ class GazetaprawnaBridge extends BridgeAbstract {
 						//link to articles
 						$a_element = $h3_element->find('a', 0);
 						$url_article_link = $a_element->href;
-						$amp_url = preg_replace('/.*\/artykuly\/(.*)/', "https://www.gazetaprawna.pl/amp/$1", $url_article_link);
-//						echo "amp_url: $amp_url<br>";
+						$url_article_link = $this->getCustomizedLink($url_article_link);
 						$GLOBALS['is_article_free'] = $this->isArticleFree($h3_element);
 						$GLOBALS['is_article_opinion'] = $this->isArticleOpinion($h3_element);
 						if ($this->meetsConditions() === TRUE && count($this->items) < $GLOBALS['number_of_wanted_articles'])
 						{
-							$this->addArticle($amp_url);
+							$this->addArticle($url_article_link);
 						}
 					}
 				}
@@ -84,16 +91,28 @@ class GazetaprawnaBridge extends BridgeAbstract {
 			}
 			$url_articles_list = $html_articles_list->find('A[title="następna"]', 0)->getAttribute('href');
 		}
+		if (TRUE === $GLOBALS['my_debug'])
+			echo "<br>Wszystkie {$GLOBALS['all_articles_counter']} artykulow zajelo {$GLOBALS['all_articles_time']}, <br>średnio ".$GLOBALS['all_articles_time']/$GLOBALS['all_articles_counter'] ."<br>";
 	}
 
 	private function addArticle($amp_url)
 	{
-		$article_html = getSimpleHTMLDOMCached($amp_url, (864000/(count($this->items)+1)*$GLOBALS['number_of_wanted_articles']));
+		if (TRUE === $GLOBALS['my_debug'])
+		{
+			$start_request = microtime(TRUE);
+			$article_html = getSimpleHTMLDOMCached($amp_url, (864000/(count($this->items)+1)*$GLOBALS['number_of_wanted_articles']));
+			$end_request = microtime(TRUE);
+			echo "<br>Article  took " . ($end_request - $start_request) . " seconds to complete - url: $amp_url.";
+			$GLOBALS['all_articles_counter']++;
+			$GLOBALS['all_articles_time'] = $GLOBALS['all_articles_time'] + $end_request - $start_request;
+		}
+		else
+			$article_html = getSimpleHTMLDOMCached($amp_url, (864000/(count($this->items)+1)*$GLOBALS['number_of_wanted_articles']));
 
 //		echo "url_article_link: $url<br>";
 		$article = $article_html->find('article', 0);
 		$article_data = $article_html->find('SCRIPT[type="application/ld+json"]', 0)->innertext;
-		$article_data_parsed = $this->parse_article_data(json_decode($article_data));
+		$article_data_parsed = parse_article_data(json_decode($article_data));
 		$date = trim($article_data_parsed["datePublished"]);
 		$title = trim($article_data_parsed["headline"]);
 		$author = trim($article_data_parsed["author"]["0"]["name"]);
@@ -112,25 +131,14 @@ class GazetaprawnaBridge extends BridgeAbstract {
 		foreach($article->find('DIV.tags', 0)->find('A[href*="/tagi/"]') as $tag_link)
 			$tags[] = trim($tag_link->plaintext);
 
-		$this->deleteAllDescendantsIfExist($article, 'comment');
-		$this->deleteAllDescendantsIfExist($article, 'script');
-		$this->deleteAllDescendantsIfExist($article, 'DIV.w2g');
-		$this->deleteAllDescendantsIfExist($article, 'DIV.articleNextPrev');
-		$this->deleteAllDescendantsIfExist($article, 'UL.psav-author-ul');
-		$this->deleteAllDescendantsIfExist($article, 'DIV.widget-psav-share-box');
-		$this->deleteAllDescendantsIfExist($article, 'A.arrowLink');
-		$this->addStyle($article, 'P.pytanie', array('font-weight: bold;'));
-		$this->addStyle($article, 'DIV.articleReadMoreHead', array('font-weight: bold;'));
-
-
-		foreach($article->find('amp-img') as $ampimg)
-			$ampimg->tag = "img";
-
-		foreach($article->find('amp-img, img') as $photo_element)
-		{
-			if(isset($photo_element->width)) $photo_element->width = NULL;
-			if(isset($photo_element->height)) $photo_element->height = NULL;
-		}
+		$article = fixAmpArticles($article);
+		deleteAllDescendantsIfExist($article, 'DIV.widget-psav-share-box');
+		deleteAllDescendantsIfExist($article, 'DIV.w2g');
+		deleteAllDescendantsIfExist($article, 'DIV.psavSpecialLinks');
+		deleteAllDescendantsIfExist($article, 'DIV.articleRelated');
+		deleteAllDescendantsIfExist($article, 'DIV.articleNextPrev');
+		deleteAllDescendantsIfExist($article, 'DIV.tags');
+		deleteAllDescendantsIfExist($article, 'UL.psav-author-ul');
 
 		$this->items[] = array(
 			'uri' => $amp_url,
@@ -140,38 +148,6 @@ class GazetaprawnaBridge extends BridgeAbstract {
 			'content' => $article,
 			'categories' => $tags
 		);
-	}
-
-	private function parse_article_data($article_data)
-	{
-		if (TRUE === is_object($article_data))
-		{
-			$article_data = (array)$article_data;
-			foreach ($article_data as $key => $value)
-				$article_data[$key] = $this->parse_article_data($value);
-			return $article_data;
-		}
-		else if (TRUE === is_array($article_data))
-		{
-			foreach ($article_data as $key => $value)
-				$article_data[$key] = $this->parse_article_data($value);
-			return $article_data;
-		}
-		else
-			return $article_data;
-	}
-
-	private function addStyle($article_element, $search_string, $stylesArray)
-	{
-		$styleString = "";
-		foreach ($stylesArray as $style)
-		{
-			$styleString = $styleString.$style;
-		}
-		foreach ($article_element->find($search_string) as $element)
-		{
-			$element->style = $element->style.$styleString;
-		}
 	}
 
 	private function meetsConditions()
@@ -239,59 +215,10 @@ class GazetaprawnaBridge extends BridgeAbstract {
 		else
 			return FALSE;
 	}
-	private function deleteDescendantIfExists($ancestor, $descendant_string)
+	private function getCustomizedLink($url)
 	{
-		if (FALSE === is_null($descendant = $ancestor->find($descendant_string, 0)))
-			$descendant->outertext = '';
-	}
-
-	private function deleteAncestorIfDescendantExists($ancestor, $descendant_string)
-	{
-		if (FALSE === is_null($descendant = $ancestor->find($descendant_string, 0)))
-			$ancestor->outertext = '';
-	}
-
-	private function deleteAncestorIfContainsText($ancestor, $descendant_string)
-	{
-		if (FALSE === is_null($ancestor))
-			if (FALSE !== strpos($ancestor->plaintext, $descendant_string))
-				$ancestor->outertext = '';
-	}
-
-	private function deleteAllDescendantsIfExist($ancestor, $descendant_string)
-	{
-		foreach($ancestor->find($descendant_string) as $descendant)
-			$descendant->outertext = '';
-	}
-
-	private function deleteAncestorIfChildMatches($element, $hierarchy)
-	{
-		$last = count($hierarchy)-1;
-		$counter = 0;
-		foreach($element->find($hierarchy[$last]) as $found)
-		{
-			$counter++;
-			$iterator = $last-1;
-			while ($iterator >= 0 && $found->parent->tag === $hierarchy[$iterator])
-			{
-				$found = $found->parent;
-				$iterator--;
-			}
-			if ($iterator === -1)
-			{
-				$found->outertext = '';
-			}
-		}
-	}
-
-	private function redirectUrl($url)
-	{
-		$twitter_proxy = 'nitter.net';
-		$instagram_proxy = 'bibliogram.art';
-		$facebook_proxy = 'mbasic.facebook.com';
-		$url = preg_replace('/.*[\.\/]twitter\.com(.*)/', 'https://'.$twitter_proxy.'${1}', $url);
-		$url = preg_replace('/.*[\.\/]instagram\.com(.*)/', 'https://'.$instagram_proxy.'${1}', $url);
-		$url = preg_replace('/.*[\.\/]facebook\.com(.*)/', 'https://'.$facebook_proxy.'${1}', $url);
-		return $url;
+		$new_url = preg_replace('/.*\/artykuly\/(.*)/', "https://www-gazetaprawna-pl.cdn.ampproject.org/v/s/www.gazetaprawna.pl/amp/$1", $url);
+		$new_url = str_replace('.html', '.amp?amp_js_v=0.1', $new_url);
+		return $new_url;
 	}
 }

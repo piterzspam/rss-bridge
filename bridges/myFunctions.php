@@ -1,4 +1,21 @@
 <?php
+
+	function fixAmpArticles($article)
+	{
+		foreach($article->find('amp-img') as $ampimg)
+			$ampimg->tag = "img";
+		foreach($article->find('amp-img, img') as $photo_element)
+		{
+			if(isset($photo_element->width)) $photo_element->width = NULL;
+			if(isset($photo_element->height)) $photo_element->height = NULL;
+		}
+		deleteAllDescendantsIfExist($article, 'amp-analytics');
+		deleteAllDescendantsIfExist($article, 'amp-ad');
+		deleteAllDescendantsIfExist($article, 'i-amphtml-sizer');
+		deleteAllDescendantsIfExist($article, 'amp-image-lightbox');
+		return $article;
+	}
+
 	function formatAampLinks($article)
 	{
 		foreach($article->find('amp-iframe') as $amp_iframe)
@@ -167,4 +184,17 @@
 			$tags[] = trim($tags_item->plaintext);
 		}
 		return $tags;
+	}
+
+	function addStyle($article_element, $search_string, $stylesArray)
+	{
+		$styleString = "";
+		foreach ($stylesArray as $style)
+		{
+			$styleString = $styleString.$style;
+		}
+		foreach ($article_element->find($search_string) as $element)
+		{
+			$element->style = $element->style.$styleString;
+		}
 	}
