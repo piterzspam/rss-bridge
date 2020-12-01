@@ -16,7 +16,7 @@
 		return $article;
 	}
 
-	function formatAampLinks($article)
+	function formatAmpLinks($article)
 	{
 		foreach($article->find('amp-iframe') as $amp_iframe)
 		{
