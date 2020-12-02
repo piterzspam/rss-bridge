@@ -131,7 +131,8 @@ class GazetaprawnaBridge extends BridgeAbstract {
 		foreach($article->find('DIV.tags', 0)->find('A[href*="/tagi/"]') as $tag_link)
 			$tags[] = trim($tag_link->plaintext);
 
-		$article = fixAmpArticles($article);
+		fixAmpArticles($article);
+		formatAmpLinks($article);
 		deleteAllDescendantsIfExist($article, 'DIV.widget-psav-share-box');
 		deleteAllDescendantsIfExist($article, 'DIV.w2g');
 		deleteAllDescendantsIfExist($article, 'DIV.psavSpecialLinks');

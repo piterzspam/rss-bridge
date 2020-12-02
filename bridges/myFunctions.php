@@ -18,7 +18,6 @@
 		deleteAllDescendantsIfExist($article, 'amp-ad');
 		deleteAllDescendantsIfExist($article, 'i-amphtml-sizer');
 		deleteAllDescendantsIfExist($article, 'amp-image-lightbox');
-		return $article;
 	}
 
 	function formatAmpLinks($article)

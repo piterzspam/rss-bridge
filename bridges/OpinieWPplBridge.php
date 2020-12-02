@@ -4,7 +4,7 @@ class OpinieWPplBridge extends BridgeAbstract {
 	const URI = 'https://opinie.wp.pl/';
 	const DESCRIPTION = 'No description provided';
 	const MAINTAINER = 'No maintainer';
-	const CACHE_TIMEOUT = 1; // Can be omitted!
+	const CACHE_TIMEOUT = 3600; // Can be omitted!
 
 	const PARAMETERS = array
 	(
@@ -93,7 +93,8 @@ class OpinieWPplBridge extends BridgeAbstract {
 		foreach($article->find('P.tags', 0)->find('A[href*="/tag/"]') as $tag_link)
 			$tags[] = trim($tag_link->plaintext);
 
-		$article = fixAmpArticles($article);
+		fixAmpArticles($article);
+		formatAmpLinks($article);
 		deleteAllDescendantsIfExist($article, 'DIV.ad');
 		deleteAllDescendantsIfExist($article, 'P.tags');
 		deleteAllDescendantsIfExist($article, 'comment');
@@ -116,7 +117,6 @@ class OpinieWPplBridge extends BridgeAbstract {
 			'width: 100%;'
 		);
 		addStyle($article, 'DIV.header-image-container DIV.header-author', $photo_author_style);
-		formatAmpLinks($article);
 
 
 

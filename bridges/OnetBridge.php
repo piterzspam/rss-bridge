@@ -124,14 +124,14 @@ class OnetBridge extends BridgeAbstract {
 				$paragraph->outertext='';
 			}
 		}
-		$article = fixAmpArticles($article);
+		fixAmpArticles($article);
+		formatAmpLinks($article);
 
 		foreach($article->find('LI') as $li)
 		{
 			deleteAncestorIfContainsText($li, 'Więcej informacji i podcastów znajdziesz na stronie głównej Onet.pl');
 		}
 
-		formatAmpLinks($article);
 
 		$this->items[] = array(
 			'uri' => $url_article,
