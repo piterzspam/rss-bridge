@@ -1,5 +1,10 @@
 <?php
 
+	function var_dump_print ($variable)
+	{
+		echo "Zmienna: <br><pre>"; var_dump($variable); echo "</pre>";
+	}
+	
 	function fixAmpArticles($article)
 	{
 		foreach($article->find('amp-img') as $ampimg)
@@ -81,6 +86,21 @@
 		if (FALSE === is_null($ancestor))
 			if (FALSE !== strpos($ancestor->plaintext, $descendant_string))
 				$ancestor->outertext = '';
+	}
+	
+	function deleteAncestorIfContainsTextForEach($main, $ancestor_string, $descendant_string_array)
+	{
+		foreach($main->find($ancestor_string) as $ancestor)
+		{
+			foreach($descendant_string_array as $descendant_string)
+			{
+				if (FALSE !== strpos($ancestor->plaintext, $descendant_string))
+				{
+					$ancestor->outertext = '';
+					break;
+				}
+			}
+		}
 	}
 
 	function parse_article_data($article_data)
