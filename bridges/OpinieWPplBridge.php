@@ -4,11 +4,11 @@ class OpinieWPplBridge extends BridgeAbstract {
 	const URI = 'https://opinie.wp.pl/';
 	const DESCRIPTION = 'No description provided';
 	const MAINTAINER = 'No maintainer';
-	const CACHE_TIMEOUT = 3600; // Can be omitted!
+	const CACHE_TIMEOUT = 1; // Can be omitted!
 
 	const PARAMETERS = array
 	(
-		'Tekst pogrubiony' => array
+		'Parametry' => array
 		(
 			'url' => array
 			(
@@ -16,6 +16,12 @@ class OpinieWPplBridge extends BridgeAbstract {
 				'type' => 'text',
 				'required' => true
 			),
+			'wanted_number_of_articles' => array
+			(
+				'name' => 'Liczba artykułów',
+				'type' => 'text',
+				'required' => true
+			)
 		)
 	);
 
@@ -23,133 +29,141 @@ class OpinieWPplBridge extends BridgeAbstract {
 
 	public function collectData()
 	{
-		$url_articles_list = $this->getInput('url');
-//		$url_articles_list = 'https://opinie.wp.pl/autor/kataryna/6119008086550145';
-		$html_main_page = getSimpleHTMLDOM($url_articles_list);
-		$articles_list_elements = $html_main_page->find('DIV[data-st-area="list-topic"]', 0)->first_child()->first_child();
-
-		foreach($articles_list_elements->childNodes() as $articles_list_element)
+		include 'myFunctions.php';
+		$author_page_url = $this->getInput('url');
+		$GLOBALS['number_of_wanted_articles'] = $this->getInput('wanted_number_of_articles');
+		$GLOBALS['my_debug'] = FALSE;
+//		$GLOBALS['my_debug'] = TRUE;
+		if (TRUE === $GLOBALS['my_debug'])
 		{
-			if (FALSE === is_null($articles_list_element->find('A', 0)))
-			{
-				$href = 'https://opinie.wp.pl'.$articles_list_element->find('A', 0)->getAttribute('href');
-				$this->addArticle($href);
-			}
+			$GLOBALS['all_articles_time'] = 0;
+			$GLOBALS['all_articles_counter'] = 0;
 		}
+		
+		$urls = array();
+		$url_articles_list = $author_page_url;
+		$page_number = 1;
+		while (count($this->items) < $GLOBALS['number_of_wanted_articles'])
+		{
+			$html_main_page = getSimpleHTMLDOM($url_articles_list);
+			$articles_list_elements = $html_main_page->find('DIV[data-st-area="list-topic"]', 0)->first_child()->first_child();
 
+			foreach($articles_list_elements->childNodes() as $articles_list_element)
+			{
+				if (count($this->items) < $GLOBALS['number_of_wanted_articles'])
+				{
+					if (FALSE === is_null($articles_list_element->find('A', 0)))
+					{
+						$href = $articles_list_element->find('A', 0)->getAttribute('href');
+						$amp_url = $this->getCustomizedLink($href);
+						$urls[] = $amp_url;
+						$this->addArticle($amp_url);
+					}
+				}
+			}
+			$page_number++;
+			$url_articles_list = $url_articles_list.'/'.$page_number;
+		}
+		if (TRUE === $GLOBALS['my_debug'])
+			echo "<br>Wszystkie {$GLOBALS['all_articles_counter']} artykulow zajelo {$GLOBALS['all_articles_time']}, <br>średnio ".$GLOBALS['all_articles_time']/$GLOBALS['all_articles_counter'] ."<br>";
 	}
 
 	private function addArticle($url_article)
 	{
-		$article_html = getSimpleHTMLDOMCached($url_article, (864000/(count($this->items)+1)*10));
-//		$article_html = getSimpleHTMLDOM($url_article);
-		$article = $article_html->find('ARTICLE.article', 0);
-
-		//tags
-		$tags = array();
-		foreach($article->find('DIV[data-st-area="article-header"]', 0)->find('A[href^="/tag/"]') as $tag_element)
+		if (TRUE === $GLOBALS['my_debug'])
 		{
-			$tags[] = $tag_element->plaintext;
-			$tag_element->outertext = '';
-		}
-
-		$title = $article->find('H1.article--title', 0)->plaintext;
-		$timestamp = $article->find('time', 0)->getAttribute('datetime');
-		if (FALSE === is_null($article->find('A[href="https://magazyn.wp.pl"]', 0)))
-		{
-			//uklad magazyn.wp.pl - https://opinie.wp.pl/kataryna-zyjemy-w-okrutnym-swiecie-ale-aborcja-embriopatologiczna-musi-pozostac-opinia-6567085945505921a
-			$author = $article->find('A[href^="/autor/"]', 0)->find('IMG', 0)->getAttribute('alt');
-			$this->deleteAncestorIfChildMatches($article, array('section', 'div', 'A[href^="/autor/"]'));
-			foreach($article->find('H3')as $h3_element)
-			{
-				if (FALSE !== strpos($h3_element->plaintext, "Polecane przez autora:"))
-					if (($parent = $h3_element->parent)->tag === 'section')
-						if (($parent = $parent->parent)->tag === 'aside')
-							$parent->outertext = '';
-			}
+			$start_request = microtime(TRUE);
+			$article_html = getSimpleHTMLDOMCached($url_article, (864000/(count($this->items)+1)*$GLOBALS['number_of_wanted_articles']));
+			$end_request = microtime(TRUE);
+			echo "<br>Article  took " . ($end_request - $start_request) . " seconds to complete - url: $url_article.";
+			$GLOBALS['all_articles_counter']++;
+			$GLOBALS['all_articles_time'] = $GLOBALS['all_articles_time'] + $end_request - $start_request;
 		}
 		else
-		{
-			//uklad opinie.wp.pl - https://opinie.wp.pl/kataryna-przeklenstwa-sluza-do-wyrazania-emocji-ale-trudno-je-traktowac-jako-postulat-opinia-6569943046974240a
-			$author = $article->find('SPAN.signature--author', 0)->plaintext;
-		}
+			$article_html = getSimpleHTMLDOMCached($url_article, (864000/(count($this->items)+1)*$GLOBALS['number_of_wanted_articles']));
 
-		$article->find('DIV[data-st-area="article-header"]', 0)->outertext = $article->find('DIV.signature', 0)->outertext;
-		$article->find('DIV.article--lead', 0)->next_sibling()->outertext = '';
+		$article = $article_html->find('main#content', 0);
+		$article_data = $article_html->find('SCRIPT[type="application/ld+json"]', 0)->innertext;
+		$article_data_parsed = parse_article_data(json_decode($article_data));
+		$date = trim($article_data_parsed["datePublished"]);
+		$title = trim($article_data_parsed["headline"]);
+		$author = $article->find('P[data-st-area="Autor"] SPAN.uppercase', 0)->plaintext;
+		$author = str_replace(',', '', $author);
+		$tags = array();
+		foreach($article->find('P.tags', 0)->find('A[href*="/tag/"]') as $tag_link)
+			$tags[] = trim($tag_link->plaintext);
+
+		$article = fixAmpArticles($article);
+		deleteAllDescendantsIfExist($article, 'DIV.ad');
+		deleteAllDescendantsIfExist($article, 'P.tags');
+		deleteAllDescendantsIfExist($article, 'comment');
+		deleteAllDescendantsIfExist($article, 'SECTION.recommendations');
+		deleteAllDescendantsIfExist($article, 'DIV.seolinks');
+		deleteAllDescendantsIfExist($article, 'A.comment-button');
+		deleteAllDescendantsIfExist($article, 'FOOTER#footer');
+		deleteAllDescendantsIfExist($article, 'amp-video-iframe');
+		deleteAncestorIfContainsTextForEach($article, 'P', array( 'Masz newsa, zdjęcie lub filmik? Prześlij nam przez', 'dla WP Opinie', 'Zobacz też: ', 'Źródło: opinie.wp.pl'));
+		$this->removeVideoTitles($article);
+		$photo_author_style = array(
+			'transform-origin: right;',
+			'transform: rotate(270deg);',
+			'position: relative;',
+			'z-index: 2;',
+			'color: #fff;',
+			'right: 15px;',
+			'text-align: right;',
+			'font-size: 14px;',
+			'width: 100%;'
+		);
+		addStyle($article, 'DIV.header-image-container DIV.header-author', $photo_author_style);
+		formatAmpLinks($article);
 
 
-		$this->deleteAncestorIfChildMatches($article, array('div', 'div', 'IMG[src*="v.wpimg.pl"][!width]'));
-		$this->deleteAncestorIfChildMatches($article, array('div', 'div', 'DIV#fb-iframe'));
 
-		foreach($article->find('IMG[src][data-src]') as $img)
-		{
-			$new_url = $img->getAttribute('data-src');
-			$img->src = $new_url;
-		}
-
-		foreach($article->find('DIV[id^="video-player"]') as $video_player)
-		{
-			$parent = $video_player->parent();
-			$previous = $parent->prev_sibling();
-			if ($previous->children(0)->tag === 'h2')
-				$previous->outertext = '';
-			$parent->outertext = '';
-		}
-
-		foreach($article->find('comment') as $comment)
-		{
-			$comment->outertext = '';
-		}
-
-		foreach($article->find('P') as $paragraph)
-		{
-			$this->deleteAncestorIfContainsText($paragraph, 'Masz newsa, zdjęcie lub filmik? Prześlij nam przez');
-			$this->deleteAncestorIfContainsText($paragraph, 'Zobacz też: ');
-			$this->deleteAncestorIfContainsText($paragraph, 'Zobacz wideo: ');
-			$this->deleteAncestorIfContainsText($paragraph, 'Zobacz także: ');
-		}
-		
+		$url_article = str_replace('https://opinie-wp-pl.cdn.ampproject.org/v/s/', 'https://', $url_article);
 		$this->items[] = array(
 			'uri' => $url_article,
 			'title' => $title,
-			'timestamp' => $timestamp,
+			'timestamp' => $date,
 			'author' => $author,
-			'content' => $article,
-			'categories' => $tags
+			'categories' => $tags,
+			'content' => $article
 		);
-		
-//		echo '<br><br><br><br>article: po<br>'.$article;
-	}
-	private function deleteAncestorIfContainsText($ancestor, $descendant_string)
-	{
-		if (FALSE === is_null($ancestor))
-			if (FALSE !== strpos($ancestor->plaintext, $descendant_string))
-				$ancestor->outertext = '';
 	}
 
-	private function deleteAncestorIfChildMatches($element, $hierarchy)
+	private function removeVideoTitles($article)
 	{
-		$last = count($hierarchy)-1;
-		$counter = 0;
-		foreach($element->find($hierarchy[$last]) as $found)
+		foreach($article->find('amp-video-iframe') as $amp_video_iframe)
 		{
-			$counter++;
-			$iterator = $last-1;
-			while ($iterator >= 0 && $found->parent->tag === $hierarchy[$iterator])
+			$previous = $amp_video_iframe->prev_sibling();
+			if ('div' === $previous->tag)
 			{
-				$found = $found->parent;
-				$iterator--;
+				$attributes=$previous->getAllAttributes();
+				if ('ad' === $attributes['class'])
+				{
+					$previous_second = $previous->prev_sibling();
+					$previous->outertext='';
+					if ('h2' === $previous_second->tag)
+					{
+						$previous_second->outertext='';
+					}
+				}
 			}
-			if ($iterator === -1)
+			else
 			{
-				$found->outertext = '';
+				if ('h2' === $previous->tag)
+				{
+					$previous->outertext='';
+				}
 			}
 		}
 	}
 
-	private function deleteDescendantIfExists($ancestor, $descendant_string)
+	private function getCustomizedLink($url)
 	{
-		if (FALSE === is_null($descendant = $ancestor->find($descendant_string, 0)))
-			$descendant->outertext = '';
+		$url = 'https://opinie.wp.pl'.$url;
+		$new_url = $url.'?amp=1&amp_js_v=0.1';
+		$new_url = str_replace('https://', 'https://opinie-wp-pl.cdn.ampproject.org/v/s/', $new_url);
+		return $new_url;
 	}
 }
