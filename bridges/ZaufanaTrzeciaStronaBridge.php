@@ -9,7 +9,7 @@ class ZaufanaTrzeciaStronaBridge extends FeedExpander {
 	const CACHE_TIMEOUT = 3600;
 
     public function collectData(){
-		include 'myFunctions.php';
+//		include 'myFunctions.php';
         $this->collectExpandableDatas('https://zaufanatrzeciastrona.pl/feed/');
     }
 

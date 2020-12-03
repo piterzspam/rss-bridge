@@ -8,7 +8,7 @@ class OnetBridge extends BridgeAbstract {
 
 	const PARAMETERS = array
 	(
-		'Tekst pogrubiony' => array
+		'Parametry' => array
 		(
 			'url' => array
 			(
@@ -33,7 +33,7 @@ class OnetBridge extends BridgeAbstract {
 		$url_articles_list = preg_replace('/(.*\/autorzy\/[a-z]+-[a-z]+).*/', '$1', $url_articles_list);
 		$GLOBALS['number_of_wanted_articles'] = $this->getInput('wanted_number_of_articles');
 		$GLOBALS['my_debug'] = FALSE;
-		$GLOBALS['my_debug'] = TRUE;
+//		$GLOBALS['my_debug'] = TRUE;
 		if (TRUE === $GLOBALS['my_debug'])
 		{
 			$GLOBALS['all_articles_time'] = 0;
