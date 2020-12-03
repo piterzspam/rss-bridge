@@ -8,7 +8,7 @@ class GazetaplBridge extends BridgeAbstract {
 
 	const PARAMETERS = array
 	(
-		'Tekst pogrubiony' => array
+		'Parametry' => array
 		(
 			'url' => array
 			(
