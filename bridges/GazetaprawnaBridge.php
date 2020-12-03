@@ -141,6 +141,11 @@ class GazetaprawnaBridge extends BridgeAbstract {
 		deleteAllDescendantsIfExist($article, 'DIV.tags');
 		deleteAllDescendantsIfExist($article, 'UL.psav-author-ul');
 
+		$interview_question_style = array(
+			'font-weight: bold;'
+		);
+		addStyle($article, 'P.pytanie', $interview_question_style);
+
 		$this->items[] = array(
 			'uri' => $amp_url,
 			'title' => $title,

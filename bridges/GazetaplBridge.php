@@ -100,6 +100,11 @@ class GazetaplBridge extends BridgeAbstract {
 		deleteDescendantIfExists($article, 'SECTION.tags');
 		clearParagraphsFromTaglinks($article, 'P.art_paragraph', array('/\?tag=/'));
 
+		$interview_question_style = array(
+			'font-weight: bold;'
+		);
+		addStyle($article, 'H4.art_interview_question', $interview_question_style);
+
 
 		foreach($article->find('div.art_embed') as $art_embed)
 		{
