@@ -8,7 +8,7 @@ class BezprawnikBridge extends BridgeAbstract {
 
 	const PARAMETERS = array
 	(
-		'Tekst pogrubiony' => array
+		'Parametry' => array
 		(
 			'url' => array
 			(
@@ -74,10 +74,10 @@ class BezprawnikBridge extends BridgeAbstract {
 		$author = $article_data_parsed["@graph"][3]["name"];
 //		$title = $article_html->find('META[property="og:title"]', 0)->content;
 //		$date = $article_html->find('META[property="article:published_time]', 0)->content;
-		var_dump_print($article_data_parsed);
 		
 		$tags = array();
-		foreach($article_html->find('META[property="article:tag"]') as $tag_element) $tags[] = $tag_element->content;
+		foreach($article_html->find('DIV.amp-wp-tax-tag A[href*="bezprawnik.pl/tag/"][rel="tag"]') as $tag_element)
+			$tags[] = trim($tag_element->plaintext);
 		fixAmpArticles($article);
 		formatAmpLinks($article);
 		deleteAllDescendantsIfExist($article, 'comment');

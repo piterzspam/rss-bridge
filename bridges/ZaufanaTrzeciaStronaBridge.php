@@ -9,7 +9,7 @@ class ZaufanaTrzeciaStronaBridge extends FeedExpander {
 	const CACHE_TIMEOUT = 3600;
 
     public function collectData(){
-//		include 'myFunctions.php';
+		include 'myFunctions.php';
         $this->collectExpandableDatas('https://zaufanatrzeciastrona.pl/feed/');
     }
 
@@ -26,11 +26,31 @@ class ZaufanaTrzeciaStronaBridge extends FeedExpander {
 		}
 		foreach($article->find('DIV.wp-block-embed__wrapper') as $embed)
 		{
-			$embed->outertext = '<div class="wp-block-embed__wrapper">'.$embed->innertext.'</div>';
+			$embed_innertext = $embed->innertext;
+			preg_match('/title="([^"]*)"/', $embed_innertext, $output_array);
+			$title = $output_array[1];
+			preg_match('/src="([^"]*)"/', $embed_innertext, $output_array);
+			$src = $output_array[1];
+			$embed->outertext = 
+				'<strong><br>'
+				.'<a href='.$src.'>'
+				."Ramka - ".$title.'<br>'
+				.'</a>'
+				.'<br></strong>';
+		}
+		
+		$tags = array();
+		foreach($article->find('DIV.dolna-ramka A[href*="/tag/"][rel="tag"]') as $tag)
+		{
+			$tags[] = trim($tag->plaintext);
 		}
 		
 		$item['content'] = $article;
-		return $item;
+		$item['categories'] = $tags;
+		if (FALSE === in_array("konferencja", $item['categories']))
+		{
+			return $item;
+		}
 	}
 
 }
