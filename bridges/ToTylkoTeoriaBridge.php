@@ -8,7 +8,7 @@ class ToTylkoTeoriaBridge extends BridgeAbstract {
 
 	const PARAMETERS = array
 	(
-		'Tekst pogrubiony' => array
+		'Parametry' => array
 		(
 			'wanted_number_of_articles' => array
 			(
@@ -47,7 +47,8 @@ class ToTylkoTeoriaBridge extends BridgeAbstract {
 
 	private function addArticle($url_article)
 	{
-		$article_html = file_get_html($url_article);
+//		$article_html = file_get_html($url_article);
+		$article_html = getSimpleHTMLDOMCached($url_article, 60*60*24*7*2);
 		if (FALSE === is_null($article_html->find('ARTICLE', 0)))
 		{
 			$article = $article_html->find('ARTICLE', 0);

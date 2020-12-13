@@ -57,7 +57,7 @@ function logBridgeError($bridgeName, $code) {
 	$cache = $cacheFac->create(Configuration::getConfig('cache', 'type'));
 	$cache->setScope('error_reporting');
 	$cache->setkey($bridgeName . '_' . $code);
-	$cache->purgeCache(864000); // 24 hours
+	$cache->purgeCache(864000*14); // 24*14 hours
 
 	if($report = $cache->loadData()) {
 		$report = json_decode($report, true);

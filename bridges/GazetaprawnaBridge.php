@@ -100,14 +100,18 @@ class GazetaprawnaBridge extends BridgeAbstract {
 		if (TRUE === $GLOBALS['my_debug'])
 		{
 			$start_request = microtime(TRUE);
-			$article_html = getSimpleHTMLDOMCached($amp_url, (864000/(count($this->items)+1)*$GLOBALS['number_of_wanted_articles']));
+//			$article_html = getSimpleHTMLDOMCached($amp_url, (864000/(count($this->items)+1)*$GLOBALS['number_of_wanted_articles']));
+			$article_html = getSimpleHTMLDOMCached($amp_url, 60*60*24*7*2);
 			$end_request = microtime(TRUE);
 			echo "<br>Article  took " . ($end_request - $start_request) . " seconds to complete - url: $amp_url.";
 			$GLOBALS['all_articles_counter']++;
 			$GLOBALS['all_articles_time'] = $GLOBALS['all_articles_time'] + $end_request - $start_request;
 		}
 		else
-			$article_html = getSimpleHTMLDOMCached($amp_url, (864000/(count($this->items)+1)*$GLOBALS['number_of_wanted_articles']));
+		{
+//			$article_html = getSimpleHTMLDOMCached($amp_url, (864000/(count($this->items)+1)*$GLOBALS['number_of_wanted_articles']));
+			$article_html = getSimpleHTMLDOMCached($amp_url, 60*60*24*7*2);
+		}
 
 //		echo "url_article_link: $url<br>";
 		$article = $article_html->find('article', 0);

@@ -51,7 +51,7 @@ function getContents($url, $header = array(), $opts = array(), $returnHeader = f
 	$cacheFac->setWorkingDir(PATH_LIB_CACHES);
 	$cache = $cacheFac->create(Configuration::getConfig('cache', 'type'));
 	$cache->setScope('server');
-	$cache->purgeCache(864000); // 24 hours (forced)
+	$cache->purgeCache(864000*14); // 24*14 hours (forced)
 
 	$params = array($url);
 	$cache->setKey($params);

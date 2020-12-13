@@ -8,7 +8,7 @@ class NewsweekBridge extends BridgeAbstract {
 
 	const PARAMETERS = array
 	(
-		'Tekst pogrubiony' => array
+		'Parametry' => array
 		(
 			'url' => array
 			(
@@ -66,7 +66,8 @@ class NewsweekBridge extends BridgeAbstract {
 
 		foreach($urls as $url_article_link)
 		{
-			$article_html = getSimpleHTMLDOMCached($url_article_link, (864000/(count($this->items)+1)*$GLOBALS['number_of_wanted_articles']));
+//			$article_html = getSimpleHTMLDOMCached($url_article_link, (864000/(count($this->items)+1)*$GLOBALS['number_of_wanted_articles']));
+			$article_html = getSimpleHTMLDOMCached($url_article_link, 60*60*24*7*2);
 			if (is_bool($article_html))
 			{
 				$this->items[] = array(

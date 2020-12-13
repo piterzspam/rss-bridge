@@ -4,11 +4,11 @@ class TygodnikPolsatNewsBridge extends BridgeAbstract {
 	const URI = 'https://tygodnik.polsatnews.pl/';
 	const DESCRIPTION = 'No description provided';
 	const MAINTAINER = 'No maintainer';
-	const CACHE_TIMEOUT = 3600; // Can be omitted!
+	const CACHE_TIMEOUT = 3600;
 
 	const PARAMETERS = array
 	(
-		'Tekst pogrubiony' => array
+		'Parametry' => array
 		(
 			'author' => array
 			(
@@ -43,7 +43,6 @@ class TygodnikPolsatNewsBridge extends BridgeAbstract {
 //		ini_set('user_agent','Mozilla/4.0 (compatible; MSIE 6.0)');
 		$html_main_page = getSimpleHTMLDOM($main_page_url);
 
-
 		foreach($html_main_page->find('a.article__link') as $article__link)
 		{
 			if (FALSE === is_null($author_element = $article__link->find('DIV.article__author', 0)))
@@ -77,7 +76,7 @@ class TygodnikPolsatNewsBridge extends BridgeAbstract {
 
 	private function addArticle($url_article)
 	{
-		$article_html = getSimpleHTMLDOMCached($url_article, (864000/(count($this->items)+1)*$GLOBALS['number_of_wanted_articles']));
+		$article_html = getSimpleHTMLDOMCached($url_article, 60*60*24*7*2);
 		$article_target = $article_html->find('article.article--target', 0);
 
 		//title
