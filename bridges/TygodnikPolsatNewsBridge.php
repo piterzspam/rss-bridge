@@ -99,6 +99,11 @@ class TygodnikPolsatNewsBridge extends BridgeAbstract {
 		$this->deleteDescendantIfExists($article_target, 'DIV.article__related');
 		$this->deleteDescendantIfExists($article_target, 'DIV.article__share');
 		$this->deleteDescendantIfExists($article_target, 'DIV#fb-root');
+		foreach($article_target->find('amp-img, img') as $photo_element)
+		{
+			if(isset($photo_element->width)) $photo_element->width = NULL;
+			if(isset($photo_element->height)) $photo_element->height = NULL;
+		}
 
 		$this->items[] = array(
 			'uri' => $url_article,

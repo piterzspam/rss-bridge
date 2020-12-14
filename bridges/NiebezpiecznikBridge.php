@@ -18,8 +18,8 @@ class NiebezpiecznikBridge extends FeedExpander {
 		$item = parent::parseItem($newsItem);
 		$articlePage = getSimpleHTMLDOMCached(($item['uri']), 60*60*24*7*2);
 		$article = $articlePage->find('DIV#main DIV.post', 0);
-		$ad = $article->find('DIV.entry DIV[style="margin-top:-25px;"]', 0);
-		$ad->outertext = '';
+		if (FALSE === is_null($ad = $article->find('DIV.entry DIV[style="margin-top:-25px;"]', 0)))
+			$ad->outertext = '';
 		$title_link = $article->find('DIV.title A[href]', 0);
 		$href = $title_link->href;
 		$tags = array();
@@ -32,7 +32,7 @@ class NiebezpiecznikBridge extends FeedExpander {
 		$item['uri'] = $href;
 		$item['content'] = $article;
 		$item['categories'] = $tags;
-		if (FALSE === in_array("konferencje i wykłady", $item['categories']))
+		if (FALSE === in_array("konferencje i wykłady", $item['categories']) && FALSE === in_array("szkolenia", $item['categories']) )
 		{
 			return $item;
 		}
