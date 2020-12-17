@@ -24,7 +24,10 @@ class SekurakBridge extends FeedExpander {
 		{
 			$tags[] = trim($tag->plaintext);
 		}
+		$page_link = $articlePage->find('LINK[rel="canonical"][href^="https://sekurak.pl/"]', 0);
+		$href = $page_link->href;
 		
+		$item['uri'] = $href;
 		$item['content'] = $article;
 		$item['categories'] = $tags;
 		

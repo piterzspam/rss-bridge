@@ -82,6 +82,8 @@ class BezprawnikBridge extends BridgeAbstract {
 		fixAmpArticles($article);
 		formatAmpLinks($article);
 		deleteAllDescendantsIfExist($article, 'comment');
+		//może pomoże na drugie zdjęcie pod zdjęciem głównynm w czytniku
+		deleteAllDescendantsIfExist($article, 'script');
 		deleteAllDescendantsIfExist($article, 'DIV.amp-autor');
 		deleteAllDescendantsIfExist($article, 'FIGURE[id^="attachment_"]');
 		deleteAllDescendantsIfExist($article, 'FOOTER');
