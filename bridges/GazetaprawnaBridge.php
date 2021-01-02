@@ -4,7 +4,7 @@ class GazetaprawnaBridge extends BridgeAbstract {
 	const URI = 'https://www.gazetaprawna.pl/';
 	const DESCRIPTION = 'No description provided';
 	const MAINTAINER = 'No maintainer';
-	const CACHE_TIMEOUT = 3600; // Can be omitted!
+	const CACHE_TIMEOUT = 1; // Can be omitted!
 
 	const PARAMETERS = array
 	(
@@ -53,7 +53,7 @@ class GazetaprawnaBridge extends BridgeAbstract {
 		include 'myFunctions.php';
 		$GLOBALS['number_of_wanted_articles'] = $this->getInput('wanted_number_of_articles');
 		$GLOBALS['my_debug'] = FALSE;
-//		$GLOBALS['my_debug'] = TRUE;
+		$GLOBALS['my_debug'] = TRUE;
 		if (TRUE === $GLOBALS['my_debug'])
 		{
 			$GLOBALS['all_articles_time'] = 0;
@@ -66,24 +66,46 @@ class GazetaprawnaBridge extends BridgeAbstract {
 		while (count($this->items) < $GLOBALS['number_of_wanted_articles'])
 		{
 			$html_articles_list = getSimpleHTMLDOM($url_articles_list);
-			if (0 !== count($found_urls = $html_articles_list->find('DIV.whiteListArt', 0)->find('H3')))
+//				echo "<br>html_articles_list<br><br>$html_articles_list";
+			if (0 !== count($found_urls = $html_articles_list->find('.solrList A[href*="gazetaprawna.pl"][title]')))
 			{
-				foreach($found_urls as $h3_element)
+//				echo "<br>found_urls<br><br>$found_urls";
+				$found_urls_hrefs = array();
+				$found_urls_titles = array();
+				echo "<br><br>Array - found_urls:";
+				foreach($found_urls as $url_element)
+				{
+					$title = $url_element->title;
+					if (FALSE === in_array($title, $found_urls_titles))
+					{
+						$found_urls_hrefs[] = $url_element->href;
+						$found_urls_titles[] = $title;
+					}
+					echo "<br>url_element->href: $url_element->href";
+				}
+				echo "<br><br>Array - found_urls2:";
+				foreach($found_urls_hrefs as $url_article_link)
+				{
+					echo "<br>url_article_link: <br>$url_article_link";
+				}
+//				break;
+				echo "<br><br>Array - found_urls3:";
+				foreach($found_urls_hrefs as $url_article_link)
 				{
 					if (count($this->items) < $GLOBALS['number_of_wanted_articles'])
 					{
 						//link to articles
-						$a_element = $h3_element->find('a', 0);
-						$url_article_link = $a_element->href;
 						$url_article_link = $this->getCustomizedLink($url_article_link);
-						$GLOBALS['is_article_free'] = $this->isArticleFree($h3_element);
-						$GLOBALS['is_article_opinion'] = $this->isArticleOpinion($h3_element);
-						if ($this->meetsConditions() === TRUE && count($this->items) < $GLOBALS['number_of_wanted_articles'])
-						{
-							$this->addArticle($url_article_link);
-						}
+						echo "<br>url_article_link: <br>$url_article_link";
+//						$GLOBALS['is_article_free'] = $this->isArticleFree($h3_element);
+//						$GLOBALS['is_article_opinion'] = $this->isArticleOpinion($h3_element);
+//						if ($this->meetsConditions() === TRUE && count($this->items) < $GLOBALS['number_of_wanted_articles'])
+//						{
+//							$this->addArticle($url_article_link);
+//						}
 					}
 				}
+				break;
 			}
 			else
 			{

@@ -103,6 +103,8 @@ class TygodnikPolsatNewsBridge extends BridgeAbstract {
 		{
 			if(isset($photo_element->width)) $photo_element->width = NULL;
 			if(isset($photo_element->height)) $photo_element->height = NULL;
+			if(isset($photo_element->srcset)) $photo_element->srcset = NULL;
+			if(isset($photo_element->sizes)) $photo_element->sizes = NULL;
 		}
 
 		$this->items[] = array(

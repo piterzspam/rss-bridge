@@ -45,7 +45,8 @@ class OpinieWPplBridge extends BridgeAbstract {
 		$page_number = 1;
 		while (count($this->items) < $GLOBALS['number_of_wanted_articles'])
 		{
-			$html_main_page = getSimpleHTMLDOM($url_articles_list);
+//			$html_main_page = getSimpleHTMLDOM($url_articles_list);
+			$html_main_page = getSimpleHTMLDOMCached($url_articles_list, 60*60*24*7*2);
 			$articles_list_elements = $html_main_page->find('DIV[data-st-area="list-topic"]', 0)->first_child()->first_child();
 
 			foreach($articles_list_elements->childNodes() as $articles_list_element)

@@ -84,9 +84,17 @@ class BezprawnikBridge extends BridgeAbstract {
 		deleteAllDescendantsIfExist($article, 'comment');
 		//może pomoże na drugie zdjęcie pod zdjęciem głównynm w czytniku
 		deleteAllDescendantsIfExist($article, 'script');
+		//może pomoże na drugie zdjęcie pod zdjęciem głównynm w czytniku - 2
+		deleteAllDescendantsIfExist($article, 'NOSCRIPT');
 		deleteAllDescendantsIfExist($article, 'DIV.amp-autor');
 		deleteAllDescendantsIfExist($article, 'FIGURE[id^="attachment_"]');
 		deleteAllDescendantsIfExist($article, 'FOOTER');
+
+		foreach($article->find('amp-img, img') as $photo_element)
+		{
+			if(isset($photo_element->layout)) $photo_element->layout = NULL;
+			if(isset($photo_element->srcset)) $photo_element->srcset = NULL;
+		}
 		
 		clearParagraphsFromTaglinks($article, 'P', array('/bezprawnik.pl\/tag\//'));
 //https://bezprawnik.pl/korwin-mikke-wyrzucony-z-facebooka/amp/
