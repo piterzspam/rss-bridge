@@ -167,7 +167,7 @@ class DisplayAction extends ActionAbstract
 						$item = new \FeedItem();
 
 						// Create "new" error message every 24 hours
-						$this->userData['_error_time'] = urlencode((int)(time() / 86400));
+						$this->userData['_error_time'] = urlencode((int)(time() / 86400 * 14));
 
 						// Error 0 is a special case (i.e. "trying to get property of non-object")
 						if ($e->getCode() === 0)
@@ -204,7 +204,7 @@ class DisplayAction extends ActionAbstract
 						$item = new \FeedItem();
 
 						// Create "new" error message every 24 hours
-						$this->userData['_error_time'] = urlencode((int)(time() / 86400));
+						$this->userData['_error_time'] = urlencode((int)(time() / 86400 * 14));
 
 						$item->setURI((isset($_SERVER['REQUEST_URI']) ? parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) : '') . '?' . http_build_query($this->userData));
 
