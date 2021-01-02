@@ -99,70 +99,51 @@ class DisplayAction extends ActionAbstract
 		$infos = array();
 		$mtime = $cache->getTime();
 
-		echo "test0<br>";
 		if ($mtime !== false && (time() - $cache_timeout < $mtime) && !Debug::isEnabled())
 		{ // Load cached data
-			echo "test1<br>";
 
 			// Send "Not Modified" response if client supports it
 			// Implementation based on https://stackoverflow.com/a/10847262
 			if (isset($_SERVER['HTTP_IF_MODIFIED_SINCE']))
 			{
-				echo "test2<br>";
 				$stime = strtotime($_SERVER['HTTP_IF_MODIFIED_SINCE']);
 
 				if ($mtime <= $stime)
 				{ // Cached data is older or same
 					header('Last-Modified: ' . gmdate('D, d M Y H:i:s ', $mtime) . 'GMT', true, 304);
-					echo "test3<br>";
 					die();
 				}
 			}
 
-			echo "test4<br>";
 			$cached = $cache->loadData();
-			echo "test5<br>";
-			echo "dump1 " . var_export((isset($cached['items'])) , true) . "<br>";
-			var_dump($cached['items']);
-			echo "dump2 " . var_export((isset($cached['extraInfos'])) , true) . "<br>";
-			var_dump($cached['extraInfos']);
 
 			if (isset($cached['items']) && isset($cached['extraInfos']))
 			{
-				echo "test6<br>";
 				foreach ($cached['items'] as $item)
 				{
-					echo "test7<br>";
 					$items[] = new \FeedItem($item);
 				}
 
-				echo "test8<br>";
 				$infos = $cached['extraInfos'];
 			}
-			echo "test9<br>";
 		}
 		else
 		{ // Collect new data
 			try
 			{
-				echo "test10<br>";
 				$bridge->setDatas($bridge_params);
 				$bridge->collectData();
-				echo "test11<br>";
 
 				$items = $bridge->getItems();
-				echo "test12<br>";
 
 				// Transform "legacy" items to FeedItems if necessary.
 				// Remove this code when support for "legacy" items ends!
 				if (isset($items[0]) && is_array($items[0]))
 				{
-					echo "test13<br>";
 					$feedItems = array();
 
 					foreach ($items as $item)
 					{
-						echo "test14<br>";
 						$feedItems[] = new \FeedItem($item);
 					}
 
