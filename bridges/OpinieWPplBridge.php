@@ -46,7 +46,7 @@ class OpinieWPplBridge extends BridgeAbstract {
 		while (count($this->items) < $GLOBALS['number_of_wanted_articles'])
 		{
 //			$html_main_page = getSimpleHTMLDOM($url_articles_list);
-			$html_main_page = getSimpleHTMLDOMCached($url_articles_list, 60*60*24*7*2);
+			$html_main_page = getSimpleHTMLDOMCached($url_articles_list, 86400 * 14);
 			$articles_list_elements = $html_main_page->find('DIV[data-st-area="list-topic"]', 0)->first_child()->first_child();
 
 			foreach($articles_list_elements->childNodes() as $articles_list_element)
@@ -74,14 +74,14 @@ class OpinieWPplBridge extends BridgeAbstract {
 		if (TRUE === $GLOBALS['my_debug'])
 		{
 			$start_request = microtime(TRUE);
-			$article_html = getSimpleHTMLDOMCached($url_article, 60*60*24*7*2);
+			$article_html = getSimpleHTMLDOMCached($url_article, 86400 * 14);
 			$end_request = microtime(TRUE);
 			echo "<br>Article  took " . ($end_request - $start_request) . " seconds to complete - url: $url_article.";
 			$GLOBALS['all_articles_counter']++;
 			$GLOBALS['all_articles_time'] = $GLOBALS['all_articles_time'] + $end_request - $start_request;
 		}
 		else
-			$article_html = getSimpleHTMLDOMCached($url_article, 60*60*24*7*2);
+			$article_html = getSimpleHTMLDOMCached($url_article, 86400 * 14);
 
 		$article = $article_html->find('main#content', 0);
 		$article_data = $article_html->find('SCRIPT[type="application/ld+json"]', 0)->innertext;

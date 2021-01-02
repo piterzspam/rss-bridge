@@ -92,7 +92,7 @@ class DisplayAction extends ActionAbstract
 		$cacheFac->setWorkingDir(PATH_LIB_CACHES);
 		$cache = $cacheFac->create(Configuration::getConfig('cache', 'type'));
 		$cache->setScope('');
-		$cache->purgeCache(864000 * 14); // 24 hours * 14
+		$cache->purgeCache(86400 * 14); // 24 hours * 14
 		$cache->setKey($cache_params);
 
 		$items = array();

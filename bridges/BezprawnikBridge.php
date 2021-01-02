@@ -38,7 +38,9 @@ class BezprawnikBridge extends BridgeAbstract {
 		$GLOBALS['number_of_wanted_articles'] = $this->getInput('wanted_number_of_articles');
 		while (count($this->items) < $GLOBALS['number_of_wanted_articles'])
 		{
-			$html_articles_list = getSimpleHTMLDOM($url_articles_list);
+//			$html_articles_list = getSimpleHTMLDOM($url_articles_list);
+			$html_articles_list = getSimpleHTMLDOMCached($url_articles_list, 86400 * 14);
+			
 			if (0 !== count($found_urls = $html_articles_list->find("A.linkbg")))
 				foreach($found_urls as $article__link)
 					if (count($this->items) < $GLOBALS['number_of_wanted_articles'])
@@ -65,8 +67,8 @@ class BezprawnikBridge extends BridgeAbstract {
 
 	private function addArticle($url_article)
 	{
-//		$article_html = getSimpleHTMLDOMCached($url_article, (864000/(count($this->items)+1)*$GLOBALS['number_of_wanted_articles']));
-		$article_html = getSimpleHTMLDOMCached($url_article, 60*60*24*7*2);
+//		$article_html = getSimpleHTMLDOMCached($url_article, (86400/(count($this->items)+1)*$GLOBALS['number_of_wanted_articles']));
+		$article_html = getSimpleHTMLDOMCached($url_article, 86400 * 14);
 		$article = $article_html->find('article', 0);
 		$article_data = $article_html->find('SCRIPT[type="application/ld+json"]', 0)->innertext;
 		$article_data_parsed = parse_article_data(json_decode($article_data));

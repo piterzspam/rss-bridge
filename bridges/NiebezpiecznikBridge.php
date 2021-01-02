@@ -16,7 +16,7 @@ class NiebezpiecznikBridge extends FeedExpander {
 	protected function parseItem($newsItem)
 	{
 		$item = parent::parseItem($newsItem);
-		$articlePage = getSimpleHTMLDOMCached(($item['uri']), 60*60*24*7*2);
+		$articlePage = getSimpleHTMLDOMCached(($item['uri']), 86400 * 14);
 		$article = $articlePage->find('DIV#main DIV.post', 0);
 		if (FALSE === is_null($ad = $article->find('DIV.entry DIV[style="margin-top:-25px;"]', 0)))
 			$ad->outertext = '';

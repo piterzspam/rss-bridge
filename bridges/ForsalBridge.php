@@ -62,7 +62,9 @@ class ForsalBridge extends BridgeAbstract {
 						//link to articles
 						$url_article_link = $a_element->href;
 						$url_article_link = $url_article_link.".amp";
-						$article_html = getSimpleHTMLDOMCached($url_article_link, (864000/(count($this->items)+1)*$GLOBALS['number_of_wanted_articles']));
+//						$article_html = getSimpleHTMLDOMCached($url_article_link, (86400/(count($this->items)+1)*$GLOBALS['number_of_wanted_articles']));
+						$article_html = getSimpleHTMLDOMCached($url_article_link, 86400 * 14);
+						
 						$GLOBALS['is_article_free'] = $this->isArticleFree($article_html);
 						$GLOBALS['is_article_opinion'] = $this->isArticleOpinion($article_html);
 						if (TRUE === $this->meetsConditions($article_html))

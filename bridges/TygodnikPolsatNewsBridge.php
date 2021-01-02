@@ -76,7 +76,7 @@ class TygodnikPolsatNewsBridge extends BridgeAbstract {
 
 	private function addArticle($url_article)
 	{
-		$article_html = getSimpleHTMLDOMCached($url_article, 60*60*24*7*2);
+		$article_html = getSimpleHTMLDOMCached($url_article, 86400 * 14);
 		$article_target = $article_html->find('article.article--target', 0);
 
 		//title

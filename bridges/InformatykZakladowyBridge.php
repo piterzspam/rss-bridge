@@ -16,7 +16,7 @@ class InformatykZakladowyBridge extends FeedExpander {
 	protected function parseItem($newsItem)
 	{
 		$item = parent::parseItem($newsItem);
-		$articlePage = getSimpleHTMLDOMCached($item['uri'], 60*60*24*7*2);
+		$articlePage = getSimpleHTMLDOMCached($item['uri'], 86400 * 14);
 		$article = $articlePage->find('MAIN#site-content', 0);
 		deleteAllDescendantsIfExist($article, 'DIV.comments-wrapper');
 		deleteAllDescendantsIfExist($article, 'comment');

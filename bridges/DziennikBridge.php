@@ -63,7 +63,8 @@ class DziennikBridge extends BridgeAbstract {
 						$title = $article_link->getAttribute('title');
 						$href = $article_link->getAttribute('href');
 						$href = $href.".amp";
-						$article_html = getSimpleHTMLDOMCached($href, (864000/(count($this->items)+1)*$GLOBALS['number_of_wanted_articles']));
+//						$article_html = getSimpleHTMLDOMCached($href, (86400/(count($this->items)+1)*$GLOBALS['number_of_wanted_articles']));
+						$article_html = getSimpleHTMLDOMCached($href, 86400 * 14);
 						$GLOBALS['is_article_free'] = $this->isArticleFree($article_html);
 						$GLOBALS['is_article_opinion'] = $this->isArticleOpinion($article_html);
 						if ($this->meetsConditions() === TRUE && FALSE === in_array($title, $titles))

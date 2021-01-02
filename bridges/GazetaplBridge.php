@@ -62,8 +62,8 @@ class GazetaplBridge extends BridgeAbstract {
 
 	private function addArticle($url_article)
 	{
-//		$article_html = getSimpleHTMLDOMCached($url_article, (864000/(count($this->items)+1)*$GLOBALS['number_of_wanted_articles']));
-		$article_html = getSimpleHTMLDOMCached($url_article, 60*60*24*7*2);
+//		$article_html = getSimpleHTMLDOMCached($url_article, (86400/(count($this->items)+1)*$GLOBALS['number_of_wanted_articles']));
+		$article_html = getSimpleHTMLDOMCached($url_article, 86400 * 14);
 		if (is_bool($article_html))
 		{
 			$this->items[] = array(

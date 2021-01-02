@@ -75,8 +75,8 @@ class OnetBridge extends BridgeAbstract {
 		if (TRUE === $GLOBALS['my_debug'])
 		{
 			$start_request = microtime(TRUE);
-//			$article_html = getSimpleHTMLDOMCached($url_article, (864000/(count($this->items)+1)*$GLOBALS['number_of_wanted_articles']));
-			$article_html = getSimpleHTMLDOMCached($url_article, 60*60*24*7*2);
+//			$article_html = getSimpleHTMLDOMCached($url_article, (86400/(count($this->items)+1)*$GLOBALS['number_of_wanted_articles']));
+			$article_html = getSimpleHTMLDOMCached($url_article, 86400 * 14);
 			$end_request = microtime(TRUE);
 			echo "<br>Article  took " . ($end_request - $start_request) . " seconds to complete - url: $url_article.";
 			$GLOBALS['all_articles_counter']++;
@@ -84,8 +84,8 @@ class OnetBridge extends BridgeAbstract {
 		}
 		else
 		{
-//			$article_html = getSimpleHTMLDOMCached($url_article, (864000/(count($this->items)+1)*$GLOBALS['number_of_wanted_articles']));
-			$article_html = getSimpleHTMLDOMCached($url_article, 60*60*24*7*2);
+//			$article_html = getSimpleHTMLDOMCached($url_article, (86400/(count($this->items)+1)*$GLOBALS['number_of_wanted_articles']));
+			$article_html = getSimpleHTMLDOMCached($url_article, 86400 * 14);
 		}
 		if (is_bool($article_html))
 		{

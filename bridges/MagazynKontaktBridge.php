@@ -22,8 +22,8 @@ class MagazynKontaktBridge extends FeedExpander {
 		}
 		if (FALSE === strpos($item['uri'], 'magazynkontakt.pl/profil/'))
 		{
-//			$articlePage = getSimpleHTMLDOMCached($item['uri'], 100);
-			$articlePage = getSimpleHTMLDOM($item['uri'], 100);
+//			$articlePage = getSimpleHTMLDOM($item['uri'], 100);
+			$articlePage = getSimpleHTMLDOMCached($item['uri'], 86400 * 14);
 			$article = $articlePage->find('ARTICLE.block-post', 0);
 			foreach($article->find('DIV[id^="attachment_"]') as $photo_element)
 			{

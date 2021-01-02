@@ -16,7 +16,7 @@ class ZaufanaTrzeciaStronaBridge extends FeedExpander {
 	protected function parseItem($newsItem)
 	{
 		$item = parent::parseItem($newsItem);
-		$articlePage = getSimpleHTMLDOMCached($newsItem->link, 60*60*24*7*2);
+		$articlePage = getSimpleHTMLDOMCached($newsItem->link, 86400 * 14);
 		$article = $articlePage->find('DIV#main DIV.postcontent', 0);
 		foreach($article->find('IMG') as $img)
 		{
