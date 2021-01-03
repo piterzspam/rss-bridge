@@ -5,8 +5,20 @@ class MagazynKontaktBridge extends FeedExpander {
 	const NAME = 'Magazyn Kontakt';
 	const URI = '';
 	const DESCRIPTION = 'No description provided';
-	const PARAMETERS = array();
-	const CACHE_TIMEOUT = 100;
+	const CACHE_TIMEOUT = 86400;
+
+	const PARAMETERS = array
+	(
+		'Parametry' => array
+		(
+			'wanted_number_of_articles' => array
+			(
+				'name' => 'Liczba artykułów',
+				'type' => 'text',
+				'required' => true
+			)
+		)
+	);
 
     public function collectData(){
 		include 'myFunctions.php';
@@ -16,13 +28,12 @@ class MagazynKontaktBridge extends FeedExpander {
 	protected function parseItem($newsItem)
 	{
 		$item = parent::parseItem($newsItem);
-		if (count($this->items) >= 2)
+		if (count($this->items) >= $this->getInput('wanted_number_of_articles'))
 		{
 			return;
 		}
 		if (FALSE === strpos($item['uri'], 'magazynkontakt.pl/profil/'))
 		{
-//			$articlePage = getSimpleHTMLDOM($item['uri'], 100);
 			$articlePage = getSimpleHTMLDOMCached($item['uri'], 86400 * 14);
 			$article = $articlePage->find('ARTICLE.block-post', 0);
 			foreach($article->find('DIV[id^="attachment_"]') as $photo_element)

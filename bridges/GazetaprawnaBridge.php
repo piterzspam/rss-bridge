@@ -4,7 +4,7 @@ class GazetaprawnaBridge extends BridgeAbstract {
 	const URI = 'https://www.gazetaprawna.pl/';
 	const DESCRIPTION = 'No description provided';
 	const MAINTAINER = 'No maintainer';
-	const CACHE_TIMEOUT = 1; // Can be omitted!
+	const CACHE_TIMEOUT = 86400; // Can be omitted!
 
 	const PARAMETERS = array
 	(
@@ -144,7 +144,7 @@ class GazetaprawnaBridge extends BridgeAbstract {
 		$article_data_parsed = parse_article_data(json_decode($article_data));
 		$date = trim($article_data_parsed["datePublished"]);
 		$title = trim($article_data_parsed["headline"]);
-		$author = trim($article_data_parsed["author"]["0"]["name"]);
+		$author = trim($article_data_parsed["author"]["name"]);
 
 		if ($GLOBALS['is_article_opinion'])
 			$title = '[OPINIA] '.str_replace('[OPINIA]', '', $title);

@@ -4,7 +4,7 @@ class BezprawnikBridge extends BridgeAbstract {
 	const URI = 'https://bezprawnik.pl/author/';
 	const DESCRIPTION = 'No description provided';
 	const MAINTAINER = 'No maintainer';
-	const CACHE_TIMEOUT = 3600; // Can be omitted!
+	const CACHE_TIMEOUT = 86400; // Can be omitted!
 
 	const PARAMETERS = array
 	(
@@ -27,7 +27,9 @@ class BezprawnikBridge extends BridgeAbstract {
 
 	public function getIcon()
 	{
-		return 'https://c.disquscdn.com/uploads/forums/349/4323/favicon.png';
+		return 'https://ocs-pl.oktawave.com/v1/AUTH_2887234e-384a-4873-8bc5-405211db13a2/spidersweb/bp/fav/favicon-32x32.png';
+//		return 'https://c.disquscdn.com/uploads/forums/349/4323/favicon.png';
+//		return 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAMAAABEpIrGAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAABdUExURRuX80Cn9fX8//r+//3+/wuR8kiq9f///x2Y8xGU9BSV8yGa9Mno/TWi9XzA9uHx/lmx9bPc/JTL9xIPE6TY/TuJwu34/w+B1W279xZVhDSm/TNefzZojkKb3gw2VRTmK5wAAAENSURBVDjLlZPZcsMgDEUxEj4Y8L5k7/9/Zh8yyaQYd9rzqjuSrhZj/ojfkQlCkxEyQVvl/CzgOkQ/ECaXFelR3ih9DFmKAUXsE5Szi5kLN4Kt2+v12vaQmtyFbypRltPpdOpQ6rwDY6KbUB7zvG6w5AWMMT7EDdLla4GtDX4/y+g6hOGB0hUSGGNMSJASpKN1uAFVlMH5I8WICONR3PjQWrDFDl+CDbRuDgVuQaQwxXe8fjZ5PnDpXzb7cjy6M0JdIUzlFLGHsWkWtGgkugmV9XJZLaVR+NBaZZrnee6QwjCfB7Pe7vfb2kMKpT0gVqwVa5H9QkP69Wi96z7joLuzr+qMKj8Wl//ef5/3kG/lHBAqw+chFAAAAFd6VFh0UmF3IHByb2ZpbGUgdHlwZSBpcHRjAAB4nOPyDAhxVigoyk/LzEnlUgADIwsuYwsTIxNLkxQDEyBEgDTDZAMjs1Qgy9jUyMTMxBzEB8uASKBKLgDqFxF08kI1lQAAAABJRU5ErkJggg==';
 	}
 
 	public function collectData()

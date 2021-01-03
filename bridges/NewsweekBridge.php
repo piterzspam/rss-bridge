@@ -4,7 +4,7 @@ class NewsweekBridge extends BridgeAbstract {
 	const URI = 'https://www.newsweek.pl/autorzy/';
 	const DESCRIPTION = 'No description provided';
 	const MAINTAINER = 'No maintainer';
-	const CACHE_TIMEOUT = 3600; // Can be omitted!
+	const CACHE_TIMEOUT = 86400; // Can be omitted!
 
 	const PARAMETERS = array
 	(
@@ -66,13 +66,13 @@ class NewsweekBridge extends BridgeAbstract {
 
 		foreach($urls as $url_article_link)
 		{
-//			$article_html = getSimpleHTMLDOMCached($url_article_link, (86400/(count($this->items)+1)*$GLOBALS['number_of_wanted_articles']));
-			$article_html = getSimpleHTMLDOMCached($url_article_link, 86400 * 14);
+//			$article_html = getSimpleHTMLDOMCached($url_article_link, 86400 * 14);
+			$article_html = getSimpleHTMLDOMCached($url_article_link, 10);
 			if (is_bool($article_html))
 			{
 				$this->items[] = array(
 					'uri' => $url_article_link,
-					'title' => "getSimpleHTMLDOM($url_article_link) jest booleml",
+					'title' => "getSimpleHTMLDOM($url_article_link) jest boolem",
 					'timestamp' => '',
 					'author' => '',
 					'content' => $article_html,
@@ -126,7 +126,7 @@ class NewsweekBridge extends BridgeAbstract {
 					$previous->outertext = '';
 				}
 			}
-			foreach($article->find('SPAN') as $span)
+			foreach($article->find('DIV.articleDetail SPAN.descPhoto') as $span)
 			{
 				while (FALSE === is_null($previous = $span->prev_sibling()))
 				{
@@ -144,7 +144,6 @@ class NewsweekBridge extends BridgeAbstract {
 				}
 				$span->innertext = trim($span->innertext);
 				$span->setAttribute('style', 'display: block;');
-
 			}
 			//paragrafy, czytaj inne artykuly
 			foreach($article->find('P') as $paragraph)
@@ -174,6 +173,8 @@ class NewsweekBridge extends BridgeAbstract {
 			$this->deleteAllDescendantsIfExist($article, 'DIV#fbComments');
 			$this->deleteAllDescendantsIfExist($article, 'UL.breadCrumb');
 			$this->deleteAllDescendantsIfExist($article, 'DIV.tags');
+//			$this->deleteAllDescendantsIfExist($article, 'SPAN');
+			
 
 
 			$this->items[] = array(
