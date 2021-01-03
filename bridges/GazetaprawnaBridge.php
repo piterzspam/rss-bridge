@@ -53,7 +53,7 @@ class GazetaprawnaBridge extends BridgeAbstract {
 		include 'myFunctions.php';
 		$GLOBALS['number_of_wanted_articles'] = $this->getInput('wanted_number_of_articles');
 		$GLOBALS['my_debug'] = FALSE;
-		$GLOBALS['my_debug'] = TRUE;
+//		$GLOBALS['my_debug'] = TRUE;
 		if (TRUE === $GLOBALS['my_debug'])
 		{
 			$GLOBALS['all_articles_time'] = 0;
@@ -72,7 +72,7 @@ class GazetaprawnaBridge extends BridgeAbstract {
 //				echo "<br>found_urls<br><br>$found_urls";
 				$found_urls_hrefs = array();
 				$found_urls_titles = array();
-				echo "<br><br>Array - found_urls:";
+//				echo "<br><br>Array - found_urls:";
 				foreach($found_urls as $url_element)
 				{
 					$title = $url_element->title;
@@ -81,28 +81,31 @@ class GazetaprawnaBridge extends BridgeAbstract {
 						$found_urls_hrefs[] = $url_element->href;
 						$found_urls_titles[] = $title;
 					}
-					echo "<br>url_element->href: $url_element->href";
+//					echo "<br>url_element->href: $url_element->href";
 				}
-				echo "<br><br>Array - found_urls2:";
+//				echo "<br><br>Array - found_urls2:";
 				foreach($found_urls_hrefs as $url_article_link)
 				{
-					echo "<br>url_article_link: <br>$url_article_link";
+//					echo "<br>url_article_link: <br>$url_article_link";
 				}
 //				break;
-				echo "<br><br>Array - found_urls3:";
+//				echo "<br><br>Array - found_urls3:";
 				foreach($found_urls_hrefs as $url_article_link)
 				{
 					if (count($this->items) < $GLOBALS['number_of_wanted_articles'])
 					{
 						//link to articles
 						$url_article_link = $this->getCustomizedLink($url_article_link);
-						echo "<br>url_article_link: <br>$url_article_link";
+//						echo "<br>url_article_link: <br>$url_article_link";
 //						$GLOBALS['is_article_free'] = $this->isArticleFree($h3_element);
 //						$GLOBALS['is_article_opinion'] = $this->isArticleOpinion($h3_element);
-//						if ($this->meetsConditions() === TRUE && count($this->items) < $GLOBALS['number_of_wanted_articles'])
-//						{
-//							$this->addArticle($url_article_link);
-//						}
+						$article_html = getSimpleHTMLDOMCached($url_article_link, 86400 * 14);
+						$GLOBALS['is_article_free'] = $this->isArticleFree($article_html);
+						$GLOBALS['is_article_opinion'] = $this->isArticleOpinion($article_html);
+						if ($this->meetsConditions() === TRUE && count($this->items) < $GLOBALS['number_of_wanted_articles'])
+						{
+							$this->addArticle($url_article_link);
+						}
 					}
 				}
 				break;
@@ -146,26 +149,55 @@ class GazetaprawnaBridge extends BridgeAbstract {
 		if ($GLOBALS['is_article_opinion'])
 			$title = '[OPINIA] '.str_replace('[OPINIA]', '', $title);
 
-		if ($GLOBALS['is_article_free'])
+/*		if ($GLOBALS['is_article_free'])
 			$title = '[FREE] '.$title;
 		else
-			$title = '[PREMIUM] '.$title;
+			$title = '[PREMIUM] '.$title;*/
 //		echo "<br><br><br>article_data_parsed:<pre>";var_dump($article_data_parsed);echo "</pre>";
 
-		//tags
+/*		//tags
 		$tags = array();
 		foreach($article->find('DIV.tags', 0)->find('A[href*="/tagi/"]') as $tag_link)
-			$tags[] = trim($tag_link->plaintext);
+			$tags[] = trim($tag_link->plaintext);*/
 
 		fixAmpArticles($article);
 		formatAmpLinks($article);
-		deleteAllDescendantsIfExist($article, 'DIV.widget-psav-share-box');
+/*		deleteAllDescendantsIfExist($article, 'DIV.widget-psav-share-box');
 		deleteAllDescendantsIfExist($article, 'DIV.w2g');
 		deleteAllDescendantsIfExist($article, 'DIV.psavSpecialLinks');
 		deleteAllDescendantsIfExist($article, 'DIV.articleRelated');
 		deleteAllDescendantsIfExist($article, 'DIV.articleNextPrev');
 		deleteAllDescendantsIfExist($article, 'DIV.tags');
-		deleteAllDescendantsIfExist($article, 'UL.psav-author-ul');
+		deleteAllDescendantsIfExist($article, 'UL.psav-author-ul');*/
+		
+		deleteAllDescendantsIfExist($article, 'DIV.promoFrame');
+		deleteAllDescendantsIfExist($article, 'DIV.social-box');
+		deleteAllDescendantsIfExist($article, 'DIV.adBoxTop');
+		deleteAllDescendantsIfExist($article, 'DIV.serviceLogoBox');
+		//https://prawo.gazetaprawna.pl/artykuly/8054640,nowelizacja-ustawy-o-wlasnosci-lokali-eksmisja-utrata-mieszkania.html.amp?amp_js_v=0.1
+		clearParagraphsFromTaglinks($article, 'P.hyphenate', array(
+			'/gazetaprawna\.pl\/tagi\//',
+			'/prawo\.gazetaprawna\.pl\/$/',
+			'/serwisy\.gazetaprawna\.pl\/msp\/tematy\//'
+		));
+
+		//https://www-gazetaprawna-pl.cdn.ampproject.org/v/s/www.gazetaprawna.pl/firma-i-prawo/artykuly/8054663,uokik-postepowanie-kaufland-polska-markety-eurocash-i-sca-pr-polska-intermarche.html.amp?amp_js_v=0.1
+		clearParagraphsFromTaglinks($article, 'DIV.frameArea', array(
+			'/gazetaprawna\.pl\/tagi\//',
+			'/prawo\.gazetaprawna\.pl\/$/',
+			'/serwisy\.gazetaprawna\.pl\/.*\/tematy\/p\//'
+		));
+/*
+		https://www.gazetaprawna.pl/tagi/ustawa
+		https://www.gazetaprawna.pl/tagi/prawo
+		https://www.gazetaprawna.pl/tagi/sadownictwo
+		https://prawo.gazetaprawna.pl/
+		https://serwisy.gazetaprawna.pl/msp/tematy/p/przedsiebiorca
+		https://serwisy.gazetaprawna.pl/nieruchomosci/artykuly/8054104,spoldzielcy-status-nowelizacja-rpo-tk-czlonkostwo-w-spoldzielni-mieszkaniowej.html.amp?amp_js_v=0.1
+		https://serwisy.gazetaprawna.pl/poradnik-konsumenta/tematy/p/prawo
+		https://www.gazetaprawna.pl/tagi/prawo
+		https://www.gazetaprawna.pl/tagi/przedsiebiorca
+*/
 
 		$interview_question_style = array(
 			'font-weight: bold;'
@@ -229,28 +261,32 @@ class GazetaprawnaBridge extends BridgeAbstract {
 			return FALSE;
 	}
 
-	private function isArticleFree($h3_element)
+	private function isArticleFree($article_html)
 	{
-		if ($h3_element->class === "open")
+		//Jeżeli element istneje (FALSE === is_null), to jest to artykul platny
+		$premium_element = $article_html->find('A[href*="edgp.gazetaprawna.pl"]', 0);
+		if (FALSE === is_null($premium_element))
+			return FALSE;
+		else
 			return TRUE;
-		else if ($h3_element->class === "gold")
-			return FALSE;
-		else 
-			return FALSE;
 	}
 
-	private function isArticleOpinion($h3_element)
+	private function isArticleOpinion($article_html)
 	{
-		$title = $h3_element->plaintext;
-		if (FALSE !== strpos($title, '[OPINIA]'))
+		$title = $article_html->find('H1.headline', 0)->plaintext;
+		if (FALSE !== strpos($title, '[OPINIA]') || FALSE !== strpos($title, '[KOMENTARZ]'))
 			return TRUE;
 		else
 			return FALSE;
 	}
+
 	private function getCustomizedLink($url)
 	{
-		$new_url = preg_replace('/.*\/artykuly\/(.*)/', "https://www-gazetaprawna-pl.cdn.ampproject.org/v/s/www.gazetaprawna.pl/amp/$1", $url);
-		$new_url = str_replace('.html', '.amp?amp_js_v=0.1', $new_url);
+		$new_url = str_replace('https://www.gazetaprawna.pl', 'https://www-gazetaprawna-pl.cdn.ampproject.org/v/s/www.gazetaprawna.pl', $url);
+		
+		
+//		$new_url = preg_replace('/.*\/artykuly\/(.*)/', "https://www-gazetaprawna-pl.cdn.ampproject.org/v/s/www.gazetaprawna.pl/amp/$1", $url);
+		$new_url = str_replace('.html', '.html.amp?amp_js_v=0.1', $new_url);
 		return $new_url;
 	}
 }
