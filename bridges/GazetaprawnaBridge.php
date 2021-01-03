@@ -209,8 +209,7 @@ class GazetaprawnaBridge extends BridgeAbstract {
 			'title' => $title,
 			'timestamp' => $date,
 			'author' => $author,
-			'content' => $article,
-			'categories' => $tags
+			'content' => $article
 		);
 	}
 
