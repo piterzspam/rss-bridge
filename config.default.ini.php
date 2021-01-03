@@ -21,7 +21,7 @@ type = "file"
 ; Allow users to specify custom timeout for specific requests.
 ; true  = enabled
 ; false = disabled (default)
-custom_timeout = false
+custom_timeout = true
 
 [admin]
 ; Advertise an email address where people can reach the administrator.
