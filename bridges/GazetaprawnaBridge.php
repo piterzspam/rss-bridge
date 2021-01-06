@@ -19,7 +19,7 @@ class GazetaprawnaBridge extends BridgeAbstract {
 			'wanted_number_of_articles' => array
 			(
 				'name' => 'Liczba artykułów',
-				'type' => 'text',
+				'type' => 'number',
 				'required' => true
 			),
 			'tylko_opinie' => array
@@ -76,35 +76,44 @@ class GazetaprawnaBridge extends BridgeAbstract {
 				foreach($found_urls as $url_element)
 				{
 					$title = $url_element->title;
-					if (FALSE === in_array($title, $found_urls_titles))
+					if (FALSE === in_array($title, $found_urls_titles) && FALSE === strpos($url_element->href, '/dgp/'))
 					{
 						$found_urls_hrefs[] = $url_element->href;
 						$found_urls_titles[] = $title;
 					}
-//					echo "<br>url_element->href: $url_element->href";
 				}
-//				echo "<br><br>Array - found_urls2:";
-				foreach($found_urls_hrefs as $url_article_link)
-				{
-//					echo "<br>url_article_link: <br>$url_article_link";
-				}
-//				break;
-//				echo "<br><br>Array - found_urls3:";
+
 				foreach($found_urls_hrefs as $url_article_link)
 				{
 					if (count($this->items) < $GLOBALS['number_of_wanted_articles'])
 					{
 						//link to articles
 						$url_article_link = $this->getCustomizedLink($url_article_link);
-//						echo "<br>url_article_link: <br>$url_article_link";
+						echo "<br>url_article_link: <br>$url_article_link";
 //						$GLOBALS['is_article_free'] = $this->isArticleFree($h3_element);
 //						$GLOBALS['is_article_opinion'] = $this->isArticleOpinion($h3_element);
-						$article_html = getSimpleHTMLDOMCached($url_article_link, 86400 * 14);
+
+						
+						if (TRUE === $GLOBALS['my_debug'])
+						{
+							$start_request = microtime(TRUE);
+//							$article_html = getSimpleHTMLDOMCached($amp_url, (86400/(count($this->items)+1)*$GLOBALS['number_of_wanted_articles']));
+							$article_html = getSimpleHTMLDOMCached($url_article_link, 86400 * 14);
+							$end_request = microtime(TRUE);
+							echo "<br>Article  took " . ($end_request - $start_request) . " seconds to complete - url: $url_article_link.";
+							$GLOBALS['all_articles_counter']++;
+							$GLOBALS['all_articles_time'] = $GLOBALS['all_articles_time'] + $end_request - $start_request;
+						}
+						else
+						{
+//							$article_html = getSimpleHTMLDOMCached($amp_url, (86400/(count($this->items)+1)*$GLOBALS['number_of_wanted_articles']));
+							$article_html = getSimpleHTMLDOMCached($url_article_link, 86400 * 14);
+						}
 						$GLOBALS['is_article_free'] = $this->isArticleFree($article_html);
 						$GLOBALS['is_article_opinion'] = $this->isArticleOpinion($article_html);
 						if ($this->meetsConditions() === TRUE && count($this->items) < $GLOBALS['number_of_wanted_articles'])
 						{
-							$this->addArticle($url_article_link);
+							$this->addArticle($article_html, $url_article_link);
 						}
 					}
 				}
@@ -120,24 +129,8 @@ class GazetaprawnaBridge extends BridgeAbstract {
 			echo "<br>Wszystkie {$GLOBALS['all_articles_counter']} artykulow zajelo {$GLOBALS['all_articles_time']}, <br>średnio ".$GLOBALS['all_articles_time']/$GLOBALS['all_articles_counter'] ."<br>";
 	}
 
-	private function addArticle($amp_url)
+	private function addArticle($article_html, $url_article_link)
 	{
-		if (TRUE === $GLOBALS['my_debug'])
-		{
-			$start_request = microtime(TRUE);
-//			$article_html = getSimpleHTMLDOMCached($amp_url, (86400/(count($this->items)+1)*$GLOBALS['number_of_wanted_articles']));
-			$article_html = getSimpleHTMLDOMCached($amp_url, 86400 * 14);
-			$end_request = microtime(TRUE);
-			echo "<br>Article  took " . ($end_request - $start_request) . " seconds to complete - url: $amp_url.";
-			$GLOBALS['all_articles_counter']++;
-			$GLOBALS['all_articles_time'] = $GLOBALS['all_articles_time'] + $end_request - $start_request;
-		}
-		else
-		{
-//			$article_html = getSimpleHTMLDOMCached($amp_url, (86400/(count($this->items)+1)*$GLOBALS['number_of_wanted_articles']));
-			$article_html = getSimpleHTMLDOMCached($amp_url, 86400 * 14);
-		}
-
 //		echo "url_article_link: $url<br>";
 		$article = $article_html->find('article', 0);
 		$article_data = $article_html->find('SCRIPT[type="application/ld+json"]', 0)->innertext;
@@ -178,14 +171,14 @@ class GazetaprawnaBridge extends BridgeAbstract {
 		clearParagraphsFromTaglinks($article, 'P.hyphenate', array(
 			'/gazetaprawna\.pl\/tagi\//',
 			'/prawo\.gazetaprawna\.pl\/$/',
-			'/serwisy\.gazetaprawna\.pl\/msp\/tematy\//'
+			'/serwisy\.gazetaprawna\.pl\/.*\/tematy\//'
 		));
 
 		//https://www-gazetaprawna-pl.cdn.ampproject.org/v/s/www.gazetaprawna.pl/firma-i-prawo/artykuly/8054663,uokik-postepowanie-kaufland-polska-markety-eurocash-i-sca-pr-polska-intermarche.html.amp?amp_js_v=0.1
 		clearParagraphsFromTaglinks($article, 'DIV.frameArea', array(
 			'/gazetaprawna\.pl\/tagi\//',
 			'/prawo\.gazetaprawna\.pl\/$/',
-			'/serwisy\.gazetaprawna\.pl\/.*\/tematy\/p\//'
+			'/serwisy\.gazetaprawna\.pl\/.*\/tematy\//'
 		));
 /*
 		https://www.gazetaprawna.pl/tagi/ustawa
@@ -205,7 +198,7 @@ class GazetaprawnaBridge extends BridgeAbstract {
 		addStyle($article, 'P.pytanie', $interview_question_style);
 
 		$this->items[] = array(
-			'uri' => $amp_url,
+			'uri' => $url_article_link,
 			'title' => $title,
 			'timestamp' => $date,
 			'author' => $author,
@@ -281,11 +274,7 @@ class GazetaprawnaBridge extends BridgeAbstract {
 
 	private function getCustomizedLink($url)
 	{
-		$new_url = str_replace('https://www.gazetaprawna.pl', 'https://www-gazetaprawna-pl.cdn.ampproject.org/v/s/www.gazetaprawna.pl', $url);
-		
-		
-//		$new_url = preg_replace('/.*\/artykuly\/(.*)/', "https://www-gazetaprawna-pl.cdn.ampproject.org/v/s/www.gazetaprawna.pl/amp/$1", $url);
-		$new_url = str_replace('.html', '.html.amp?amp_js_v=0.1', $new_url);
-		return $new_url;
+		preg_match('/https?:\/\/(([^\.]*)\..*)/', $url, $output_array);
+		return ('https://'.$output_array[2].'-gazetaprawna-pl.cdn.ampproject.org/v/s/'.$output_array[1].'.amp?amp_js_v=0.1');
 	}
 }
