@@ -30,7 +30,7 @@ class MiesiecznikZnakBridge extends FeedExpander {
 		$item = parent::parseItem($newsItem);
 		if (count($this->items) >= $this->getInput('wanted_number_of_articles'))
 		{
-			return;
+			return $item;
 		}
 		else
 		{

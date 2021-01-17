@@ -89,7 +89,7 @@ class GazetaprawnaBridge extends BridgeAbstract {
 					{
 						//link to articles
 						$url_article_link = $this->getCustomizedLink($url_article_link);
-						echo "<br>url_article_link: <br>$url_article_link";
+//						echo "<br>url_article_link: <br>$url_article_link";
 //						$GLOBALS['is_article_free'] = $this->isArticleFree($h3_element);
 //						$GLOBALS['is_article_opinion'] = $this->isArticleOpinion($h3_element);
 

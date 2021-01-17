@@ -4,7 +4,7 @@ class TygodnikPolsatNewsBridge extends BridgeAbstract {
 	const URI = 'https://tygodnik.polsatnews.pl/';
 	const DESCRIPTION = 'No description provided';
 	const MAINTAINER = 'No maintainer';
-	const CACHE_TIMEOUT = 3600;
+	const CACHE_TIMEOUT = 86400;
 
 	const PARAMETERS = array
 	(

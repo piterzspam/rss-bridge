@@ -4,7 +4,7 @@ class GazetaplBridge extends BridgeAbstract {
 	const URI = 'https://wiadomosci.gazeta.pl/wiadomosci/0,114871.html';
 	const DESCRIPTION = 'No description provided';
 	const MAINTAINER = 'No maintainer';
-	const CACHE_TIMEOUT = 3600; // Can be omitted!
+	const CACHE_TIMEOUT = 86400; // Can be omitted!
 
 	const PARAMETERS = array
 	(

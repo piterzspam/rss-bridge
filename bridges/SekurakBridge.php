@@ -6,7 +6,7 @@ class SekurakBridge extends FeedExpander {
 	const URI = '';
 	const DESCRIPTION = 'No description provided';
 	const PARAMETERS = array();
-	const CACHE_TIMEOUT = 3600;
+	const CACHE_TIMEOUT = 86400;
 
     public function collectData(){
 //		include 'myFunctions.php';

@@ -205,6 +205,17 @@
 		return $tags;
 	}
 
+	function returnAuthorsAsString($article, $author_selector)
+	{
+		$authors = '';
+		foreach($article->find($author_selector) as $author_item)
+		{
+			$authors = $authors.', '.trim($author_item->plaintext);
+		}
+		$authors = substr_replace($authors, '', 0, strlen(', '));
+		return $authors;
+	}
+
 	function addStyle($article_element, $search_string, $stylesArray)
 	{
 		$styleString = "";

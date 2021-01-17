@@ -4,7 +4,7 @@ class DziennikBridge extends BridgeAbstract {
 	const URI = 'https://www.dziennik.pl/';
 	const DESCRIPTION = 'No description provided';
 	const MAINTAINER = 'No maintainer';
-	const CACHE_TIMEOUT = 3600; // Can be omitted!
+	const CACHE_TIMEOUT = 86400; // Can be omitted!
 
 	const PARAMETERS = array
 	(
