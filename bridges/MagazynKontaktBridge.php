@@ -28,7 +28,7 @@ class MagazynKontaktBridge extends FeedExpander {
 	protected function parseItem($newsItem)
 	{
 		$item = parent::parseItem($newsItem);
-		if (FALSE === strpos($item['uri'], 'magazynkontakt.pl/profil/'))
+		if (FALSE === strpos($item['uri'], 'magazynkontakt.pl/profil/') && FALSE === strpos($item['uri'], 'magazynkontakt.pl/ramki/'))
 		{
 			if (count($this->items) >= $this->getInput('wanted_number_of_articles'))
 			{
