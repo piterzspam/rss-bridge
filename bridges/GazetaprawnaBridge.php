@@ -42,12 +42,7 @@ class GazetaprawnaBridge extends BridgeAbstract {
 			),
 		)
 	);
-/*
-	public function getIcon()
-	{
-		return 'https://c.disquscdn.com/uploads/forums/349/4323/favicon.png';
-	}
-*/
+
 	public function collectData()
 	{
 		include 'myFunctions.php';
@@ -62,214 +57,271 @@ class GazetaprawnaBridge extends BridgeAbstract {
 		$url_articles_list = $this->getInput('url');
 		$url_articles_list = preg_replace('/(.*\/autor\/[0-9]+,([a-z]+)-([a-z]+)).*/', '$1', $url_articles_list);
 
-
+		$GLOBALS['articles_urls'] = array();
+		$GLOBALS['articles_titles'] = array();
+		$GLOBALS['opinions_params'] = array(
+			'OPINIA',
+			'KOMENTARZ'
+		);
+		$this->setGlobalArticlesParams();
+		$GLOBALS['url_articles_list'] = $url_articles_list;
+		
 		while (count($this->items) < $GLOBALS['number_of_wanted_articles'])
 		{
-			$html_articles_list = getSimpleHTMLDOM($url_articles_list);
-//				echo "<br>html_articles_list<br><br>$html_articles_list";
-			if (0 !== count($found_urls = $html_articles_list->find('.solrList A[href*="gazetaprawna.pl"][title]')))
-			{
-//				echo "<br>found_urls<br><br>$found_urls";
-				$found_urls_hrefs = array();
-				$found_urls_titles = array();
-//				echo "<br><br>Array - found_urls:";
-				foreach($found_urls as $url_element)
-				{
-					$title = $url_element->title;
-					if (FALSE === in_array($title, $found_urls_titles) && FALSE === strpos($url_element->href, '/dgp/'))
-					{
-						$found_urls_hrefs[] = $url_element->href;
-						$found_urls_titles[] = $title;
-					}
-				}
-
-				foreach($found_urls_hrefs as $url_article_link)
-				{
-					if (count($this->items) < $GLOBALS['number_of_wanted_articles'])
-					{
-						//link to articles
-						$url_article_link = $this->getCustomizedLink($url_article_link);
-//						echo "<br>url_article_link: <br>$url_article_link";
-//						$GLOBALS['is_article_free'] = $this->isArticleFree($h3_element);
-//						$GLOBALS['is_article_opinion'] = $this->isArticleOpinion($h3_element);
-
-						
-						if (TRUE === $GLOBALS['my_debug'])
-						{
-							$start_request = microtime(TRUE);
-//							$article_html = getSimpleHTMLDOMCached($amp_url, (86400/(count($this->items)+1)*$GLOBALS['number_of_wanted_articles']));
-							$article_html = getSimpleHTMLDOMCached($url_article_link, 86400 * 14);
-							$end_request = microtime(TRUE);
-							echo "<br>Article  took " . ($end_request - $start_request) . " seconds to complete - url: $url_article_link.";
-							$GLOBALS['all_articles_counter']++;
-							$GLOBALS['all_articles_time'] = $GLOBALS['all_articles_time'] + $end_request - $start_request;
-						}
-						else
-						{
-//							$article_html = getSimpleHTMLDOMCached($amp_url, (86400/(count($this->items)+1)*$GLOBALS['number_of_wanted_articles']));
-							$article_html = getSimpleHTMLDOMCached($url_article_link, 86400 * 14);
-						}
-						$GLOBALS['is_article_free'] = $this->isArticleFree($article_html);
-						$GLOBALS['is_article_opinion'] = $this->isArticleOpinion($article_html);
-						if ($this->meetsConditions() === TRUE && count($this->items) < $GLOBALS['number_of_wanted_articles'])
-						{
-							$this->addArticle($article_html, $url_article_link);
-						}
-					}
-				}
-				break;
-			}
-			else
+			$new_urls = $this->getNewUrls();
+			if ("empty" === $new_urls)
 			{
 				break;
 			}
-			$url_articles_list = $html_articles_list->find('A[title="następna"]', 0)->getAttribute('href');
+			foreach ($new_urls as $url)
+			{
+				$article_html = getSimpleHTMLDOMCached($url, 86400 * 14);
+				if (TRUE === $this->meetsConditions($article_html))
+				{
+					$this->addArticle($article_html, $url);
+					if (count($this->items) >= $GLOBALS['number_of_wanted_articles'])
+					{
+						break;
+					}
+				}
+			}
 		}
-		if (TRUE === $GLOBALS['my_debug'])
-			echo "<br>Wszystkie {$GLOBALS['all_articles_counter']} artykulow zajelo {$GLOBALS['all_articles_time']}, <br>średnio ".$GLOBALS['all_articles_time']/$GLOBALS['all_articles_counter'] ."<br>";
 	}
+
+	private function getNewUrls()
+	{
+		$new_urls = array();
+		$html_articles_list = getSimpleHTMLDOM($GLOBALS['url_articles_list']);
+		if (0 === count($found_leads = $html_articles_list->find('DIV.itarticle')))
+		{
+			return "empty";
+		}
+		else
+		{
+			foreach($found_leads as $lead)
+			{
+				$title_element = $lead->find('H3.itemTitle', 0);
+				$href_element = $lead->find('A[href]', 0);
+				if (FALSE === is_null($title_element) && FALSE === is_null($href_element))
+				{
+					$title = $title_element->plaintext;
+					$url = $href_element->href;
+					if (FALSE === in_array($title, $GLOBALS['articles_titles']) && FALSE === strpos($url, '/dgp/'))
+					{
+						$GLOBALS['articles_urls'][] = $url;
+						$GLOBALS['articles_titles'][] = $title;
+						$new_urls[] = $url;
+					}
+				}
+			}
+		}
+		$GLOBALS['url_articles_list'] = $this->getNextPageUrl($html_articles_list);
+		return $new_urls;
+	}
+
+	private function getNextPageUrl($html_articles_list)
+	{		
+		$next_page_element = $html_articles_list->find('A.next', 0);
+		if (FALSE === is_null($next_page_element) && $next_page_element->hasAttribute('href'))
+		{
+			return $next_page_element->getAttribute('href');
+		}
+		else
+			return "empty";
+	}
+
 
 	private function addArticle($article_html, $url_article_link)
 	{
-//		echo "url_article_link: $url<br>";
-		$article = $article_html->find('article', 0);
-		$article_data = $article_html->find('SCRIPT[type="application/ld+json"]', 0)->innertext;
-		$article_data_parsed = parse_article_data(json_decode($article_data));
-		$date = trim($article_data_parsed["datePublished"]);
-		$title = trim($article_data_parsed["headline"]);
-		$author = trim($article_data_parsed["author"]["name"]);
+		$tags = returnTagsArray($article_html, 'DIV#relatedTopics A[href]');
+		$price_param = $this->getArticlePriceParam($article_html);
+		if ("premium" === $price_param)
+		{
+			$article_html = $this->getFullArticlePage($url_article_link);
+		}
+		$article = $article_html->find('SECTION.detailSection', 0);
+		//title
+		$title_element = $article->find('H1.mainTitle', 0);
+		$title = $title_element->plaintext;
+		$title = $this->getChangedTitle($title, $price_param);
+		//authors
+		$author = returnAuthorsAsString($article, 'DIV.authBox A[href*="/autor/"]');
 
-		if ($GLOBALS['is_article_opinion'])
-			$title = '[OPINIA] '.str_replace('[OPINIA]', '', $title);
+		deleteAllDescendantsIfExist($article, 'comment');
+		deleteAllDescendantsIfExist($article, 'SCRIPT');
+		deleteAllDescendantsIfExist($article, 'DIV.streamNews');
+		deleteAllDescendantsIfExist($article, 'DIV.plistaDetailDesktop');
+		deleteAllDescendantsIfExist($article, 'DIV.commentsBox');
+		deleteAllDescendantsIfExist($article, 'DIV.detailAllBoxes');
+		deleteAllDescendantsIfExist($article, 'DIV.social-container');
+		deleteAllDescendantsIfExist($article, 'DIV#relatedTopics');
+		deleteAllDescendantsIfExist($article, 'DIV.serviceLogoWrapper');
+		deleteAllDescendantsIfExist($article, 'DIV.infor-ad');
+		deleteAllDescendantsIfExist($article, 'DIV.bottomAdsBox');
+		deleteAllDescendantsIfExist($article, 'ASIDE#rightColumnBox');
+		deleteAllDescendantsIfExist($article, 'DIV.promoFrame.pulse2PromoFrame.withDescription.article');
+		deleteAllDescendantsIfExist($article, 'DIV#banner_art_video_out');
 
-/*		if ($GLOBALS['is_article_free'])
-			$title = '[FREE] '.$title;
-		else
-			$title = '[PREMIUM] '.$title;*/
-//		echo "<br><br><br>article_data_parsed:<pre>";var_dump($article_data_parsed);echo "</pre>";
-
-/*		//tags
-		$tags = array();
-		foreach($article->find('DIV.tags', 0)->find('A[href*="/tagi/"]') as $tag_link)
-			$tags[] = trim($tag_link->plaintext);*/
-
-		fixAmpArticles($article);
-		formatAmpLinks($article);
-/*		deleteAllDescendantsIfExist($article, 'DIV.widget-psav-share-box');
-		deleteAllDescendantsIfExist($article, 'DIV.w2g');
-		deleteAllDescendantsIfExist($article, 'DIV.psavSpecialLinks');
-		deleteAllDescendantsIfExist($article, 'DIV.articleRelated');
-		deleteAllDescendantsIfExist($article, 'DIV.articleNextPrev');
-		deleteAllDescendantsIfExist($article, 'DIV.tags');
-		deleteAllDescendantsIfExist($article, 'UL.psav-author-ul');*/
-		
-		deleteAllDescendantsIfExist($article, 'DIV.promoFrame');
-		deleteAllDescendantsIfExist($article, 'DIV.social-box');
-		deleteAllDescendantsIfExist($article, 'DIV.adBoxTop');
-		deleteAllDescendantsIfExist($article, 'DIV.serviceLogoBox');
-		//https://prawo.gazetaprawna.pl/artykuly/8054640,nowelizacja-ustawy-o-wlasnosci-lokali-eksmisja-utrata-mieszkania.html.amp?amp_js_v=0.1
-		clearParagraphsFromTaglinks($article, 'P.hyphenate', array(
-			'/gazetaprawna\.pl\/tagi\//',
-			'/prawo\.gazetaprawna\.pl\/$/',
-			'/serwisy\.gazetaprawna\.pl\/.*\/tematy\//'
-		));
-
-		//https://www-gazetaprawna-pl.cdn.ampproject.org/v/s/www.gazetaprawna.pl/firma-i-prawo/artykuly/8054663,uokik-postepowanie-kaufland-polska-markety-eurocash-i-sca-pr-polska-intermarche.html.amp?amp_js_v=0.1
-		clearParagraphsFromTaglinks($article, 'DIV.frameArea', array(
-			'/gazetaprawna\.pl\/tagi\//',
-			'/prawo\.gazetaprawna\.pl\/$/',
-			'/serwisy\.gazetaprawna\.pl\/.*\/tematy\//'
-		));
-/*
-		https://www.gazetaprawna.pl/tagi/ustawa
-		https://www.gazetaprawna.pl/tagi/prawo
-		https://www.gazetaprawna.pl/tagi/sadownictwo
-		https://prawo.gazetaprawna.pl/
-		https://serwisy.gazetaprawna.pl/msp/tematy/p/przedsiebiorca
-		https://serwisy.gazetaprawna.pl/nieruchomosci/artykuly/8054104,spoldzielcy-status-nowelizacja-rpo-tk-czlonkostwo-w-spoldzielni-mieszkaniowej.html.amp?amp_js_v=0.1
-		https://serwisy.gazetaprawna.pl/poradnik-konsumenta/tematy/p/prawo
-		https://www.gazetaprawna.pl/tagi/prawo
-		https://www.gazetaprawna.pl/tagi/przedsiebiorca
-*/
-
-		$interview_question_style = array(
+		//https://www.gazetaprawna.pl/firma-i-prawo/artykuly/8077582,konkurs-na-facebooku-polubienie-posta-kara-od-skarbowki.html
+		$paragraph_title_style = array(
 			'font-weight: bold;'
 		);
-		addStyle($article, 'P.pytanie', $interview_question_style);
+		addStyle($article, 'DIV.frameArea.srodtytul', $paragraph_title_style);
+		foreach($article->find('DIV.frameArea.srodtytul') as $srodtytul)
+		{
+			$srodtytul->outertext = '<br>'.$srodtytul->outertext;
+		}
+		//https://serwisy.gazetaprawna.pl/orzeczenia/artykuly/8078983,antonik-burmistrz-prezes-spoldzielnia-mieszkaniowa-brodno-porozumienie-etyka.html
+		foreach($article->find('H2') as $h2)
+		{
+			$h2->outertext = '<br>'.$h2->outertext;
+		}
 
+		$lead_style = array(
+			'font-weight: bold;'
+		);
+		addStyle($article, 'DIV#lead', $lead_style);
+
+
+		$figure_style = array(
+			'position: relative;'
+		);
+		addStyle($article, 'figure', $figure_style);
+
+		$img_style = array(
+			'vertical-align: bottom;'
+		);
+		addStyle($article, 'img', $img_style);
+
+		$figcaption_style = array(
+			'position: absolute;',
+			'bottom: 0;',
+			'left: 0;',
+			'right: 0;',
+			'text-align: center;',
+			'color: #fff;',
+			'padding-top: 10px;',
+			'padding-right: 10px;',
+			'padding-bottom: 10px;',
+			'padding-left: 10px;',
+			'background-color: rgba(0, 0, 0, 0.7);'
+		);
+		addStyle($article, 'figcaption', $figcaption_style);
+		
+		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8079800,sztuczna-inteligencja-rezolucja-ue-azja-usa-slowik.html
+		$frameWrap_style = array(
+			'margin-bottom: 18px;'
+		);
+		addStyle($article, 'DIV.frameWrap', $frameWrap_style);
+
+		//https://prawo.gazetaprawna.pl/artykuly/8054640,nowelizacja-ustawy-o-wlasnosci-lokali-eksmisja-utrata-mieszkania.html.amp?amp_js_v=0.1
+		clearParagraphsFromTaglinks($article, 'P.hyphenate, DIV.frameArea', array(
+			'/gazetaprawna\.pl\/tagi\//',
+			'/prawo\.gazetaprawna\.pl\/$/',
+			'/serwisy\.gazetaprawna\.pl\/.*\/tematy\//'
+		));
+		
 		$this->items[] = array(
 			'uri' => $url_article_link,
 			'title' => $title,
-			'timestamp' => $date,
 			'author' => $author,
+			'categories' => $tags,
 			'content' => $article
 		);
 	}
 
-	private function meetsConditions()
+	private function getChangedTitle($title, $price_param)
 	{
-		$wanted_only_opinions = $this->getInput('tylko_opinie');
-		if (TRUE === is_null($wanted_only_opinions)) $wanted_only_opinions = FALSE;
-		$wanted_article_type = $this->getInput('type');
-		if (TRUE === is_null($wanted_article_type)) $wanted_article_type = "both";
-
-		if ($wanted_article_type === 'both')
+		preg_match_all('/\[[^\]]*\]/', $title, $title_categories);
+		$title_prefix = "";
+		foreach($title_categories[0] as $category)
 		{
-			if ($wanted_only_opinions)
-			{
-				if ($GLOBALS['is_article_opinion'])
-					return TRUE;
-				else
-					return FALSE;
-			}
-			else
-				return TRUE;
+			$title = str_replace($category, '', $title);
+			$title_prefix = $title_prefix.$category;
 		}
-		else if ($wanted_article_type === 'free' && $GLOBALS['is_article_free'] === TRUE)
-		{
-			if ($wanted_only_opinions)
-			{
-				if ($GLOBALS['is_article_opinion'])
-					return TRUE;
-				else
-					return FALSE;
-			}
-			else
-				return TRUE;
-		}
-		else if ($wanted_article_type === 'premium' && $GLOBALS['is_article_free'] === FALSE)
-		{
-			if ($wanted_only_opinions)
-			{
-				if ($GLOBALS['is_article_opinion'])
-					return TRUE;
-				else
-					return FALSE;
-			}
-			else
-				return TRUE;
-		}
-		else
-			return FALSE;
+		$new_title = '['.strtoupper($price_param).']'.$title_prefix.' '.trim($title);
+		return $new_title;
 	}
 
-	private function isArticleFree($article_html)
+	private function getFullArticlePage($url)
 	{
-		//Jeżeli element istneje (FALSE === is_null), to jest to artykul platny
-		$premium_element = $article_html->find('A[href*="edgp.gazetaprawna.pl"]', 0);
+		$opts = array(
+		  'http'=>array(
+		    'header'=>"User-Agent:Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)\r\n"
+		  )
+		);
+		$context = stream_context_create($opts);
+		$article_html = file_get_html($url, false, $context);
+		return $article_html;
+	}
+
+	private function setGlobalArticlesParams()
+	{
+		$GLOBALS['wanted_only_opinions'] = $this->getInput('tylko_opinie');
+		if (TRUE === is_null($GLOBALS['wanted_only_opinions']))
+			$GLOBALS['wanted_only_opinions'] = FALSE;
+
+		$GLOBALS['wanted_article_type'] = $this->getInput('type');
+		if (TRUE === is_null($GLOBALS['wanted_article_type']))
+			$GLOBALS['wanted_article_type'] = "both";
+	}
+
+	private function getArticlePriceParam($article_html)
+	{
+		$premium_element = $article_html->find('ARTICLE#leftColumnBox DIV.paywall', 0);
 		if (FALSE === is_null($premium_element))
-			return FALSE;
+			return "premium";
 		else
-			return TRUE;
+			return "free";
 	}
 
-	private function isArticleOpinion($article_html)
+	private function getArticleOpinionParam($article_html)
 	{
-		$title = $article_html->find('H1.headline', 0)->plaintext;
-		if (FALSE !== strpos($title, '[OPINIA]') || FALSE !== strpos($title, '[KOMENTARZ]'))
-			return TRUE;
+		$title_element = $article_html->find('H1.mainTitle', 0);
+		if (FALSE === is_null($title_element))
+		{
+			$title = $title_element->plaintext;
+			foreach($GLOBALS['opinions_params'] as $param)
+			{
+				if (FALSE !== strpos($title, $param))
+					return TRUE;
+			}
+			return FALSE;
+		}
 		else
 			return FALSE;
+	}
+
+	private function meetsConditions($article_html)
+	{
+		$article_price_param = $this->getArticlePriceParam($article_html);
+		$article_opinion_param = $this->getArticleOpinionParam($article_html);
+		$is_price_param_fullfiled = FALSE;
+		$is_opinion_param_fullfiled = FALSE;
+		if ('both' === $GLOBALS['wanted_article_type'])
+		{
+			$is_price_param_fullfiled = TRUE;
+		}
+		else if ($article_price_param === $GLOBALS['wanted_article_type'])
+		{
+			$is_price_param_fullfiled = TRUE;
+		}
+		if (FALSE === $GLOBALS['wanted_only_opinions'])
+		{
+			$is_opinion_param_fullfiled = TRUE;
+		}
+		else if ($article_opinion_param === $GLOBALS['wanted_only_opinions'])
+		{
+			$is_opinion_param_fullfiled = TRUE;
+		}
+		if (TRUE === $is_price_param_fullfiled && TRUE === $is_opinion_param_fullfiled)
+		{
+			return TRUE;
+		}
+		else
+		{
+			return FALSE;
+		}
 	}
 
 	private function getCustomizedLink($url)
