@@ -57,6 +57,7 @@ class KrytykaPolitycznaBridge extends FeedExpander {
 		$article_html = getSimpleHTMLDOMCached($item['uri'], 86400 * 14);
 		$article = $article_html->find('DIV#content', 0);
 		deleteAllDescendantsIfExist($article, 'script');
+		deleteAllDescendantsIfExist($article, 'script');
 		deleteAllDescendantsIfExist($article, 'DIV.read-also');
 		deleteAllDescendantsIfExist($article, 'ASIDE.book-item.site-commerc');
 		deleteAllDescendantsIfExist($article, 'DIV.addthis_tool');
@@ -69,6 +70,7 @@ class KrytykaPolitycznaBridge extends FeedExpander {
 		deleteAllDescendantsIfExist($article, 'DIV.article-top-advertisement');
 		deleteAllDescendantsIfExist($article, 'script');
 		deleteAncestorIfChildMatches($article, array('BLOCKQUOTE', 'P', 'A[href^="https://krytykapolityczna.pl/"]'));
+		deleteAncestorIfChildMatches($article, array('DIV', 'A[href][rel="author"]'));
 
 		foreach($article->find('IMG') as $photo_element)
 		{
@@ -90,10 +92,18 @@ class KrytykaPolitycznaBridge extends FeedExpander {
 		{
 			$photo_element->setAttribute('style', NULL);
 		}
+		//lead - https://krytykapolityczna.pl/kraj/galopujacy-major-aborcja-opozycjo-musisz-dac-kobietom-nadzieje/
+		$lead_style = array(
+			'font-weight: bold;'
+		);
+		$tags = returnTagsArray($article, 'DIV.single-post-tags A[rel="tag"]');
+		deleteAllDescendantsIfExist($article, 'DIV.single-post-tags');
+		addStyle($article, 'P.post-lead', $lead_style);
 		addStyle($article, 'FIGURE[id^="attachment_"]', getStylePhotoParent());
 		addStyle($article, 'DIV.post-preview, IMG[class*="wp-image-"]', getStylePhotoImg());
 		addStyle($article, 'DIV.mnky-featured-image-caption, FIGCAPTION[id^="caption-attachment-"]', getStylePhotoCaption());
 		$item['content'] = $article;
+		$item['categories'] = $tags;
 		return $item;
 	}
 
