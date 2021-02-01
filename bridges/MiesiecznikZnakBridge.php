@@ -5,7 +5,7 @@ class MiesiecznikZnakBridge extends FeedExpander {
 	const NAME = 'Miesięcznik Znak';
 	const URI = '';
 	const DESCRIPTION = 'No description provided';
-	const CACHE_TIMEOUT = 86400;
+	const CACHE_TIMEOUT = 1;
 
 	const PARAMETERS = array
 	(
@@ -59,24 +59,28 @@ class MiesiecznikZnakBridge extends FeedExpander {
 		if (FALSE === is_null($article_first_part = $articlePage->find('SECTION.article', 0)))
 		{
 			//https://www.miesiecznik.znak.com.pl/co-dalej-z-prawem-aborcyjnym-w-polsce/
-			deleteAllDescendantsIfExist($articlePage, 'SECTION.article.w-gradient');
-			$counter = 0;
-			foreach($articlePage->find('SECTION.article') as $article_part)
-			{
-				$counter++;
-				if (1 !== $counter)
-				{
-					$article_first_part->outertext = $article_first_part->outertext.$article_part->outertext;
-				}
-			}
-			
-			$article = $article_first_part;
+			$article = $articlePage->find('BODY', 0);
+
+			deleteAllDescendantsIfExist($article, 'SECTION.article.w-gradient');
+			deleteAllDescendantsIfExist($article, 'SCRIPT');
+			deleteAllDescendantsIfExist($article, 'SECTION.nav');
+			deleteAllDescendantsIfExist($article, 'SECTION#buy-issue');
+			deleteAllDescendantsIfExist($article, 'SECTION.related-tabs');
+			deleteAllDescendantsIfExist($article, 'FOOTER');
+			deleteAllDescendantsIfExist($article, 'DIV[id^="newsletter-popup"]');
+			deleteAllDescendantsIfExist($article, 'DIV#people-modal');
+			deleteAllDescendantsIfExist($article, 'DIV#mediaModal');
+			deleteAllDescendantsIfExist($article, 'DIV#cookie-notice');
 			deleteAllDescendantsIfExist($article, 'DIV.read-others');
 			deleteAllDescendantsIfExist($article, 'DIV.read-others-content');
 			deleteAllDescendantsIfExist($article, 'DIV.issue-sidebar');
 			deleteAllDescendantsIfExist($article, 'DIV.share-panel');
 			deleteAllDescendantsIfExist($article, 'DIV.article-col-33');
 			deleteAllDescendantsIfExist($article, 'DIV.read-others-content');
+			deleteAllDescendantsIfExist($article, 'SCRIPT');
+			deleteAllDescendantsIfExist($article, 'SCRIPT');
+			deleteAllDescendantsIfExist($article, 'SCRIPT');
+			deleteAllDescendantsIfExist($article, 'SCRIPT');
 	
 			//Fix szerokości artykulu
 			if(isset($article->width))
@@ -89,9 +93,12 @@ class MiesiecznikZnakBridge extends FeedExpander {
 			{
 				$photo_element->style = NULL;
 			}
+
 			foreach($article->find('IMG[src^="data:image"][data-src^="http"]') as $photo_element)
 			{
-				$photo_element->src = $photo_element->getAttribute('data-src');
+				$src = $photo_element->getAttribute('data-src');
+				if(isset($photo_element->src)) $photo_element->src = NULL;
+				$photo_element->setAttribute('src', $src);
 				if(isset($photo_element->width)) $photo_element->width = NULL;
 				if(isset($photo_element->height)) $photo_element->height = NULL;
 				if($photo_element->hasAttribute('data-sizes')) $photo_element->setAttribute('data-sizes', NULL);
@@ -99,11 +106,18 @@ class MiesiecznikZnakBridge extends FeedExpander {
 				if($photo_element->hasAttribute('data-srcset')) $photo_element->setAttribute('data-srcset', NULL);
 			}
 
+
+			//https://www.miesiecznik.znak.com.pl/oswiadczenie-ws-tygodnika-powszechnego-na-ul-wislnej/
 			$author = returnAuthorsAsString($article, 'SPAN.author');
 			addStyle($article, 'BLOCKQUOTE', getStyleQuote());
 			addStyle($article, 'DIV[id^="attachment_"]', getStylePhotoParent());
 			addStyle($article, 'IMG[class*="wp-image-"]', getStylePhotoImg());
 			addStyle($article, 'P.wp-caption-text', getStylePhotoCaption());
+			//lead
+			$lead_style = array(
+				'font-weight: bold;'
+			);
+			addStyle($article, 'DIV.lead[itemprop="description"]', $lead_style);
 			$item['author'] = $author;
 			$item['content'] = $article;
 		}
