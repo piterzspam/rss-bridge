@@ -19,7 +19,7 @@ class DziennikBridge extends BridgeAbstract {
 			'wanted_number_of_articles' => array
 			(
 				'name' => 'Liczba artykułów',
-				'type' => 'text',
+				'type' => 'number',
 				'required' => true
 			),
 			'tylko_opinie' => array

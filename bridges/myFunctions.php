@@ -4,7 +4,65 @@
 	{
 		echo "Zmienna: <br><pre>"; var_dump($variable); echo "</pre>";
 	}
+
+	function getStylePhotoParent()
+	{
+		return array(
+			'position: relative;',
+			'width: -moz-fit-content;'
+		);
+	}
+
+	function getStylePhotoImg()
+	{
+		return array(
+			'vertical-align: bottom;'
+		);
+	}
+
+	function getStylePhotoCaption()
+	{
+		return array(
+//			'position: absolute;',
+			'bottom: 0;',
+			'left: 0;',
+			'right: 0;',
+			'text-align: center;',
+			'color: #fff;',
+			'padding-top: 10px;',
+			'padding-right: 10px;',
+			'padding-bottom: 10px;',
+			'padding-left: 10px;',
+			'background-color: rgba(0, 0, 0, 0.7);'
+		);
+	}
 	
+	function getStyleQuote()
+	{
+		return array(
+			'border-top-width: 0px;',
+			'border-right-width: 0px;',
+			'border-bottom-width: 0px;',
+			'border-left-width: 7px;',
+			'margin: 16px 24px;',
+			'margin-top: 16px;',
+			'margin-right: 24px;',
+			'margin-bottom: 16px;',
+			'margin-left: 24px;',
+			'padding: 10px 12px;',
+			'padding-top: 10px;',
+			'padding-right: 12px;',
+			'padding-bottom: 10px;',
+			'padding-left: 12px;',
+			'background-color: rgb(248, 248, 248);',
+			'border-style: solid;',
+			'border-top-style: solid;',
+			'border-right-style: solid;',
+			'border-bottom-style: solid;',
+			'border-left-style: solid;'
+		);
+	}
+
 	function fixAmpArticles($article)
 	{
 		foreach($article->find('amp-img') as $ampimg)
@@ -228,7 +286,6 @@
 			$element->style = $element->style.$styleString;
 		}
 	}
-
 	
 	function hex_dump($data, $newline='<br>')
 	{

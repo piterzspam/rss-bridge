@@ -14,66 +14,58 @@ class KlubJagiellonskiBridge extends FeedExpander {
 			'wanted_number_of_articles' => array
 			(
 				'name' => 'Liczba artykułów',
-				'type' => 'text',
+				'type' => 'number',
 				'required' => true
-			)
+			),
+			'include_not_downloaded' => array
+			(
+				'name' => 'Uwzględnij niepobrane',
+				'type' => 'checkbox',
+				'required' => true,
+				'title' => 'Uwzględnij niepobrane'
+			),
 		)
 	);
 
     public function collectData(){
 		include 'myFunctions.php';
+		$this->setGlobalArticlesParams();
         $this->collectExpandableDatas('https://klubjagiellonski.pl/feed/');
     }
+
+	private function setGlobalArticlesParams()
+	{
+		$GLOBALS['include_not_downloaded'] = $this->getInput('include_not_downloaded');
+		if (TRUE === is_null($GLOBALS['include_not_downloaded']))
+			$GLOBALS['include_not_downloaded'] = FALSE;
+	}
 
 	protected function parseItem($newsItem)
 	{
 		$item = parent::parseItem($newsItem);
-		if (count($this->items) >= $this->getInput('wanted_number_of_articles'))
+		if (count($this->items) >= intval($this->getInput('wanted_number_of_articles')))
 		{
-			return $item;
+			if (TRUE === $GLOBALS['include_not_downloaded'])
+			{
+				return $item;
+			}
+			else
+			{
+				return;
+			}
 		}
 		$article_page = getSimpleHTMLDOMCached($item['uri'], 86400 * 14);
 		$article_post = $article_page->find('ARTICLE', 0);
+
 		deleteAllDescendantsIfExist($article_post, 'SECTION.block-content_breaker_sharer');
 		deleteAllDescendantsIfExist($article_post, 'DIV[data-source="ramka-newsletter"]');
 		deleteAllDescendantsIfExist($article_post, 'DIV[data-source="ramka-zbiorka"]');
 		deleteAllDescendantsIfExist($article_post, 'DIV[data-source="ramka-polecane"]');
 		deleteAllDescendantsIfExist($article_post, 'DIV.meta_mobile.desktop-hide');
-		deleteAllDescendantsIfExist($article_post, 'qqqqqqqqqqqqqq');
-		deleteAllDescendantsIfExist($article_post, 'qqqqqqqqqqqqqq');
-		deleteAllDescendantsIfExist($article_post, 'qqqqqqqqqqqqqq');
-		deleteAllDescendantsIfExist($article_post, 'qqqqqqqqqqqqqq');
-		deleteAllDescendantsIfExist($article_post, 'qqqqqqqqqqqqqq');
-		deleteAllDescendantsIfExist($article_post, 'qqqqqqqqqqqqqq');
-		deleteAllDescendantsIfExist($article_post, 'qqqqqqqqqqqqqq');
-		deleteAllDescendantsIfExist($article_post, 'qqqqqqqqqqqqqq');
-		deleteAllDescendantsIfExist($article_post, 'qqqqqqqqqqqqqq');
-		deleteAllDescendantsIfExist($article_post, 'qqqqqqqqqqqqqq');
-/*		
-		deleteAllDescendantsIfExist($article_post, 'script');
-		deleteAllDescendantsIfExist($article_post, 'DIV.kl-10lat-box');
-		deleteAllDescendantsIfExist($article_post, 'DIV.go-to-comments');
-		deleteAllDescendantsIfExist($article_post, 'DIV.nr-info');
-		deleteAllDescendantsIfExist($article_post, 'DIV.more-in-number-container');
-		deleteAllDescendantsIfExist($article_post, 'DIV.fb-comm');
-		deleteAllDescendantsIfExist($article_post, 'P.section-name.mobile-section-name');
-		//https://kulturaliberalna.pl/2021/01/12/cena-osobnosci-nie-jest-wysoka-na-razie/
-		deleteAllDescendantsIfExist($article_post, 'DIV.promobox');
-*/
+
 		$tags = returnTagsArray($article_post, 'A.block-catbox SPAN.catboxfg');
 		$author = returnAuthorsAsString($article_post, 'A.block-author_bio P.imienazwisko');
-/*		$interview_quote_style = array(
-			'border: dashed;'
-		);
-		addStyle($article_post, 'blockquote', $interview_quote_style);
-		foreach($article_post->find('IMG') as $photo_element)
-		{
-			if(isset($photo_element->width)) $photo_element->width = NULL;
-			if(isset($photo_element->height)) $photo_element->height = NULL;
-			if(isset($photo_element->srcset)) $photo_element->srcset = NULL;
-			if(isset($photo_element->sizes)) $photo_element->sizes = NULL;
-		}
-*/
+
 		foreach($article_post->find('A.block-author_bio') as $block_author)
 		{
 			if (FALSE === is_null($bio = $block_author->find('DIV.bio', 0)))
@@ -98,6 +90,11 @@ class KlubJagiellonskiBridge extends FeedExpander {
 		{
 			$author_bio->outertext = '<br>'.$author_bio->outertext;
 		}
+		addStyle($article_post, 'DIV.pix', getStylePhotoParent());
+		addStyle($article_post, 'IMG.desktop-hide', getStylePhotoImg());
+		$caption_style = getStylePhotoCaption();
+		$caption_style[] = 'position: absolute';
+		addStyle($article_post, 'SPAN.pix_source', $caption_style);
 		
 		$item['categories'] = $tags;
 		$item['author'] = $author;
