@@ -77,10 +77,6 @@ class MiesiecznikZnakBridge extends FeedExpander {
 			deleteAllDescendantsIfExist($article, 'DIV.share-panel');
 			deleteAllDescendantsIfExist($article, 'DIV.article-col-33');
 			deleteAllDescendantsIfExist($article, 'DIV.read-others-content');
-			deleteAllDescendantsIfExist($article, 'SCRIPT');
-			deleteAllDescendantsIfExist($article, 'SCRIPT');
-			deleteAllDescendantsIfExist($article, 'SCRIPT');
-			deleteAllDescendantsIfExist($article, 'SCRIPT');
 	
 			//Fix szerokości artykulu
 			if(isset($article->width))

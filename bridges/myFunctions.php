@@ -182,12 +182,10 @@
 	function deleteAncestorIfChildMatches($element, $hierarchy)
 	{
 		$last = count($hierarchy)-1;
-		$counter = 0;
 		foreach($element->find($hierarchy[$last]) as $found)
-		{			
-			$counter++;
+		{
 			$iterator = $last-1;
-			while ($iterator >= 0 && $found->parent->tag === $hierarchy[$iterator])
+			while ($iterator >= 0 && strtolower($found->parent->tag) === strtolower($hierarchy[$iterator]))
 			{
 				$found = $found->parent;
 				$iterator--;
