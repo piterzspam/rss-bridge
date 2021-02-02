@@ -114,8 +114,7 @@ class KonkretTVN24Bridge extends BridgeAbstract {
 			$author = "";
 
 		$tags = array();
-		$tag = $GLOBALS['chosen_category_url'];
-		$tag = str_replace('https://konkret24.tvn24.pl/', '', $tag);
+		$tag = str_replace('https://konkret24.tvn24.pl/', '', $url);
 		preg_match('/[a-z]*/', $tag, $output_array);
 		$tag = $output_array[0];
 		$tag = ucwords($tag);
