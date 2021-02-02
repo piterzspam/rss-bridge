@@ -55,7 +55,7 @@ class GazetaprawnaBridge extends BridgeAbstract {
 			$GLOBALS['all_articles_counter'] = 0;
 		}
 		$url_articles_list = $this->getInput('url');
-		$url_articles_list = preg_replace('/(.*\/autor\/[0-9]+,([a-z]+)-([a-z]+)).*/', '$1', $url_articles_list);
+//		$url_articles_list = preg_replace('/(.*\/autor\/[0-9]+,([a-z]+)-([a-z]+)).*/', '$1', $url_articles_list);
 
 		$GLOBALS['articles_urls'] = array();
 		$GLOBALS['articles_titles'] = array();
@@ -146,6 +146,11 @@ class GazetaprawnaBridge extends BridgeAbstract {
 		$title = $this->getChangedTitle($title, $price_param);
 		//authors
 		$author = returnAuthorsAsString($article, 'DIV.authBox A[href*="/autor/"]');
+		//date
+		if (FALSE === is_null($date_element = $article_html->find('META[property="article:published_time"][content]', 0)))
+		{
+			$date = $date_element->getAttribute('content');
+		}
 
 		deleteAllDescendantsIfExist($article, 'comment');
 		deleteAllDescendantsIfExist($article, 'SCRIPT');
@@ -204,6 +209,7 @@ class GazetaprawnaBridge extends BridgeAbstract {
 		$this->items[] = array(
 			'uri' => $url_article_link,
 			'title' => $title,
+			'timestamp' => $date,
 			'author' => $author,
 			'categories' => $tags,
 			'content' => $article
