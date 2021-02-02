@@ -87,18 +87,17 @@ class GazetaplBridge extends BridgeAbstract {
 		deleteAllDescendantsIfExist($article, 'comment');
 		deleteAllDescendantsIfExist($article, 'SCRIPT');
 		deleteAllDescendantsIfExist($article, 'DIV[id^="banC"]');
-
-		deleteDescendantIfExists($article, 'DIV#sitePath');
-		deleteDescendantIfExists($article, 'DIV.left_aside');
-		deleteDescendantIfExists($article, 'DIV.ban000_wrapper');
-		deleteDescendantIfExists($article, 'DIV.ban001_wrapper');
-		deleteDescendantIfExists($article, 'DIV.right_aside');
-		deleteDescendantIfExists($article, 'DIV.top_section_bg');
-		deleteDescendantIfExists($article, 'DIV.bottom_section_bg');
-		deleteDescendantIfExists($article, 'DIV#adUnit-007-CONTENTBOARD');
-		deleteDescendantIfExists($article, 'DIV.related_image_number_of_photo');
-		deleteDescendantIfExists($article, 'DIV.related_image_open');
-		deleteDescendantIfExists($article, 'SECTION.tags');
+		deleteAllDescendantsIfExist($article, 'DIV#sitePath');
+		deleteAllDescendantsIfExist($article, 'DIV.left_aside');
+		deleteAllDescendantsIfExist($article, 'DIV.ban000_wrapper');
+		deleteAllDescendantsIfExist($article, 'DIV.ban001_wrapper');
+		deleteAllDescendantsIfExist($article, 'DIV.right_aside');
+		deleteAllDescendantsIfExist($article, 'DIV.top_section_bg');
+		deleteAllDescendantsIfExist($article, 'DIV.bottom_section_bg');
+		deleteAllDescendantsIfExist($article, 'DIV#adUnit-007-CONTENTBOARD');
+		deleteAllDescendantsIfExist($article, 'DIV.related_image_number_of_photo');
+		deleteAllDescendantsIfExist($article, 'DIV.related_image_open');
+		deleteAllDescendantsIfExist($article, 'SECTION.tags');
 		clearParagraphsFromTaglinks($article, 'P.art_paragraph', array('/\?tag=/'));
 
 		$interview_question_style = array(
@@ -137,6 +136,4 @@ class GazetaplBridge extends BridgeAbstract {
 			'categories' => $tags
 		);
 	}
-
-
 }

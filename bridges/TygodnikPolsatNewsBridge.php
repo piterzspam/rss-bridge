@@ -10,17 +10,26 @@ class TygodnikPolsatNewsBridge extends BridgeAbstract {
 	(
 		'Parametry' => array
 		(
-			'author' => array
-			(
-				'name' => 'Autor',
-				'type' => 'text',
-				'required' => true
-			),
 			'wanted_number_of_articles' => array
 			(
 				'name' => 'Liczba artykułów',
 				'type' => 'number',
-				'required' => true
+				'required' => true,
+				'title' => 'Liczba artykułów'
+			),
+			'filter' => array
+			(
+				'name' => 'filtruj według autora',
+				'type' => 'checkbox',
+				'required' => true,
+				'title' => 'filtruj według autora'
+			),
+			'author' => array
+			(
+				'name' => 'Autor',
+				'type' => 'text',
+				'required' => false,
+				'title' => 'Autor'
 			),
 		)
 	);
@@ -31,112 +40,177 @@ class TygodnikPolsatNewsBridge extends BridgeAbstract {
 
 	public function collectData()
 	{
+		include 'myFunctions.php';
+		$GLOBALS['number_of_wanted_articles'] = $this->getInput('wanted_number_of_articles');
 //		Ramka FB: https://tygodnik.polsatnews.pl/news/2020-05-08/jan-komasa-bohater-jest-zly-bo-z-biednej-rodziny-wywiad/
 //		Ramka YT: https://tygodnik.polsatnews.pl/news/2020-05-08/jan-komasa-bohater-jest-zly-bo-z-biednej-rodziny-wywiad/
 //		Brak autora: https://tygodnik.polsatnews.pl/piotr-witwicki-wywiady-bezunikow/
 //		Brak div.article__comments i div.article__related: https://tygodnik.polsatnews.pl/news/2020-07-10/zdalna-dehumanizacja-zaremba-o-przyszlosci-uczelni/
+		
+		$this->setGlobalArticlesParams();
+		$found_urls = $this->getArticlesUrls();
+//		var_dump_print($found_urls);
+		foreach($found_urls as $url)
+		{
+			$this->addArticle($url);
+		}
+	}
+	private function setGlobalArticlesParams()
+	{
 		$GLOBALS['author'] = $this->getInput('author');
-		$GLOBALS['number_of_wanted_articles'] = $this->getInput('wanted_number_of_articles');
+		if (TRUE === is_null($GLOBALS['author']))
+			$GLOBALS['author'] = "";
+		
+		$GLOBALS['filter'] = $this->getInput('filter');
+		if (TRUE === is_null($GLOBALS['filter']))
+			$GLOBALS['filter'] = FALSE;
+	}
 
-		$main_page_url = 'https://tygodnik.polsatnews.pl/';
-
-//		ini_set('user_agent','Mozilla/4.0 (compatible; MSIE 6.0)');
-		$html_main_page = getSimpleHTMLDOM($main_page_url);
-
-		foreach($html_main_page->find('a.article__link') as $article__link)
+	private function getArticlesUrls()
+	{
+		$articles_urls = array();
+		$url_articles_list = 'https://tygodnik.polsatnews.pl/';
+		while (count($articles_urls) < $GLOBALS['number_of_wanted_articles'] && "empty" != $url_articles_list)
 		{
-			if (FALSE === is_null($author_element = $article__link->find('DIV.article__author', 0)))
+			$html_articles_list = getSimpleHTMLDOM($url_articles_list);
+			if (0 === count($found_hrefs = $html_articles_list->find('A.article__link[href^="https://tygodnik.polsatnews.pl/news/"]')))
 			{
-				if (count($this->items) < $GLOBALS['number_of_wanted_articles'] && $author_element->plaintext === $GLOBALS['author'])
-				{
-					$href = $article__link->getAttribute('href');
-					$this->addArticle($href);
-				}
-			}
-		}
-
-		$next_page_url = $html_main_page->find('BUTTON.pager__button', 0)->getAttribute('data-url');
-		while (count($this->items) < $GLOBALS['number_of_wanted_articles'])
-		{
-			$html_next_page = getSimpleHTMLDOM($next_page_url);
-			foreach($html_next_page->find('A.article__link') as $article__link)
-			{
-				if (count($this->items) < $GLOBALS['number_of_wanted_articles'] && $article__link->find('DIV.article__author', 0)->plaintext === $GLOBALS['author'])
-				{
-					$href = $article__link->getAttribute('href');
-					$this->addArticle($href);
-				}
-			}
-			if (FALSE === is_null($html_next_page->find('BUTTON.pager__button', 0)))
-				$next_page_url = $html_next_page->find('BUTTON.pager__button', 0)->getAttribute('data-url');
-			else
 				break;
+			}
+			else
+			{
+				if (TRUE === $GLOBALS['filter'])
+				{
+					foreach($found_hrefs as $href_element)
+					{
+						$author_element = $href_element->find('DIV.article__author', 0);
+						if (FALSE === is_null($author_element))
+						{
+							$author_name = $author_element->plaintext;
+							$author_name = strtolower(trim($author_name));
+							$wanted_author = strtolower($GLOBALS['author']);
+							if (FALSE !== strpos($author_name, $wanted_author))
+							{
+								if(isset($href_element->href))
+									$articles_urls[] = $href_element->href;
+							}
+						}
+					}
+				}
+				else
+				{
+					foreach($found_hrefs as $href_element)
+					{
+						if(isset($href_element->href))
+							$articles_urls[] = $href_element->href;
+					}
+				}
+			}
+			$url_articles_list = $this->getNextPageUrl($html_articles_list);
 		}
+		return array_slice($articles_urls, 0, $GLOBALS['number_of_wanted_articles']);
+	}
+
+	private function getNextPageUrl($html_articles_list)
+	{
+		$next_page_element = $html_articles_list->find('BUTTON.pager__button[data-url]', 0);
+		if (FALSE === is_null($next_page_element) && $next_page_element->hasAttribute('data-url'))
+		{
+			return $next_page_element->getAttribute('data-url');
+		}
+		else
+			return "empty";
 	}
 
 	private function addArticle($url_article)
 	{
 		$article_html = getSimpleHTMLDOMCached($url_article, 86400 * 14);
-		$article_target = $article_html->find('article.article--target', 0);
+		$article = $article_html->find('article.article--target', 0);
 
 		//title
-		$title = $article_target->find('H1.article__title', 0)->plaintext;
-		//timestamp
-		$timestamp = $article_target->find('TIME.article__time', 0)->getAttribute('datetime');
-		//author
-		$author = $article_target->find('DIV.article__author', 0)->plaintext;
-
-
-		foreach($article_target->find('p') as $paragraph)
+		if (FALSE === is_null($title_element = $article->find('H1.article__title', 0)))
 		{
-			$this->deleteAncestorIfDescendantExists($paragraph, 'SPAN.article__more');
-			$this->deleteAncestorIfContainsText($paragraph, 'ZOBACZ: ');
+			$title = $title_element->plaintext;
+		}
+		//timestamp
+		if (FALSE === is_null($time_element = $article->find('TIME.article__time[datetime]', 0)))
+		{
+			$timestamp = $time_element->getAttribute('datetime');
+		}
+		//author
+		if (FALSE === is_null($author_element = $article->find('DIV.article__author', 0)))
+		{
+			$author = $author_element->plaintext;
 		}
 
-		$this->deleteAllDescendantsIfExist($article_target, 'script');
-		$this->deleteDescendantIfExists($article_target, 'UL.menu__list');
-		$this->deleteDescendantIfExists($article_target, 'DIV.article__comments');
-		$this->deleteDescendantIfExists($article_target, 'DIV.article__related');
-		$this->deleteDescendantIfExists($article_target, 'DIV.article__share');
-		$this->deleteDescendantIfExists($article_target, 'DIV#fb-root');
-		foreach($article_target->find('amp-img, img') as $photo_element)
+		foreach($article->find('p') as $paragraph)
+		{
+			deleteAncestorIfDescendantExists($paragraph, 'SPAN.article__more');
+			deleteAncestorIfContainsText($paragraph, 'ZOBACZ: ');
+		}
+
+		deleteAllDescendantsIfExist($article, 'SCRIPT');
+		deleteAllDescendantsIfExist($article, 'UL.menu__list');
+		deleteAllDescendantsIfExist($article, 'DIV.article__comments');
+		deleteAllDescendantsIfExist($article, 'DIV.article__related');
+		deleteAllDescendantsIfExist($article, 'DIV.article__share');
+		deleteAllDescendantsIfExist($article, 'DIV#fb-root');
+		deleteAncestorIfChildMatches($article, array('A', 'STRONG', 'SPAN.article__more'));
+
+		foreach($article->find('amp-img, img') as $photo_element)
 		{
 			if(isset($photo_element->width)) $photo_element->width = NULL;
 			if(isset($photo_element->height)) $photo_element->height = NULL;
 			if(isset($photo_element->srcset)) $photo_element->srcset = NULL;
 			if(isset($photo_element->sizes)) $photo_element->sizes = NULL;
 		}
+/*
+		foreach($article->find('FIGURE.article-image') as $photo_element)
+		{
+			$photo_src = $photo_element->find('SPAN.article-image-src', 0);
+			$photo_caption = $photo_element->find('FIGCAPTION.article-image-capition', 0);
+			if (FALSE === is_null($photo_src) && FALSE === is_null($photo_caption))
+			{
+				echo "<br>photo_caption->plaintext=$photo_caption->plaintext<br>";
+				echo "photo_src->plaintext=$photo_src->plaintext<br>";
+				$new_text = $photo_caption->plaintext.' /'.$photo_src->plaintext;
+				$photo_src->outertext = '';
+				$old_outertext = $photo_caption->outertext;
+				preg_match('/>[^<]*</', $old_outertext, $output_array);
+				$new_outertext = str_replace($output_array[0], '>"testttttttttttttttttttttttt"<', $old_outertext);
+				$photo_caption->outertext = $new_outertext;
+				echo "old_outertext=$old_outertext<br>";
+				echo "new_outertext=$new_outertext<br>";
+				echo "output_array[0]=$output_array[0]<br>";
+				echo "Po zmienie photo_caption->plaintext=$photo_caption->plaintext<br>";
+			}
+			else
+			{
+				echo "Coś jest nullem<br>";
+			}
+//			$my_text = $photo_caption->plaintext;
+//			$photo_element->find('FIGCAPTION.article-image-capition', 0)->plaintext = 'testttttttttttttttttttttttt';
+//			echo "Po zmienie photo_element=$photo_element<br>";
+		}
+*/
+		$lead_style = array(
+			'font-weight: bold;'
+		);
+		addStyle($article, 'DIV.article__preview', $lead_style);
+		//https://tygodnik.polsatnews.pl/news/2021-01-23/kiedys-bano-sie-zbydlecenia-dzis-mikroczipow/
+		addStyle($article, 'FIGURE.article__figure, FIGURE.article-image', getStylePhotoParent());
+		addStyle($article, 'IMG.article__img, DIV.article-image-wrap', getStylePhotoImg());
+		//https://tygodnik.polsatnews.pl/news/2021-01-30/sladami-maurow-na-polwyspie-iberyjskim/
+		addStyle($article, 'DIV.article__source, FIGCAPTION.article-image-capition, SPAN.article-image-src', getStylePhotoCaption());
+		//https://tygodnik.polsatnews.pl/news/2021-01-30/sladami-maurow-na-polwyspie-iberyjskim/
+		addStyle($article, 'BLOCKQUOTE', getStyleQuote());
 
 		$this->items[] = array(
 			'uri' => $url_article,
 			'title' => $title,
 			'timestamp' => $timestamp,
 			'author' => $author,
-			'content' => $article_target
+			'content' => $article
 		);
-	}
-
-	private function deleteDescendantIfExists($ancestor, $descendant_string)
-	{
-		if (FALSE === is_null($descendant = $ancestor->find($descendant_string, 0)))
-			$descendant->outertext = '';
-	}
-
-	private function deleteAncestorIfDescendantExists($ancestor, $descendant_string)
-	{
-		if (FALSE === is_null($descendant = $ancestor->find($descendant_string, 0)))
-			$ancestor->outertext = '';
-	}
-
-	private function deleteAncestorIfContainsText($ancestor, $descendant_string)
-	{
-		if (FALSE === is_null($ancestor))
-			if (FALSE !== strpos($ancestor->plaintext, $descendant_string))
-				$ancestor->outertext = '';
-	}
-	private function deleteAllDescendantsIfExist($ancestor, $descendant_string)
-	{
-		foreach($ancestor->find($descendant_string) as $descendant)
-			$descendant->outertext = '';
 	}
 }

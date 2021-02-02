@@ -183,30 +183,10 @@ class GazetaprawnaBridge extends BridgeAbstract {
 		addStyle($article, 'DIV#lead', $lead_style);
 
 
-		$figure_style = array(
-			'position: relative;'
-		);
-		addStyle($article, 'figure', $figure_style);
+		addStyle($article, 'figure', getStylePhotoParent());
+		addStyle($article, 'img', getStylePhotoImg());
+		addStyle($article, 'figcaption', getStylePhotoCaption());
 
-		$img_style = array(
-			'vertical-align: bottom;'
-		);
-		addStyle($article, 'img', $img_style);
-
-		$figcaption_style = array(
-			'position: absolute;',
-			'bottom: 0;',
-			'left: 0;',
-			'right: 0;',
-			'text-align: center;',
-			'color: #fff;',
-			'padding-top: 10px;',
-			'padding-right: 10px;',
-			'padding-bottom: 10px;',
-			'padding-left: 10px;',
-			'background-color: rgba(0, 0, 0, 0.7);'
-		);
-		addStyle($article, 'figcaption', $figcaption_style);
 		
 		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8079800,sztuczna-inteligencja-rezolucja-ue-azja-usa-slowik.html
 		$frameWrap_style = array(

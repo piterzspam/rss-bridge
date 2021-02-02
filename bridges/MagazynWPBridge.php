@@ -51,7 +51,7 @@ class MagazynWPBridge extends BridgeAbstract {
 		$url_articles_list = 'https://magazyn.wp.pl/';
 		while (count($articles_urls) < $GLOBALS['number_of_wanted_articles'] && "empty" != $url_articles_list)
 		{
-			$html_articles_list = getSimpleHTMLDOMCached($url_articles_list, 86400 * 14);
+			$html_articles_list = getSimpleHTMLDOM($url_articles_list);
 			if (0 === count($found_hrefs = $html_articles_list->find('FIGURE.teaser A[href]')))
 			{
 				break;
@@ -149,26 +149,16 @@ class MagazynWPBridge extends BridgeAbstract {
 				$caption_text = substr_replace($caption_text, '', 0, strlen('; '));
 			}
 			$caption->innertext = $caption_text;
-			$caption_style = array(
-				'margin-bottom: 20px;'
-			);
-			addStyle($article, 'FIGCAPTION', $caption_style);
 		}
-
-		//Fix cytaty
-		$quote = array(
-			'border: dashed;',
-			'font-size: 34px;',
-			'color: #000;',
-			'line-height: 48px;',
-			'padding-left: 65px;',
-			'margin-bottom: 40px;',
-			'margin-top: 30px;'
-		);
-		addStyle($article, 'blockquote', $quote);
+		addStyle($article, 'figure', getStylePhotoParent());
+		addStyle($article, 'img', getStylePhotoImg());
+		addStyle($article, 'figcaption, DIV.foto-desc', getStylePhotoCaption());
+		//https://magazyn.wp.pl/ksiazki/artykul/zapomniana-epidemia
+		addStyle($article, 'blockquote', getStyleQuote());
 
 		deleteAllDescendantsIfExist($article, 'FIGURE.a--instream');
 		deleteAllDescendantsIfExist($article, 'SCRIPT');
+		deleteAllDescendantsIfExist($article, 'A[href="#"]');
 		deleteAllDescendantsIfExist($article, 'DIV.article--footer');
 		deleteAllDescendantsIfExist($article, 'DIV.socials');
 		deleteAllDescendantsIfExist($article, 'FIGURE.a--instream');

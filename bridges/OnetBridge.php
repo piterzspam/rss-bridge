@@ -104,6 +104,7 @@ class OnetBridge extends BridgeAbstract {
 		$article_data_parsed = parse_article_data(json_decode($article_data));
 		$date = trim($article_data_parsed["datePublished"]);
 		$title = trim($article_data_parsed["headline"]);
+		$title = $this->getChangedTitle($title);
 		$author = trim($article_data_parsed["author"]["name"]);
 
 		deleteAllDescendantsIfExist($article, 'comment');
@@ -119,11 +120,21 @@ class OnetBridge extends BridgeAbstract {
 		{
 			deleteAncestorIfContainsText($paragraph, 'Poniżej lista wszystkich dotychczasowych odcinków podcastu:');
 			deleteAncestorIfContainsText($paragraph, 'Cieszymy się, że jesteś z nami. Zapisz się na newsletter Onetu, aby otrzymywać od nas najbardziej wartościowe treści');
-			if (FALSE !== strpos($paragraph->plaintext, 'Pozostała część tekstu pod materiałem wideo'))
+//https://wiadomosci-onet-pl.cdn.ampproject.org/v/s/wiadomosci.onet.pl/tylko-w-onecie/michal-cholewinski-krytykowal-orzeczenie-tk-ws-aborcji-zostal-zdjety-z-anteny/31zq2s2.amp?amp_js_v=0.1
+//https://wiadomosci-onet-pl.cdn.ampproject.org/v/s/wiadomosci.onet.pl/kraj/20-lecie-platformy-obywatelskiej-partia-oklejona-nekrologami-analiza/7cwsve3.amp?amp_js_v=0.1
+//Dalsza część tekstu znajduje się pod wideo
+//Agent Tomek w "Onet Rano" przeprasza Beatę Sawicką. Ciąg dalszy tekstu pod wideo:
+//Pozostała część tekstu pod materiałem wideo
+			if (FALSE !== strpos($paragraph->plaintext, 'pod materiałem wideo') || FALSE !== strpos($paragraph->plaintext, 'pod wideo'))
 			{
 				$next_sibling = $paragraph->next_sibling();
-				if (($next_sibling = $paragraph->next_sibling())->tag === 'amp-iframe')
+				if ('amp-iframe' == strtolower($next_sibling->tag))
+				{
 					$next_sibling->outertext='';
+					$paragraph->next_sibling()->outertext='';
+					$paragraph->next_sibling()->innertext='';
+					$paragraph->next_sibling()->plaintext='';
+				}
 				$paragraph->outertext='';
 			}
 		}
@@ -135,6 +146,30 @@ class OnetBridge extends BridgeAbstract {
 			deleteAncestorIfContainsText($li, 'Więcej informacji i podcastów znajdziesz na stronie głównej Onet.pl');
 		}
 
+		foreach($article->find('IMG') as $photo_element)
+		{
+			if($photo_element->hasAttribute('i-amphtml-layout')) $photo_element->setAttribute('i-amphtml-layout', NULL);
+			if($photo_element->hasAttribute('layout')) $photo_element->setAttribute('layout', NULL);
+			if($photo_element->hasAttribute('on')) $photo_element->setAttribute('on', NULL);
+			if($photo_element->hasAttribute('role')) $photo_element->setAttribute('role', NULL);
+			if($photo_element->hasAttribute('srcset')) $photo_element->setAttribute('srcset', NULL);
+			if($photo_element->hasAttribute('style')) $photo_element->setAttribute('style', NULL);
+			if($photo_element->hasAttribute('tabindex')) $photo_element->setAttribute('tabindex', NULL);
+		}
+
+//		addStyle($article, 'BLOCKQUOTE', getStyleQuote());
+		addStyle($article, 'FIGURE DIV.wrapper', getStylePhotoParent());
+		addStyle($article, 'FIGURE DIV.wrapper IMG', getStylePhotoImg());
+		$caption_style = array(
+			'bottom: 0;',
+			'left: 0;',
+			'right: 0;',
+			'text-align: center;',
+			'color: #fff;',
+			'background-color: rgba(0, 0, 0, 0.7);'
+		);
+		addStyle($article, 'FIGURE DIV.wrapper SPAN', $caption_style);
+
 
 		$this->items[] = array(
 			'uri' => $url_article,
@@ -145,6 +180,19 @@ class OnetBridge extends BridgeAbstract {
 		);
 
 //		echo "<br>Wszystkie $all_articles_counter artykulow zajelo $all_articles_time, <br>średnio ".$all_articles_time/$all_articles_counter ."<br>";
+	}
+
+	private function getChangedTitle($title)
+	{
+		preg_match_all('/\[[^\]]*\]/', $title, $title_categories);
+		$title_prefix = "";
+		foreach($title_categories[0] as $category)
+		{
+			$title = str_replace($category, '', $title);
+			$title_prefix = $title_prefix.$category;
+		}
+		$new_title = $title_prefix.' '.trim($title);
+		return $new_title;
 	}
 
 

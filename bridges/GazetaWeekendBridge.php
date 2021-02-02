@@ -51,7 +51,7 @@ class GazetaWeekendBridge extends BridgeAbstract {
 		$url_articles_list = 'https://weekend.gazeta.pl/weekend/0,0.html';
 		while (count($articles_urls) < $GLOBALS['number_of_wanted_articles'] && "empty" != $url_articles_list)
 		{
-			$html_articles_list = getSimpleHTMLDOMCached($url_articles_list, 86400 * 14);
+			$html_articles_list = getSimpleHTMLDOM($url_articles_list);
 			if (0 === count($found_hrefs = $html_articles_list->find('DIV.title A[href]')))
 			{
 				break;
@@ -97,42 +97,19 @@ class GazetaWeekendBridge extends BridgeAbstract {
 		else
 			$date = "";
 
-		$tags = array();
-		if (FALSE === is_null($category_element = $article_html->find('DIV.keyTag', 0)))
-			$tags[] = $category_element->plaintext;
-		else
-			$tags[] = "";
+		$tags = returnTagsArray($article_html, 'DIV.keyTag');
 
-		$quote_style = array(
-			'border-top-width: 0px;',
-			'border-right-width: 0px;',
-			'border-bottom-width: 0px;',
-			'border-left-width: 7px;',
-			'margin: 16px 24px;',
-			'margin-top: 16px;',
-			'margin-right: 24px;',
-			'margin-bottom: 16px;',
-			'margin-left: 24px;',
-			'padding: 10px 12px;',
-			'padding-top: 10px;',
-			'padding-right: 12px;',
-			'padding-bottom: 10px;',
-			'padding-left: 12px;',
-			'background-color: rgb(248, 248, 248);',
-			'border-style: solid;',
-			'border-top-style: solid;',
-			'border-right-style: solid;',
-			'border-bottom-style: solid;',
-			'border-left-style: solid;'
-		);
-		addStyle($article, 'H6', $quote_style);
+		addStyle($article, 'H6', getStyleQuote());
+
+		addStyle($article, 'figure', getStylePhotoParent());
+		addStyle($article, 'img', getStylePhotoImg());
+		addStyle($article, 'figcaption', getStylePhotoCaption());
 		//Fix podpisów pod zdjęciami
 		deleteAllDescendantsIfExist($article, 'comment');
 		deleteAllDescendantsIfExist($article, 'SCRIPT');
 		deleteAllDescendantsIfExist($article, 'DIV#sitePath');
 		deleteAllDescendantsIfExist($article, 'DIV#article_comments');
 		deleteAllDescendantsIfExist($article, 'DIV.relatedHolder');
-
 		deleteAllDescendantsIfExist($article, 'DIV.shortSocialBar');
 		deleteAllDescendantsIfExist($article, 'DIV#adUnit-007-CONTENTBOARD');
 		deleteAllDescendantsIfExist($article, 'DIV.noApp');
