@@ -38,6 +38,7 @@ class TygodnikPolsatNewsBridge extends BridgeAbstract {
 		return 'https://tygodnik.polsatnews.pl/favicon-16x16.png';
 	}
 
+
 	public function collectData()
 	{
 		include 'myFunctions.php';
@@ -55,6 +56,33 @@ class TygodnikPolsatNewsBridge extends BridgeAbstract {
 			$this->addArticle($url);
 		}
 	}
+	
+	private function my_get_html($url)
+	{
+		$context = stream_context_create(array('http' => array('ignore_errors' => true)));
+		$page_content = file_get_contents($url, false, $context);
+		$code = getHttpCode($http_response_header);
+		if (200 !== $code)
+		{
+			$html_error = createErrorContent($http_response_header);
+			$date = new DateTime("now", new DateTimeZone('Europe/Warsaw'));
+			$date_string = date_format($date, 'Y-m-d H:i:s');
+			$this->items[] = array(
+				'uri' => $url,
+				'title' => "Error ".$code.": ".$url,
+				'timestamp' => $date_string,
+				'content' => $html_error
+			);
+		}
+		$page_html = str_get_html($page_content);
+
+		$return_array = array(
+			'code' => $code,
+			'html' => $page_html,
+		);
+		return $return_array;
+	}
+
 	private function setGlobalArticlesParams()
 	{
 		$GLOBALS['author'] = $this->getInput('author');
@@ -72,7 +100,12 @@ class TygodnikPolsatNewsBridge extends BridgeAbstract {
 		$url_articles_list = 'https://tygodnik.polsatnews.pl/';
 		while (count($articles_urls) < $GLOBALS['number_of_wanted_articles'] && "empty" != $url_articles_list)
 		{
-			$html_articles_list = getSimpleHTMLDOM($url_articles_list);
+			$returned_array = $this->my_get_html($url_articles_list);
+			if (200 !== $returned_array['code'])
+			{
+				break;
+			}
+			$html_articles_list = $returned_array['html'];
 			if (0 === count($found_hrefs = $html_articles_list->find('A.article__link[href^="https://tygodnik.polsatnews.pl/news/"]')))
 			{
 				break;
@@ -124,8 +157,12 @@ class TygodnikPolsatNewsBridge extends BridgeAbstract {
 
 	private function addArticle($url_article)
 	{
-		$article_html = getSimpleHTMLDOMCached($url_article, 86400 * 14);
-		$article = $article_html->find('article.article--target', 0);
+		$returned_array = $this->my_get_html($url_article);
+		if (200 !== $returned_array['code'])
+		{
+			return;
+		}
+		$article = $returned_array['html']->find('article.article--target', 0);
 
 		//title
 		if (FALSE === is_null($title_element = $article->find('H1.article__title', 0)))
