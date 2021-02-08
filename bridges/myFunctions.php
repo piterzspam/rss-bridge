@@ -1,6 +1,6 @@
 <?php
 
-	function var_dump_print ($variable)
+	function var_dump_print($variable)
 	{
 		echo "Zmienna: <br><pre>"; var_dump($variable); echo "</pre>";
 	}
@@ -281,7 +281,10 @@
 		}
 		foreach ($article_element->find($search_string) as $element)
 		{
-			$element->style = $element->style.$styleString;
+			if(FALSE === $element->hasAttribute('style'))
+				$element->setAttribute('style', $styleString);
+			else
+				$element->style = $element->style.$styleString;
 		}
 	}
 	
