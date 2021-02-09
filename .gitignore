@@ -245,3 +245,4 @@ config.ini.php
 robots.txt
 DEBUG-
 DEBUG
+bridges/test_funkcji.php

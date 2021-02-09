@@ -256,9 +256,13 @@
 		$tags = array();
 		foreach($article->find($tag_selector) as $tags_item)
 		{
-			$tags[] = trim($tags_item->plaintext);
+			$tag_text = $tags_item->plaintext;
+			$tag_text = str_replace("&nbsp;", '', $tag_text);
+			$tag_text = trim($tag_text);
+			$tag_text = trim($tag_text, ',;');
+			$tags[] = $tag_text;
 		}
-		return $tags;
+		return array_unique($tags);
 	}
 
 	function returnAuthorsAsString($article, $author_selector)
@@ -337,5 +341,34 @@
 		}
 		$content = $content.'</div>';
 		return $content;
+	}
+
+	function removeSubstringIfExistsFirst($string, $substring)
+	{
+		$length_of_substring_to_remove = strlen($substring);
+		$offset = 0;
+		$length = $length_of_substring_to_remove;
+		$first_substring = substr($string, $offset, $length);
+		if ($first_substring === $substring)
+		{
+			$replacement = '';
+			$string = substr_replace($string, $replacement, $offset, $length);
+		}
+		return $string;
+	}
+
+	function removeSubstringIfExistsLast($string, $substring)
+	{
+		$length_of_string = strlen($string);
+		$length_of_substring_to_remove = strlen($substring);
+		$offset = $length_of_string - $length_of_substring_to_remove;
+		$length = $length_of_substring_to_remove;
+		$last_substring = substr($string, $offset, $length);
+		if ($last_substring === $substring)
+		{
+			$replacement = '';
+			$string = substr_replace($string, $replacement, $offset, $length);
+		}
+		return $string;
 	}
 
