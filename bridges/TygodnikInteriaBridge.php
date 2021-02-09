@@ -204,6 +204,7 @@ class TygodnikInteriaBridge extends BridgeAbstract {
 		deleteAllDescendantsIfExist($article, 'DIV#fb-root');
 		deleteAllDescendantsIfExist($article, 'FOOTER.page-footer');
 		deleteAllDescendantsIfExist($article, 'DIV.container.page-footer-main');
+		deleteAllDescendantsIfExist($article, 'ASIDE.embed-article-list');
 		deleteAllDescendantsIfExist($article, 'DIV.main-content.col-md-8.col-lg-8');
 		deleteAllDescendantsIfExist($article, 'SPAN.page-header');
 		deleteAllDescendantsIfExist($article, 'DIV#adBox625');
@@ -231,6 +232,9 @@ class TygodnikInteriaBridge extends BridgeAbstract {
 		addStyle($article, 'DIV.embed-work-detail', getStylePhotoCaption());
 		//https://tygodnik.interia.pl/news-kolejowy-efekt-motyla-jedna-zmiana-wplywa-na-cala-polske,nId,5029602
 		addStyle($article, 'BLOCKQUOTE', getStyleQuote());
+		//Ramka IG
+		//https://tygodnik.interia.pl/news-mowili-ze-boli-przez-stres-lata-blednych-diagnoz,nId,5029594
+		//https://tygodnik.interia.pl/news-z-bolu-nie-wiedzialam-co-robic-gryzlam-sciany-dominika-strac,nId,4984520
 
 		$this->items[] = array(
 			'uri' => $url_article,
