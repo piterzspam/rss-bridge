@@ -86,7 +86,11 @@ class KulturaLiberalnaBridge extends FeedExpander {
 		addStyle($article_post, 'DIV[id^="attachment_"]', getStylePhotoParent());
 		addStyle($article_post, 'IMG[class^="wp-image-"]', getStylePhotoImg());
 		addStyle($article_post, 'P.wp-caption-text', getStylePhotoCaption());
+		$str = $article_post->save();
+		$article_post = str_get_html($str);
 
+//		if (TRUE === $GLOBALS['my_debug'])
+//			echo "<br>Wszystkie {$GLOBALS['all_articles_counter']} artykulow zajelo {$GLOBALS['all_articles_time']}, <br>średnio ".$GLOBALS['all_articles_time']/$GLOBALS['all_articles_counter'] ."<br>";
 		$item['categories'] = $tags;
 		$item['author'] = $author;
 		$item['content'] = $article_post;

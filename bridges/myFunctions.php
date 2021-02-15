@@ -9,14 +9,16 @@
 	{
 		return array(
 			'position: relative;',
-			'width: -moz-fit-content;'
+			'width: -moz-fit-content;',
+			'margin-bottom: 10px;'
 		);
 	}
 
 	function getStylePhotoImg()
 	{
 		return array(
-			'vertical-align: bottom;'
+			'vertical-align: bottom;',
+//			'margin-bottom: 10px;'
 		);
 	}
 
@@ -29,9 +31,9 @@
 			'right: 0;',
 			'text-align: center;',
 			'color: #fff;',
-			'padding-top: 10px;',
+//			'padding-top: 10px;',
 			'padding-right: 10px;',
-			'padding-bottom: 10px;',
+//			'padding-bottom: 10px;',
 			'padding-left: 10px;',
 			'background-color: rgba(0, 0, 0, 0.7);'
 		);
