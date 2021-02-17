@@ -1,6 +1,6 @@
 <?php
 class GazetaprawnaBridge extends BridgeAbstract {
-	const NAME = 'Gazetaprawna.pl - Strona autora';
+	const NAME = 'Gazetaprawna.pl';
 	const URI = 'https://www.gazetaprawna.pl/';
 	const DESCRIPTION = 'No description provided';
 	const MAINTAINER = 'No maintainer';
@@ -65,7 +65,19 @@ class GazetaprawnaBridge extends BridgeAbstract {
 		);
 		$this->setGlobalArticlesParams();
 		$GLOBALS['url_articles_list'] = $url_articles_list;
+/*
+		$new_urls = array();
+//		$new_urls[] = 'https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8094787,chinski-blad-europy-opinia-piotr-arak.html';
+		$new_urls[] = 'https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8094155,economicus-2020-oto-nominowani-w-kategorii-najlepszy-poradnik-biznesowy.html';
+//		$new_urls[] = 'https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8094315,rzad-uslugi-publiczne-transfery-likwidacja-nierownosci-opinia.html';
 		
+		foreach ($new_urls as $url)
+		{
+			$article_html = getSimpleHTMLDOMCached($url, 86400 * 14);
+			$this->addArticle($article_html, $url);
+		}
+*/
+
 		while (count($this->items) < $GLOBALS['number_of_wanted_articles'])
 		{
 			$new_urls = $this->getNewUrls();
@@ -84,6 +96,7 @@ class GazetaprawnaBridge extends BridgeAbstract {
 						break;
 					}
 				}
+				
 			}
 		}
 	}
@@ -152,8 +165,37 @@ class GazetaprawnaBridge extends BridgeAbstract {
 			$date = $date_element->getAttribute('content');
 		}
 
+		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8094155,economicus-2020-oto-nominowani-w-kategorii-najlepszy-poradnik-biznesowy.html
+		foreach ($article->find('DIV.image') as $photo_container)
+		{
+			if (FALSE === is_null($photo_element = $photo_container->find('IMG[data-original^="http"][src^="data:image/"]', 0)))
+			{
+				$src = $photo_element->getAttribute('data-original');
+				$photo_element->setAttribute('src', $src);
+				$photo_element->setAttribute('data-original', NULL);
+				$photo_element->setAttribute('itemprop', NULL);
+				$photo_element->setAttribute('data-original-retina', NULL);
+				$photo_element->setAttribute('data-original-webp', NULL);
+				$photo_element->setAttribute('data-original-webp-retina', NULL);
+			}
+			if (FALSE === is_null($caption_element = $photo_container->find('SPAN.caption[style]', 0)))
+			{
+				$caption_element->setAttribute('style', NULL);
+			}
+
+		}
+		
+		//dla porządku
+		foreach ($article->find('[data-item-uuid]') as $element)
+		{
+			$element->setAttribute('data-item-uuid', NULL);
+		}
+		
+
 		deleteAllDescendantsIfExist($article, 'comment');
 		deleteAllDescendantsIfExist($article, 'SCRIPT');
+		deleteAllDescendantsIfExist($article, 'NOSCRIPT');
+		deleteAllDescendantsIfExist($article, 'DIV.authorSourceProfile');
 		deleteAllDescendantsIfExist($article, 'DIV.streamNews');
 		deleteAllDescendantsIfExist($article, 'DIV.plistaDetailDesktop');
 		deleteAllDescendantsIfExist($article, 'DIV.commentsBox');
@@ -186,26 +228,35 @@ class GazetaprawnaBridge extends BridgeAbstract {
 			'font-weight: bold;'
 		);
 		addStyle($article, 'DIV#lead', $lead_style);
+		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8094785,sekularyzacja-przyspiesza-takze-w-polsce-wywiad.html
+		addStyle($article, 'DIV.frameArea.pytanie', $lead_style);
 
-
-		addStyle($article, 'figure', getStylePhotoParent());
-		addStyle($article, 'img', getStylePhotoImg());
-		addStyle($article, 'figcaption', getStylePhotoCaption());
+//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8094155,economicus-2020-oto-nominowani-w-kategorii-najlepszy-poradnik-biznesowy.html
+		addStyle($article, 'figure, DIV.imageCaptionWrapper', getStylePhotoParent());
+		addStyle($article, 'img, DIV.imageWrapper', getStylePhotoImg());
+		addStyle($article, 'figcaption, SPAN.caption', getStylePhotoCaption());
 
 		
 		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8079800,sztuczna-inteligencja-rezolucja-ue-azja-usa-slowik.html
+		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8094315,rzad-uslugi-publiczne-transfery-likwidacja-nierownosci-opinia.html
 		$frameWrap_style = array(
 			'margin-bottom: 18px;'
 		);
-		addStyle($article, 'DIV.frameWrap', $frameWrap_style);
+		addStyle($article, 'DIV.frameWrap, DIV#lead', $frameWrap_style);
 
 		//https://prawo.gazetaprawna.pl/artykuly/8054640,nowelizacja-ustawy-o-wlasnosci-lokali-eksmisja-utrata-mieszkania.html.amp?amp_js_v=0.1
+		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8094787,chinski-blad-europy-opinia-piotr-arak.html
+		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8094155,economicus-2020-oto-nominowani-w-kategorii-najlepszy-poradnik-biznesowy.html
+		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8094315,rzad-uslugi-publiczne-transfery-likwidacja-nierownosci-opinia.html
+		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8080209,paszport-covidowy-przywileje-podroze-szczepionka-covid.html
+//		echo "<br><br><br><br>Article przed: <br>$article<br><br><br>";
 		clearParagraphsFromTaglinks($article, 'P.hyphenate, DIV.frameArea', array(
 			'/gazetaprawna\.pl\/tagi\//',
-			'/prawo\.gazetaprawna\.pl\/$/',
+			'/gazetaprawna\.pl\/$/',
+			'/gazetaprawna\.pl$/',
 			'/serwisy\.gazetaprawna\.pl\/.*\/tematy\//'
 		));
-		
+//		echo "<br><br>Article po: <br>$article<br><br><br>";		
 		$this->items[] = array(
 			'uri' => $url_article_link,
 			'title' => $title,

@@ -133,11 +133,25 @@
 
 	function clearParagraphsFromTaglinks($article, $paragrapghSearchString, $regexArray)
 	{
+//		echo "<br><br><br>";
 		foreach($article->find($paragrapghSearchString) as $paragraph)
+		{
+//			echo "Paragraf przed: <br><pre>".htmlspecialchars($paragraph)."</pre><br>";
 			foreach($paragraph->find('A') as $a_element)
+			{
+//				echo "a_element przed: <br><pre>".htmlspecialchars($a_element)."</pre><br>";
 				foreach($regexArray as $regex)
+				{
+//					echo "Testowany regex: $regex, Testowany link: $a_element->href, <br>";
 					if(1 === preg_match($regex, $a_element->href))
-						$a_element->outertext = $a_element->plaintext;
+					{
+						$paragraph->outertext = str_replace($a_element->outertext, $a_element->plaintext, $paragraph->outertext);
+					}
+				}
+//				echo "a_element po: <br><pre>".htmlspecialchars($a_element)."</pre><br>";
+			}
+//			echo "Paragraf po: <br><pre>".htmlspecialchars($paragraph)."</pre><br>";
+		}
 	}
 	
 	function deleteAncestorIfContainsText($ancestor, $descendant_string)
