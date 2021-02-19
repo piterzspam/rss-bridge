@@ -81,22 +81,27 @@ class GazetaprawnaBridge extends BridgeAbstract {
 		while (count($this->items) < $GLOBALS['number_of_wanted_articles'])
 		{
 			$new_urls = $this->getNewUrls();
+//			$new_urls = array();
+//			$new_urls[] = 'https://serwisy.gazetaprawna.pl/zdrowie/artykuly/8076239,lista-antywywozowa-szczepionka-przeciw-covid-19.html';
 			if ("empty" === $new_urls)
 			{
 				break;
 			}
 			foreach ($new_urls as $url)
 			{
-				$article_html = getSimpleHTMLDOMCached($url, 86400 * 14);
-				if (TRUE === $this->meetsConditions($article_html))
+				$returned_array = $this->my_get_html($url, FALSE);
+				if (200 === $returned_array['code'])
 				{
-					$this->addArticle($article_html, $url);
-					if (count($this->items) >= $GLOBALS['number_of_wanted_articles'])
+					$article_html = $returned_array['html'];
+					if (TRUE === $this->meetsConditions($article_html))
 					{
-						break;
+						$this->addArticle($article_html, $url);
+						if (count($this->items) >= $GLOBALS['number_of_wanted_articles'])
+						{
+							break;
+						}
 					}
 				}
-				
 			}
 		}
 	}
@@ -104,8 +109,9 @@ class GazetaprawnaBridge extends BridgeAbstract {
 	private function getNewUrls()
 	{
 		$new_urls = array();
-		$html_articles_list = getSimpleHTMLDOM($GLOBALS['url_articles_list']);
-		if (0 === count($found_leads = $html_articles_list->find('DIV.itarticle')))
+		$returned_array = $this->my_get_html($GLOBALS['url_articles_list'], TRUE);
+		$html_articles_list = $returned_array['html'];
+		if (200 !== $returned_array['code'] || 0 === count($found_leads = $html_articles_list->find('DIV.itarticle')))
 		{
 			return "empty";
 		}
@@ -150,7 +156,7 @@ class GazetaprawnaBridge extends BridgeAbstract {
 		$price_param = $this->getArticlePriceParam($article_html);
 		if ("premium" === $price_param)
 		{
-			$article_html = $this->getFullArticlePage($url_article_link);
+			$article_html = $this->my_get_html($url_article_link, TRUE);
 		}
 		$article = $article_html->find('SECTION.detailSection', 0);
 		//title
@@ -164,79 +170,145 @@ class GazetaprawnaBridge extends BridgeAbstract {
 		{
 			$date = $date_element->getAttribute('content');
 		}
-
-		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8094155,economicus-2020-oto-nominowani-w-kategorii-najlepszy-poradnik-biznesowy.html
-		foreach ($article->find('DIV.image') as $photo_container)
-		{
-			if (FALSE === is_null($photo_element = $photo_container->find('IMG[data-original^="http"][src^="data:image/"]', 0)))
-			{
-				$src = $photo_element->getAttribute('data-original');
-				$photo_element->setAttribute('src', $src);
-				$photo_element->setAttribute('data-original', NULL);
-				$photo_element->setAttribute('itemprop', NULL);
-				$photo_element->setAttribute('data-original-retina', NULL);
-				$photo_element->setAttribute('data-original-webp', NULL);
-				$photo_element->setAttribute('data-original-webp-retina', NULL);
-			}
-			if (FALSE === is_null($caption_element = $photo_container->find('SPAN.caption[style]', 0)))
-			{
-				$caption_element->setAttribute('style', NULL);
-			}
-
-		}
 		
 		//dla porządku
 		foreach ($article->find('[data-item-uuid]') as $element)
 		{
 			$element->setAttribute('data-item-uuid', NULL);
 		}
+		$str = $article->save();
+		$char_to_replace = chr(hexdec(20));
+		$string_to_replace = $char_to_replace.$char_to_replace;
+		while (FALSE !== strpos($str, $string_to_replace))
+		{
+			$str = str_replace($string_to_replace, $char_to_replace, $str);
+		}
+		$article = str_get_html($str);
 		
 
 		deleteAllDescendantsIfExist($article, 'comment');
 		deleteAllDescendantsIfExist($article, 'SCRIPT');
 		deleteAllDescendantsIfExist($article, 'NOSCRIPT');
+		deleteAllDescendantsIfExist($article, 'ASIDE#rightColumnBox');
+		deleteAllDescendantsIfExist($article, 'DIV#banner_art_video_out');
+		deleteAllDescendantsIfExist($article, 'DIV#relatedTopics');
+		deleteAllDescendantsIfExist($article, 'DIV#widgetStop');
 		deleteAllDescendantsIfExist($article, 'DIV.authorSourceProfile');
 		deleteAllDescendantsIfExist($article, 'DIV.streamNews');
 		deleteAllDescendantsIfExist($article, 'DIV.plistaDetailDesktop');
 		deleteAllDescendantsIfExist($article, 'DIV.commentsBox');
 		deleteAllDescendantsIfExist($article, 'DIV.detailAllBoxes');
 		deleteAllDescendantsIfExist($article, 'DIV.social-container');
-		deleteAllDescendantsIfExist($article, 'DIV#relatedTopics');
 		deleteAllDescendantsIfExist($article, 'DIV.serviceLogoWrapper');
 		deleteAllDescendantsIfExist($article, 'DIV.infor-ad');
 		deleteAllDescendantsIfExist($article, 'DIV.bottomAdsBox');
-		deleteAllDescendantsIfExist($article, 'ASIDE#rightColumnBox');
 		deleteAllDescendantsIfExist($article, 'DIV.promoFrame.pulse2PromoFrame.withDescription.article');
-		deleteAllDescendantsIfExist($article, 'DIV#banner_art_video_out');
+
+		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8094155,economicus-2020-oto-nominowani-w-kategorii-najlepszy-poradnik-biznesowy.html
+		foreach ($article->find('DIV.image') as $photo_container)
+		{
+			$img_src = "";
+			$img_alt = "";
+			$figcaption_text = "";
+			if (FALSE === is_null($photo_element = $photo_container->find('IMG[data-original^="http"][src^="data:image/"]', 0)))
+			{
+				$img_src = $photo_element->getAttribute('data-original');
+				if($photo_element->hasAttribute('alt'))
+					$img_alt = $photo_element->getAttribute('alt', NULL);
+			}
+			if (FALSE === is_null($image_caption = $photo_container->find('SPAN.caption', 0)))
+			{//jeżeli jest podpis zdjęcia
+				$figcaption_text = trim($image_caption->plaintext);
+				if (0 === strlen($figcaption_text))
+				{//jeżeli podpis ma dlugosc 0
+					if (FALSE === is_null($next_element = $photo_container->next_sibling()))
+					{//jeżeli jest nastepny element
+						if (FALSE === is_null($next_element_caption = $next_element->find('DIV.articleImageDescription', 0)))
+						{//jeżeli w następnym w elemencie jest podpis to zamiana
+							$figcaption_text = $next_element_caption->plaintext;
+							$next_element->outertext = '';
+						}
+					}
+				}
+			}
+			foreach ($article->find('DIV.frameWrap DIV.articleImageDescription') as $description_container)
+			{
+				$description_container->parent->outertext = '';
+			}
+
+			$char_to_replace = chr(hexdec(20));
+			$string_to_replace = $char_to_replace.$char_to_replace;
+			while (FALSE !== strpos($figcaption_text, $string_to_replace))
+			{
+				$figcaption_text = str_replace($string_to_replace, $char_to_replace, $figcaption_text);
+			}
+			$figcaption_text = str_replace('/'.$char_to_replace, '/', $figcaption_text);
+
+			if (0 !== strlen($img_src) && 0 !== strlen($figcaption_text) && 0 === strlen($img_alt))
+				$photo_container->outertext = '<figure class="photoWrapper photo"><img src="'.$img_src.'"><figcaption>'.$figcaption_text.'</figcaption></figure>';
+			else if (0 !== strlen($img_src) && 0 !== strlen($figcaption_text) && 0 !== strlen($img_alt))
+				$photo_container->outertext = '<figure class="photoWrapper photo"><img src="'.$img_src.'" alt="'.$img_alt.'"><figcaption>'.$figcaption_text.'</figcaption></figure>';
+			else if (0 !== strlen($img_src))
+				$photo_container->outertext = '<figure class="photoWrapper photo"><img src="'.$img_src.'"></figure>';
+		}
+		foreach ($article->find('FIGURE.mainPhoto') as $main_photo_container)
+		{
+			$img_src = "";
+			$img_alt = "";
+			$figcaption_text = "";
+			if (FALSE === is_null($photo_element = $main_photo_container->find('IMG[src^="http"]', 0)))
+			{
+				$img_src = $photo_element->getAttribute('src');
+				if($photo_element->hasAttribute('alt'))
+					$img_alt = $photo_element->getAttribute('alt', NULL);
+			}
+			if (FALSE === is_null($image_caption = $main_photo_container->find('FIGCAPTION', 0)))
+			{//jeżeli jest podpis zdjęcia
+				$figcaption_text = trim($image_caption->plaintext);
+			}
+
+			$char_to_replace = chr(hexdec(20));
+			$string_to_replace = $char_to_replace.$char_to_replace;
+			while (FALSE !== strpos($figcaption_text, $string_to_replace))
+			{
+				$figcaption_text = str_replace($string_to_replace, $char_to_replace, $figcaption_text);
+			}
+			$figcaption_text = str_replace('/'.$char_to_replace, '/', $figcaption_text);
+
+			if (0 !== strlen($img_src) && 0 !== strlen($figcaption_text) && 0 !== strlen($img_alt))
+				$main_photo_container->outertext = '<figure class="photoWrapper mainPhoto"><img src="'.$img_src.'" alt="'.$img_alt.'"><figcaption>'.$figcaption_text.'</figcaption></figure>';
+			else if (0 !== strlen($img_src) && 0 !== strlen($figcaption_text) && 0 === strlen($img_alt))
+				$main_photo_container->outertext = '<figure class="photoWrapper mainPhoto"><img src="'.$img_src.'"><figcaption>'.$figcaption_text.'</figcaption></figure>';
+			else if (0 !== strlen($img_src))
+				$main_photo_container->outertext = '<figure class="photoWrapper mainPhoto"><img src="'.$img_src.'"></figure>';
+		}
+
+		//https://prawo.gazetaprawna.pl/artykuly/8054640,nowelizacja-ustawy-o-wlasnosci-lokali-eksmisja-utrata-mieszkania.html.amp?amp_js_v=0.1
+		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8094787,chinski-blad-europy-opinia-piotr-arak.html
+		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8094155,economicus-2020-oto-nominowani-w-kategorii-najlepszy-poradnik-biznesowy.html
+		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8094315,rzad-uslugi-publiczne-transfery-likwidacja-nierownosci-opinia.html
+		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8080209,paszport-covidowy-przywileje-podroze-szczepionka-covid.html
+		clearParagraphsFromTaglinks($article, 'P.hyphenate, DIV.frameArea', array(
+			'/gazetaprawna\.pl\/tagi\//',
+			'/gazetaprawna\.pl\/$/',
+			'/gazetaprawna\.pl$/',
+			'/serwisy\.gazetaprawna\.pl\/.*\/tematy\//'
+		));
+
+		//https://serwisy.gazetaprawna.pl/orzeczenia/artykuly/8078983,antonik-burmistrz-prezes-spoldzielnia-mieszkaniowa-brodno-porozumienie-etyka.html
+		foreach($article->find('H2') as $element)
+		{
+			$element->outertext = '<br>'.$element->outertext;
+//			$element->innertext = '<br>'.$element->innertext;
+		}
 
 		//https://www.gazetaprawna.pl/firma-i-prawo/artykuly/8077582,konkurs-na-facebooku-polubienie-posta-kara-od-skarbowki.html
-		$paragraph_title_style = array(
-			'font-weight: bold;'
-		);
-		addStyle($article, 'DIV.frameArea.srodtytul', $paragraph_title_style);
-		foreach($article->find('DIV.frameArea.srodtytul') as $srodtytul)
-		{
-			$srodtytul->outertext = '<br>'.$srodtytul->outertext;
-		}
-		//https://serwisy.gazetaprawna.pl/orzeczenia/artykuly/8078983,antonik-burmistrz-prezes-spoldzielnia-mieszkaniowa-brodno-porozumienie-etyka.html
-		foreach($article->find('H2') as $h2)
-		{
-			$h2->outertext = '<br>'.$h2->outertext;
-		}
-
-		$lead_style = array(
-			'font-weight: bold;'
-		);
-		addStyle($article, 'DIV#lead', $lead_style);
 		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8094785,sekularyzacja-przyspiesza-takze-w-polsce-wywiad.html
-		addStyle($article, 'DIV.frameArea.pytanie', $lead_style);
+		$bold_style = array(
+			'font-weight: bold;'
+		);
+		addStyle($article, 'DIV.frameArea.srodtytul, DIV.frameArea.pytanie, DIV#lead', $bold_style);
 
-//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8094155,economicus-2020-oto-nominowani-w-kategorii-najlepszy-poradnik-biznesowy.html
-		addStyle($article, 'figure, DIV.imageCaptionWrapper', getStylePhotoParent());
-		addStyle($article, 'img, DIV.imageWrapper', getStylePhotoImg());
-		addStyle($article, 'figcaption, SPAN.caption', getStylePhotoCaption());
-
-		
 		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8079800,sztuczna-inteligencja-rezolucja-ue-azja-usa-slowik.html
 		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8094315,rzad-uslugi-publiczne-transfery-likwidacja-nierownosci-opinia.html
 		$frameWrap_style = array(
@@ -244,19 +316,35 @@ class GazetaprawnaBridge extends BridgeAbstract {
 		);
 		addStyle($article, 'DIV.frameWrap, DIV#lead', $frameWrap_style);
 
-		//https://prawo.gazetaprawna.pl/artykuly/8054640,nowelizacja-ustawy-o-wlasnosci-lokali-eksmisja-utrata-mieszkania.html.amp?amp_js_v=0.1
-		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8094787,chinski-blad-europy-opinia-piotr-arak.html
-		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8094155,economicus-2020-oto-nominowani-w-kategorii-najlepszy-poradnik-biznesowy.html
-		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8094315,rzad-uslugi-publiczne-transfery-likwidacja-nierownosci-opinia.html
-		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8080209,paszport-covidowy-przywileje-podroze-szczepionka-covid.html
-//		echo "<br><br><br><br>Article przed: <br>$article<br><br><br>";
-		clearParagraphsFromTaglinks($article, 'P.hyphenate, DIV.frameArea', array(
-			'/gazetaprawna\.pl\/tagi\//',
-			'/gazetaprawna\.pl\/$/',
-			'/gazetaprawna\.pl$/',
-			'/serwisy\.gazetaprawna\.pl\/.*\/tematy\//'
-		));
-//		echo "<br><br>Article po: <br>$article<br><br><br>";		
+//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8094155,economicus-2020-oto-nominowani-w-kategorii-najlepszy-poradnik-biznesowy.html
+		$str = $article->save();
+		$article = str_get_html($str);
+		addStyle($article, 'FIGURE.photoWrapper', getStylePhotoParent());
+		addStyle($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
+		addStyle($article, 'FIGCAPTION', getStylePhotoCaption());
+
+		//Splaszczenie struktury
+		$detailContentWrapper = $article->find('DIV.detailContentWrapper', 0);
+		$detailContent = $article->find('DIV.detailContent', 0);
+		if (FALSE === is_null($detailContentWrapper) && FALSE === is_null($detailContent))
+		{
+			$detailContentWrapper->outertext = $detailContent->innertext;
+		}
+
+		$leftColumnBox = $article->find('ARTICLE#leftColumnBox', 0);
+		$whitelistPremium = $article->find('DIV.whitelistPremium', 0);
+		if (FALSE === is_null($leftColumnBox) && FALSE === is_null($whitelistPremium))
+		{
+			$leftColumnBox->outertext = $whitelistPremium->innertext;
+		}
+		
+		if (FALSE === is_null($detailSection = $article->find('SECTION.detailSection', 0)))
+		{
+			$article->outertext = $detailSection->innertext;
+		}
+
+
+
 		$this->items[] = array(
 			'uri' => $url_article_link,
 			'title' => $title,
@@ -290,6 +378,53 @@ class GazetaprawnaBridge extends BridgeAbstract {
 		$context = stream_context_create($opts);
 		$article_html = file_get_html($url, false, $context);
 		return $article_html;
+	}
+
+	
+	private function my_get_html($url, $get_premium = FALSE)
+	{
+		if (TRUE === $get_premium)
+		{
+			$context = stream_context_create(
+				array(
+					'http' => array(
+						'ignore_errors' => true,
+					    'header'=>"User-Agent:Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)\r\n"
+					)
+				)
+			);
+		}
+		else
+		{
+			$context = stream_context_create(
+				array(
+					'http' => array(
+						'ignore_errors' => true
+					)
+				)
+			);
+		}
+		$page_content = file_get_contents($url, false, $context);
+		$code = getHttpCode($http_response_header);
+		if (200 !== $code)
+		{
+			$html_error = createErrorContent($http_response_header);
+			$date = new DateTime("now", new DateTimeZone('Europe/Warsaw'));
+			$date_string = date_format($date, 'Y-m-d H:i:s');
+			$this->items[] = array(
+				'uri' => $url,
+				'title' => "Error ".$code.": ".$url,
+				'timestamp' => $date_string,
+				'content' => $html_error
+			);
+		}
+		$page_html = str_get_html($page_content);
+
+		$return_array = array(
+			'code' => $code,
+			'html' => $page_html,
+		);
+		return $return_array;
 	}
 
 	private function setGlobalArticlesParams()

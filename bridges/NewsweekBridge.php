@@ -65,13 +65,10 @@ class NewsweekBridge extends BridgeAbstract {
 
 		//author
 		$author = $article->find('H4.name', 0)->plaintext;
+		//authors
+		$author = returnAuthorsAsString($article, 'DIV.authorBox H4.name');
 		//tags
-		$tags = array();
-		foreach($article->find('DIV.tags', 0)->find('A') as $tag_element)
-		{
-			$tags[] = trim($tag_element->plaintext);
-			$tag_element->outertext = '';
-		}
+		$tags = returnTagsArray($article, 'DIV.tags A');
 		//date
 		$date = $article->find('SPAN.articleDates', 0)->innertext;
 		$date = str_replace('Data publikacji: ', '', $date);
@@ -126,6 +123,12 @@ class NewsweekBridge extends BridgeAbstract {
 			deleteAncestorIfContainsText($paragraph, 'Czytaj też: ');
 			deleteAncestorIfContainsText($paragraph, 'Czytaj także: ');
 			deleteAncestorIfContainsText($paragraph, 'Zobacz też: ');
+//https://www.newsweek.pl/polska/polityka/nowa-odslona-konfliktu-w-porozumieniu/d18e6y6
+			deleteAncestorIfContainsText($paragraph, 'Zobacz więcej: ');
+			deleteAncestorIfContainsText($paragraph, 'Zobacz także: ');
+			deleteAncestorIfContainsText($paragraph, 'Czytaj więcej: ');
+//https://www.newsweek.pl/polska/polityka/paulina-hennig-kloska-w-szeregach-polska-2050-nowa-poslanka-szymona-holowni/5cj9tqx
+			deleteAncestorIfContainsText($paragraph, 'Zobacz: ');
 		}
 		//Przenoszenie tresci premium poziom wyzej
 		if (FALSE === is_null($offerView = $article->find('DIV.offerView', 0)) && FALSE === is_null($article->find('DIV.contentPremium', 0)))

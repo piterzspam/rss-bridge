@@ -5,6 +5,11 @@
 		echo "Zmienna: <br><pre>"; var_dump($variable); echo "</pre>";
 	}
 
+	function html_print($variable)
+	{
+		echo "Zmienna_html: <br><pre>".htmlspecialchars($variable)."</pre><br>";
+	}
+
 	function getStylePhotoParent()
 	{
 		return array(
