@@ -214,7 +214,7 @@ class GazetaprawnaBridge extends BridgeAbstract {
 			{
 				$img_src = $photo_element->getAttribute('data-original');
 				if($photo_element->hasAttribute('alt'))
-					$img_alt = $photo_element->getAttribute('alt', NULL);
+					$img_alt = $photo_element->getAttribute('alt');
 			}
 			if (FALSE === is_null($image_caption = $photo_container->find('SPAN.caption', 0)))
 			{//jeżeli jest podpis zdjęcia
@@ -260,7 +260,7 @@ class GazetaprawnaBridge extends BridgeAbstract {
 			{
 				$img_src = $photo_element->getAttribute('src');
 				if($photo_element->hasAttribute('alt'))
-					$img_alt = $photo_element->getAttribute('alt', NULL);
+					$img_alt = $photo_element->getAttribute('alt');
 			}
 			if (FALSE === is_null($image_caption = $main_photo_container->find('FIGCAPTION', 0)))
 			{//jeżeli jest podpis zdjęcia

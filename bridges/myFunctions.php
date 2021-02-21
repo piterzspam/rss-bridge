@@ -259,6 +259,38 @@
 			$ancestor->outertext = '';
 	}
 
+	function deleteAllAncestorsIfDescendantExists($main_element, $ancestor_string, $descendant_string)
+	{
+		foreach ($main_element->find($ancestor_string) as $ancestor_element)
+		{
+			if (FALSE === is_null($descendant_element = $ancestor_element->find($descendant_string, 0)))
+				$ancestor_element->outertext = '';
+		}
+	}
+
+	function replaceAllBiggerOutertextWithSmallerInnertext($main_element, $bigger_string, $smaller_string)
+	{
+		foreach($main_element->find($bigger_string) as $bigger_element)
+		{
+			if (FALSE === is_null($smaller_element = $bigger_element->find($smaller_string, 0)))
+			{
+				$bigger_element->outertext = $smaller_element->innertext;
+			}
+		}
+	}
+
+	function replaceAllBiggerOutertextWithSmallerOutertext($main_element, $bigger_string, $smaller_string)
+	{
+		foreach($main_element->find($bigger_string) as $bigger_element)
+		{
+			if (FALSE === is_null($smaller_element = $bigger_element->find($smaller_string, 0)))
+			{
+				$bigger_element->outertext = $smaller_element->outertext;
+			}
+		}
+	}
+
+
 	function redirectUrl($social_url)
 	{
 		$twitter_proxy = 'nitter.net';
