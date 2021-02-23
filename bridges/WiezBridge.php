@@ -59,6 +59,10 @@ class WiezBridge extends FeedExpander {
 		$article = $articlePage->find('DIV.single__post', 0);
 		$tags = returnTagsArray($article, 'LI.post-categories__item A.post-categories__item__link');
 
+
+		deleteAllDescendantsIfExist($article, 'SCRIPT');
+		deleteAllDescendantsIfExist($article, 'NOSCRIPT');
+		deleteAllDescendantsIfExist($article, 'LINK');
 		deleteAllDescendantsIfExist($article, 'DIV.single-post-sidebar-wrapper');
 		deleteAllDescendantsIfExist($article, 'DIV.latest-articles-section');
 		deleteAllDescendantsIfExist($article, 'DIV.single__post__socials-top');

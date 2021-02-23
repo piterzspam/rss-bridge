@@ -141,11 +141,25 @@ class DemagogBridge extends BridgeAbstract {
 		$article = $article_html->find('MAIN[role="main"] DIV.container', 0);
 		$article = str_get_html($article->save());
 
+/*
+
+		if (FALSE === is_null($title_element = $article->find('META[property="og:title"][content]', 0)))
+		{
+			if($title_element->hasAttribute('content'))
+				$title = trim($title_element->getAttribute('content'));
+		}
+*/
+
+
 		//tytuł
 		$title = "";
-		if (FALSE === is_null($title_element = $article->find('H1.count-text', 0)))
+		if (FALSE === is_null($title_element = $article_html->find('TITLE', 0)))
 		{
 			$title = trim($title_element->plaintext);
+		}
+		else
+		{
+			$title = $url;
 		}
 		//autor
 		$author = "Demagog";
@@ -209,7 +223,7 @@ class DemagogBridge extends BridgeAbstract {
 			$img_alt = "";
 			$img_src = $article_element->getAttribute('src');
 			if($article_element->hasAttribute('alt'))
-				$img_alt = trim($article_element->getAttribute('alt', NULL));
+				$img_alt = trim($article_element->getAttribute('alt'));
 			if (0 === strlen($img_alt))
 				$new_outertext = '<figure class="photoWrapper mainPhoto"><img src="'.$img_src.'"></figure>';
 			else

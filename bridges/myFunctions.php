@@ -10,6 +10,12 @@
 		echo "Zmienna_html: <br><pre>".htmlspecialchars($variable)."</pre><br>";
 	}
 
+	function element_print($element, $name, $prefix = "")
+	{
+		echo $prefix;
+		echo "<br>Element $name:<br>$element<br><br>";
+	}
+
 	function getStylePhotoParent()
 	{
 		return array(

@@ -156,8 +156,18 @@ class GazetaprawnaBridge extends BridgeAbstract {
 		$price_param = $this->getArticlePriceParam($article_html);
 		if ("premium" === $price_param)
 		{
-			$article_html = $this->my_get_html($url_article_link, TRUE);
+			$returned_array = $this->my_get_html($url_article_link, TRUE);
+			if (200 !== $returned_array['code'])
+			{
+				return;
+			}
+			else
+			{
+				$article_html = $returned_array['html'];
+			}
+
 		}
+//		element_print($article_html, 'article_html', '<br>');
 		$article = $article_html->find('SECTION.detailSection', 0);
 		//title
 		$title_element = $article->find('H1.mainTitle', 0);
