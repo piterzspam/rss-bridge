@@ -70,8 +70,9 @@ class NewsweekBridge extends BridgeAbstract {
 		//tags
 		$tags = returnTagsArray($article, 'DIV.tags A');
 		//date
-		$date = $article->find('SPAN.articleDates', 0)->innertext;
-		$date = str_replace('Data publikacji: ', '', $date);
+		$article_data = $article_html->find('SCRIPT[type="application/ld+json"]', 0)->innertext;
+		$article_data_parsed = parse_article_data(json_decode($article_data));
+		$date = trim($article_data_parsed["datePublished"]);
 		//title
 		$title = trim($article->find('H1.detailTitle', 0)->innertext);
 		if (FALSE === is_null($article_html->find('H1.detailTitle', 0)->find('SPAN.label', 0)))
