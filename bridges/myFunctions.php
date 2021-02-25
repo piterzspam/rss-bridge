@@ -67,7 +67,7 @@
 			'padding-right: 12px;',
 			'padding-bottom: 10px;',
 			'padding-left: 12px;',
-			'background-color: rgb(248, 248, 248);',
+//			'background-color: rgb(248, 248, 248);',
 			'border-style: solid;',
 			'border-top-style: solid;',
 			'border-right-style: solid;',

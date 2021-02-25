@@ -211,16 +211,19 @@ class LiberteBridge extends BridgeAbstract {
 		$author = returnAuthorsAsString($article, 'DIV.entry-autor H5 A.big.black.bold[href*="/author/"]');
 		//tagi
 		$tags = returnTagsArray($article, 'DIV.entry-autor A.light[href*="/tag/"]');	
-		if (FALSE === is_null($category_element = $article->find('META[property="article:section"][content]', 0)))
+		if (FALSE === is_null($category_element = $article_html->find('META[property="article:section"][content]', 0)))
 		{
 			$tags[] = $category_element->getAttribute('content');
 		}
 		//data
 		$date = "";
-		if (FALSE === is_null($date_element = $article->find('META[property="article:published_time"][content]', 0)))
+		if (FALSE === is_null($date_element = $article_html->find('META[property="article:published_time"][content]', 0)))
 		{
+//			element_print($date_element, "date_element", "<br>");
 			$date = $date_element->getAttribute('content');
 		}
+//		element_print($date, "date_element", "<br>");
+//		var_dump_print($date);
 
 		if (FALSE === is_null($header = $article->find('SECTION.single-top', 0)) && FALSE === is_null($article_text = $article->find('DIV.margin-bottom30 DIV.row', 0)))
 		{

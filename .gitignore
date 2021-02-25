@@ -246,3 +246,4 @@ robots.txt
 DEBUG-
 DEBUG
 bridges/test_funkcji.php
+bridges/TestowyBridge.php
