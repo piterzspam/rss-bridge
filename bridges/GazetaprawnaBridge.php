@@ -103,6 +103,7 @@ class GazetaprawnaBridge extends BridgeAbstract {
 					}
 				}
 			}
+//			break;
 		}
 	}
 
@@ -119,12 +120,15 @@ class GazetaprawnaBridge extends BridgeAbstract {
 		{
 			foreach($found_leads as $lead)
 			{
-				$title_element = $lead->find('H3.itemTitle', 0);
+				//element_print($lead, 'lead', '<br>');
+				$title_element = $lead->find('.itemTitle', 0);
 				$href_element = $lead->find('A[href]', 0);
 				if (FALSE === is_null($title_element) && FALSE === is_null($href_element))
 				{
 					$title = $title_element->plaintext;
 					$url = $href_element->href;
+//					var_dump_print($title);
+//					var_dump_print($url);
 					if (FALSE === in_array($title, $GLOBALS['articles_titles']) && FALSE === strpos($url, '/dgp/'))
 					{
 						$GLOBALS['articles_urls'][] = $url;
@@ -135,6 +139,9 @@ class GazetaprawnaBridge extends BridgeAbstract {
 			}
 		}
 		$GLOBALS['url_articles_list'] = $this->getNextPageUrl($html_articles_list);
+//		element_print($new_urls, 'new_urls', '<br>');
+//		var_dump_print($new_urls);
+//		html_print($new_urls);
 		return $new_urls;
 	}
 
@@ -352,7 +359,7 @@ class GazetaprawnaBridge extends BridgeAbstract {
 		{
 			$article->outertext = $detailSection->innertext;
 		}
-
+//		element_print($article, 'article', '<br>');
 
 
 		$this->items[] = array(
