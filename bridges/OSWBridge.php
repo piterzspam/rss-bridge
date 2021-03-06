@@ -73,6 +73,12 @@ class OSWBridge extends FeedExpander {
 			$tags_string = trim($tags_element->plaintext);
 			$tags[] = $tags_string;
 		}
+		$date = "";
+		if (FALSE === is_null($date_element = $article_page->find('META[property="article:published_time"][content]', 0)))
+		{
+//			element_print($date_element, "date_element", "<br>");
+			$date = $date_element->getAttribute('content');
+		}
 		
 		
 		foreach($article->find('a') as $element)
@@ -88,6 +94,10 @@ class OSWBridge extends FeedExpander {
 
 		$item['content'] = $article;
 		$item['categories'] = $tags;
+		if ("" !== $date)
+		{
+			$item['timestamp'] = $date;
+		}
 		return $item;
 	}
 
