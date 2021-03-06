@@ -430,4 +430,84 @@
 		}
 		return $string;
 	}
+	
+
+	function fix_article_photos($article, $str_selectror_photo_wrapper, $is_main = FALSE, $str_photo_url_attribute = 'src', $str_selectror_photo_caption = '')
+	{
+		foreach($article->find($str_selectror_photo_wrapper) as $old_photo_wrapper)
+		{
+			if ('img' === strtolower($old_photo_wrapper->tag))
+			{
+				$old_photo_element = $old_photo_wrapper;
+			}
+			else 
+			{
+				$old_photo_element = $old_photo_wrapper->find('IMG', 0);
+			}
+			if (FALSE === is_null($old_photo_element))
+			{
+				$img_src = "";
+				$img_src = $old_photo_element->getAttribute($str_photo_url_attribute);
+				if (0 === strlen($img_src))
+				{
+					continue;
+				}
+				$caption_text = '';
+				if (0 !== strlen($str_selectror_photo_caption) && FALSE === is_null($caption_element = $old_photo_wrapper->find($str_selectror_photo_caption, 0)))
+				{
+					$caption_text = trim($caption_element->plaintext);
+				}
+				$href = '';
+				if (FALSE === is_null($href_element = $old_photo_wrapper->find('A[href]', 0)))
+				{
+					$href = $href_element->getAttribute('href');
+				}
+
+				if (TRUE === $is_main)
+				{
+					$class_string = 'photoWrapper mainPhoto';
+				}
+				else
+				{
+					$class_string = 'photoWrapper photo';
+				}
+				if (0 !== strlen($href) && 0 !== strlen($caption_text))
+				{
+					$new_photo_wrapper = str_get_html('<figure class="'.$class_string.'"><a href="'.$href.'"><img src="'.$img_src.'" ></a><figcaption>'.$caption_text.'</figcaption></figure>');
+				}
+				else if (0 !== strlen($href) && 0 === strlen($caption_text))
+				{
+					$new_photo_wrapper = str_get_html('<figure class="'.$class_string.'"><a href="'.$href.'"><img src="'.$img_src.'" ></a></figure>');
+				}
+				else if (0 === strlen($href) && 0 !== strlen($caption_text))
+				{
+					$new_photo_wrapper = str_get_html('<figure class="'.$class_string.'"><img src="'.$img_src.'" ><figcaption>'.$caption_text.'</figcaption></figure>');
+				}
+				else if (0 === strlen($href) && 0 === strlen($caption_text))
+				{
+					$new_photo_wrapper = str_get_html('<figure class="'.$class_string.'"><img src="'.$img_src.'" ></figure>');
+				}
+				$new_element_img = $new_photo_wrapper->find('IMG', 0);
+
+				if($old_photo_element->hasAttribute('alt'))
+				{
+					$img_alt = trim($old_photo_element->getAttribute('alt'));
+					if (0 !== strlen($img_alt))
+					{
+						$new_element_img->setAttribute('alt', $img_alt);
+					}
+				}
+
+				if($old_photo_element->hasAttribute('title'))
+				{
+					$img_title = trim($old_photo_element->getAttribute('title'));
+					if (0 !== strlen($img_title))
+					{
+						$new_element_img->setAttribute('title', $img_title);
+					}
+				}
+				$old_photo_wrapper->outertext = $new_photo_wrapper;
+			}
+		}
+	}
 

@@ -235,33 +235,21 @@ class LiberteBridge extends BridgeAbstract {
 		deleteAllDescendantsIfExist($article, 'DIV.single-bottom.border-top.padding-top30');
 		deleteAllDescendantsIfExist($article, 'DIV.show-for-large');
 		deleteAllAncestorsIfDescendantExists($article, 'DIV.row', 'DIV#disqus_thread');
-		deleteAllDescendantsIfExist($article, 'qqqqqqqqqq');
-		deleteAllDescendantsIfExist($article, 'qqqqqqqqqq');
-		deleteAllDescendantsIfExist($article, 'qqqqqqqqqq');
-		deleteAllDescendantsIfExist($article, 'qqqqqqqqqq');
-		deleteAllDescendantsIfExist($article, 'qqqqqqqqqq');
-		deleteAllDescendantsIfExist($article, 'qqqqqqqqqq');
 		$article = str_get_html($article->save());
 		replaceAllBiggerOutertextWithSmallerInnertext($article, 'DIV#anchor-link', 'DIV.flexible');
 		replaceAllBiggerOutertextWithSmallerOutertext($article, 'DIV.large-8.medium-12.small-12.columns.text-center', 'H1');
 		replaceAllBiggerOutertextWithSmallerInnertext($article, 'DIV.large-8.medium-12.small-12.columns', 'DIV.row.collapse.align-middle.entry-autor');
 		replaceAllBiggerOutertextWithSmallerInnertext($article, 'qqqqqqqqqqqqqqqq', 'qqqqqqqqqqqqqqqq');
 
-		
-
-		if (FALSE === is_null($article_element = $article->find('DIV.row-custom.blue.mb-3.pb-2', 0)))
-		{
-//			$article_element->outertext = $article_element->innertext;
-		}
-		if (FALSE === is_null($article_element = $article->find('DIV.mb-5.pb-3.count-text', 0)))
-		{
-//			$article_element->outertext = $article_element->innertext;
-		}
 
 		$article = str_get_html($article->save());
 
 		$this->fix_main_photo($article);
-		$this->fix_article_photos($article);
+		$this->fix_article_photos_sources($article);
+
+		fix_article_photos($article, 'IMG.alignleft[src^="http"], IMG.alignright[src^="http"], IMG.alignnone[src^="http"]', FALSE);
+
+
 		
 		foreach($article->find('DIV.important-text') as $quote_element)
 		{
@@ -302,37 +290,9 @@ class LiberteBridge extends BridgeAbstract {
 		}
 	}
 
-	private function fix_article_photos($article)
+	private function fix_article_photos_sources($article)
 	{
-		foreach($article->find('IMG.alignleft[src^="http"], IMG.alignright[src^="http"]') as $photo_element)
-		{
-			$img_src = $photo_element->getAttribute('src');
-			$img_src = str_replace('-300x200', '', $img_src);
-			if($photo_element->hasAttribute('srcset'))
-			{/*
-				$img_srcset = $photo_element->getAttribute('srcset');
-				$srcset_array  = explode(',', $img_srcset);
-				$last = count($srcset_array) - 1;
-				$img_src = $srcset_array[$last];*/
-				$img_srcset = $photo_element->getAttribute('srcset');
-				$srcset_array  = explode(',', $img_srcset);
-				$last = count($srcset_array) - 1;
-				$last_url_string = trim($srcset_array[$last]);
-				$last_url_array  = explode(' ', $last_url_string);
-				$img_src = $last_url_array[0];
-			}
-			$img_alt = '';
-			if($photo_element->hasAttribute('alt'))
-				$img_alt = trim($photo_element->getAttribute('alt'));
-			if (0 === strlen($img_alt))
-				$new_outertext = '<figure class="photoWrapper photo"><img src="'.$img_src.'"></figure>';
-			else
-				$new_outertext = '<figure class="photoWrapper photo"><img src="'.$img_src.'" alt="'.$img_alt.'"></figure>';
-			$parent = $photo_element->parent;
-			$photo_element->outertext = '';
-			$parent->outertext = $new_outertext.$parent->outertext;
-		}
-		foreach($article->find('IMG.alignnone[src^="http"], IMG[src^="http"]') as $photo_element)
+		foreach($article->find('IMG[src^="http"]') as $photo_element)
 		{
 			$img_src = $photo_element->getAttribute('src');
 			$img_src = str_replace('-300x200', '', $img_src);
@@ -345,16 +305,10 @@ class LiberteBridge extends BridgeAbstract {
 				$last_url_array  = explode(' ', $last_url_string);
 				$img_src = $last_url_array[0];
 			}
-			if($photo_element->hasAttribute('alt'))
-				$img_alt = trim($photo_element->getAttribute('alt'));
-			if (0 === strlen($img_alt))
-				$new_outertext = '<figure class="photoWrapper photo"><img src="'.$img_src.'"></figure>';
-			else
-				$new_outertext = '<figure class="photoWrapper photo"><img src="'.$img_src.'" alt="'.$img_alt.'"></figure>';
-			$photo_element->parent->outertext = $new_outertext;
+			$photo_element->setAttribute('src', $img_src);
 		}
 	}
-	
+
 	private function my_get_html($url)
 	{
 		$context = stream_context_create(array('http' => array('ignore_errors' => true)));

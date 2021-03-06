@@ -189,8 +189,8 @@ class DemagogBridge extends BridgeAbstract {
 
 		$article = str_get_html($article->save());
 
-		$this->fix_main_photo($article);
-		$this->fix_article_photos($article);
+		fix_article_photos($article, 'DIV[id^="attachment_"]', FALSE, 'src', 'P.wp-caption-text');
+		fix_article_photos($article, 'DIV.col-12.mb-4.px-0.w-img-100', TRUE);
 		
 		foreach($article->find('DIV.important-text') as $quote_element)
 		{
