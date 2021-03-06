@@ -45,6 +45,11 @@ class DemagogBridge extends BridgeAbstract {
 		include 'myFunctions.php';
 		$GLOBALS['my_debug'] = FALSE;
 //		$GLOBALS['my_debug'] = TRUE;
+		if (TRUE === $GLOBALS['my_debug'])
+		{
+			$GLOBALS['all_articles_time'] = 0;
+			$GLOBALS['all_articles_counter'] = 0;
+		}
 		switch($this->queriedContext)
 		{
 			case 'Artykuły kategorii':
@@ -63,6 +68,9 @@ class DemagogBridge extends BridgeAbstract {
 		$found_urls = $this->getArticlesUrlsCategoryArticles();
 		foreach($found_urls as $url)
 			$this->addArticle($url);
+
+		if (TRUE === $GLOBALS['my_debug'])
+			echo "<br>Wszystkie {$GLOBALS['all_articles_counter']} artykulow zajelo {$GLOBALS['all_articles_time']}, <br>średnio ".$GLOBALS['all_articles_time']/$GLOBALS['all_articles_counter'] ."<br>";
 	}
 	private function getArticlesUrlsCategoryArticles()
 	{
@@ -95,6 +103,9 @@ class DemagogBridge extends BridgeAbstract {
 		$found_urls = $this->getArticlesUrlsNewest();
 		foreach($found_urls as $url)
 			$this->addArticle($url);
+		
+		if (TRUE === $GLOBALS['my_debug'])
+			echo "<br>Wszystkie {$GLOBALS['all_articles_counter']} artykulow zajelo {$GLOBALS['all_articles_time']}, <br>średnio ".$GLOBALS['all_articles_time']/$GLOBALS['all_articles_counter'] ."<br>";
 	}
 	private function getArticlesUrlsNewest()
 	{
@@ -137,30 +148,15 @@ class DemagogBridge extends BridgeAbstract {
 		$article_html = $returned_array['html'];
 
 		$article_html->outertext = str_replace("&nbsp;", '', $article_html->outertext);
-//		echo "<br>article_html:<br>|$article_html|<br><br><br><br><br><br>";
 		$article = $article_html->find('MAIN[role="main"] DIV.container', 0);
 		$article = str_get_html($article->save());
-
-/*
-
-		if (FALSE === is_null($title_element = $article->find('META[property="og:title"][content]', 0)))
-		{
-			if($title_element->hasAttribute('content'))
-				$title = trim($title_element->getAttribute('content'));
-		}
-*/
-
 
 		//tytuł
 		$title = "";
 		if (FALSE === is_null($title_element = $article_html->find('TITLE', 0)))
-		{
 			$title = trim($title_element->plaintext);
-		}
 		else
-		{
 			$title = $url;
-		}
 		//autor
 		$author = "Demagog";
 		//tagi
@@ -177,27 +173,19 @@ class DemagogBridge extends BridgeAbstract {
 		deleteAllDescendantsIfExist($article, 'DIV.row-custom.blue.mb-3.pb-2 P[!class]');
 		deleteAllDescendantsIfExist($article, 'DIV.breadcrumbs');
 		deleteAllDescendantsIfExist($article, 'DIV.mb-5.d-none.d-md-flex');
-
-		if (FALSE === is_null($article_element = $article->find('DIV.row-custom.blue.mb-3.pb-2', 0)))
-		{
-			$article_element->outertext = $article_element->innertext;
-		}
-		if (FALSE === is_null($article_element = $article->find('DIV.mb-5.pb-3.count-text', 0)))
-		{
-			$article_element->outertext = $article_element->innertext;
-		}
-
 		$article = str_get_html($article->save());
-
-		fix_article_photos($article, 'DIV[id^="attachment_"]', FALSE, 'src', 'P.wp-caption-text');
+		replaceAllOutertextWithInnertext($article, 'DIV.row-custom.blue.mb-3.pb-2');
+		replaceAllOutertextWithInnertext($article, 'DIV.mb-5.pb-3.count-text');
+		$article = str_get_html($article->save());
+		//https://demagog.org.pl/wypowiedzi/ilu-wnioskow-o-skargi-nadzwyczajne-wciaz-nie-rozpatrzono/
+		fix_article_photos($article, 'DIV[id^="attachment_"], IMG.alignnone', FALSE, 'src', 'P.wp-caption-text');
 		fix_article_photos($article, 'DIV.col-12.mb-4.px-0.w-img-100', TRUE);
-		
+		$article = str_get_html($article->save());
 		foreach($article->find('DIV.important-text') as $quote_element)
 		{
 			$new_outertext = '<blockquote>'.$quote_element->innertext.'</blockquote>';
 			$quote_element->outertext = $new_outertext;
 		}
-
 		$article = str_get_html($article->save());
 		addStyle($article, 'FIGURE.photoWrapper', getStylePhotoParent());
 		addStyle($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
@@ -213,67 +201,6 @@ class DemagogBridge extends BridgeAbstract {
 			'categories' => $tags,
 			'content' => $article
 		);
-	}
-
-	private function fix_main_photo($article)
-	{
-		foreach($article->find('DIV.col-12.mb-4.px-0.w-img-100 IMG[src]') as $article_element)
-		{
-			$img_src = "";
-			$img_alt = "";
-			$img_src = $article_element->getAttribute('src');
-			if($article_element->hasAttribute('alt'))
-				$img_alt = trim($article_element->getAttribute('alt'));
-			if (0 === strlen($img_alt))
-				$new_outertext = '<figure class="photoWrapper mainPhoto"><img src="'.$img_src.'"></figure>';
-			else
-				$new_outertext = '<figure class="photoWrapper mainPhoto"><img src="'.$img_src.'" alt="'.$img_alt.'"></figure>';
-//			$article->outertext = str_replace($article_element->parent->outertext, $new_outertext, $article->outertext);
-			$article_element->outertext = $new_outertext;
-		}
-	}
-
-	private function fix_article_photos($article)
-	{
-		foreach($article->find('DIV[id^="attachment_"]') as $article_element)
-		{
-			if (FALSE === is_null($photo_element = $article_element->find('IMG[src^="http"]', 0)))
-			{
-				if (FALSE === is_null($caption_element = $article_element->find('P.wp-caption-text', 0)))
-				{
-					$caption_text = trim($caption_element->plaintext);
-				}
-				$img_src = "";
-				$img_src = $photo_element->getAttribute('src');
-
-				$img_alt = "";
-				if($photo_element->hasAttribute('alt'))
-					$img_alt = trim($photo_element->getAttribute('alt'));
-
-				if (0 === strlen($img_alt) && 0 === strlen($caption_text))
-					$new_outertext = '<figure class="photoWrapper photo"><img src="'.$img_src.'"></figure>';
-				else if (0 === strlen($img_alt) && 0 !== strlen($caption_text))
-					$new_outertext = '<figure class="photoWrapper photo"><img src="'.$img_src.'"><figcaption>'.$caption_text.'</figcaption></figure>';
-				else if (0 !== strlen($img_alt) && 0 === strlen($caption_text))
-					$new_outertext = '<figure class="photoWrapper photo"><img src="'.$img_src.'" alt="'.$img_alt.'"></figure>';
-				else if (0 !== strlen($img_alt) && 0 !== strlen($caption_text))
-					$new_outertext = '<figure class="photoWrapper photo"><img src="'.$img_src.'" alt="'.$img_alt.'"><figcaption>'.$caption_text.'</figcaption></figure>';
-				$article_element->outertext = $new_outertext;
-			}
-			if (FALSE === is_null($href_element = $article_element->find('A[href]', 0)))
-			{
-				$href = $href_element->getAttribute('href');
-				if (0 === strlen($img_alt) && 0 === strlen($caption_text))
-					$new_outertext = '<figure class="photoWrapper photo"><a href="'.$href.'"><img src="'.$img_src.'"></a></figure>';
-				else if (0 === strlen($img_alt) && 0 !== strlen($caption_text))
-					$new_outertext = '<figure class="photoWrapper photo"><a href="'.$href.'"><img src="'.$img_src.'"></a><figcaption>'.$caption_text.'</figcaption></figure>';
-				else if (0 !== strlen($img_alt) && 0 === strlen($caption_text))
-					$new_outertext = '<figure class="photoWrapper photo"><a href="'.$href.'"><img src="'.$img_src.'" alt="'.$img_alt.'"></a></figure>';
-				else if (0 !== strlen($img_alt) && 0 !== strlen($caption_text))
-					$new_outertext = '<figure class="photoWrapper photo"><a href="'.$href.'"><img src="'.$img_src.'" alt="'.$img_alt.'"></a><figcaption>'.$caption_text.'</figcaption></figure>';
-				$article_element->outertext = $new_outertext;
-			}
-		}
 	}
 	
 	private function my_get_html($url)

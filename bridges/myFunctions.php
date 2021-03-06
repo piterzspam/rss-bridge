@@ -296,6 +296,14 @@
 		}
 	}
 
+	function replaceAllOutertextWithInnertext($main_element, $bigger_string)
+	{
+		foreach($main_element->find($bigger_string) as $bigger_element)
+		{
+			$bigger_element->outertext = $bigger_element->innertext;
+		}
+	}
+
 
 	function redirectUrl($social_url)
 	{
