@@ -5,7 +5,7 @@ class MiesiecznikZnakBridge extends FeedExpander {
 	const NAME = 'Miesięcznik Znak';
 	const URI = '';
 	const DESCRIPTION = 'No description provided';
-	const CACHE_TIMEOUT = 1;
+	const CACHE_TIMEOUT = 86400;
 
 	const PARAMETERS = array
 	(
@@ -26,6 +26,11 @@ class MiesiecznikZnakBridge extends FeedExpander {
 			),
 		)
 	);
+
+	public function getIcon()
+	{
+		return 'https://www.miesiecznik.znak.com.pl/wp-content/themes/znak/img/favicon.jpg';
+	}
 
     public function collectData(){
 		include 'myFunctions.php';

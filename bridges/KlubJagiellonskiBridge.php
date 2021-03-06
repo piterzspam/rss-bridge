@@ -62,6 +62,7 @@ class KlubJagiellonskiBridge extends FeedExpander {
 		deleteAllDescendantsIfExist($article_post, 'DIV[data-source="ramka-zbiorka"]');
 		deleteAllDescendantsIfExist($article_post, 'DIV[data-source="ramka-polecane"]');
 		deleteAllDescendantsIfExist($article_post, 'DIV.meta_mobile.desktop-hide');
+		deleteAllAncestorsIfDescendantExists($article_post, 'DIV.block-content_breaker.block-content_breaker_ramka', 'A[href*="/temat/"]');
 
 		$tags = returnTagsArray($article_post, 'A.block-catbox SPAN.catboxfg');
 		$author = returnAuthorsAsString($article_post, 'A.block-author_bio P.imienazwisko');

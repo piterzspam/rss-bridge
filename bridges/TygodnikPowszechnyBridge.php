@@ -57,16 +57,6 @@ class TygodnikPowszechnyBridge extends FeedExpander {
 		$article_page = getSimpleHTMLDOMCached($item['uri'], 86400 * 14);
 		$article_post = $article_page->find('DIV.view-full-article', 0);
 		deleteAllDescendantsIfExist($article_post, 'DIV.views-field.views-field-body-1');
-		deleteAllDescendantsIfExist($article_post, 'qqqqqqqqqq');
-		deleteAllDescendantsIfExist($article_post, 'qqqqqqqqqq');
-		deleteAllDescendantsIfExist($article_post, 'qqqqqqqqqq');
-		deleteAllDescendantsIfExist($article_post, 'qqqqqqqqqq');
-		deleteAllDescendantsIfExist($article_post, 'qqqqqqqqqq');
-		deleteAllDescendantsIfExist($article_post, 'qqqqqqqqqq');
-		deleteAllDescendantsIfExist($article_post, 'qqqqqqqqqq');
-		deleteAllDescendantsIfExist($article_post, 'qqqqqqqqqq');
-		deleteAllDescendantsIfExist($article_post, 'qqqqqqqqqq');
-		deleteAllDescendantsIfExist($article_post, 'qqqqqqqqqq');
 
 		$article_post = str_get_html($article_post->save());
 
