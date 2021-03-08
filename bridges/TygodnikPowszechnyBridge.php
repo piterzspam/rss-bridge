@@ -106,8 +106,8 @@ class TygodnikPowszechnyBridge extends FeedExpander {
 			
 			$main_image->parent->parent->outertext = $new_element;
 			
-			element_print($main_image, "main_image", "<br>");
-			element_print($new_element, "new_element", "<br>");
+//			element_print($main_image, "main_image", "<br>");
+//			element_print($new_element, "new_element", "<br>");
 //			element_print($date, "date_element", "<br>");
 //			var_dump_print($date);
 		}
