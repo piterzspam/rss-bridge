@@ -456,7 +456,7 @@
 			{
 				$img_src = "";
 				$img_src = $old_photo_element->getAttribute($str_photo_url_attribute);
-				if (0 === strlen($img_src))
+				if (TRUE === $img_src || 0 === strlen($img_src))
 				{
 					continue;
 				}
@@ -469,6 +469,10 @@
 				if (FALSE === is_null($href_element = $old_photo_wrapper->find('A[href]', 0)))
 				{
 					$href = $href_element->getAttribute('href');
+					if (TRUE === $href)
+					{
+						$href = '';
+					}
 				}
 
 				if (TRUE === $is_main)
@@ -497,21 +501,26 @@
 				}
 				$new_element_img = $new_photo_wrapper->find('IMG', 0);
 
+				//dla atrybutu bez wartosci zwracane jest true
 				if($old_photo_element->hasAttribute('alt'))
 				{
-					$img_alt = trim($old_photo_element->getAttribute('alt'));
-					if (0 !== strlen($img_alt))
+					if (TRUE !== ($img_alt = $old_photo_element->getAttribute('alt')))
 					{
-						$new_element_img->setAttribute('alt', $img_alt);
+						if (0 !== strlen($img_alt))
+						{
+							$new_element_img->setAttribute('alt', $img_alt);
+						}
 					}
 				}
 
 				if($old_photo_element->hasAttribute('title'))
 				{
-					$img_title = trim($old_photo_element->getAttribute('title'));
-					if (0 !== strlen($img_title))
+					if (TRUE !== ($img_title = $old_photo_element->getAttribute('title')))
 					{
-						$new_element_img->setAttribute('title', $img_title);
+						if (0 !== strlen($img_title))
+						{
+							$new_element_img->setAttribute('title', $img_title);
+						}
 					}
 				}
 				$old_photo_wrapper->outertext = $new_photo_wrapper;
