@@ -82,7 +82,7 @@ class SprawdzamAFPBridge extends BridgeAbstract {
 		}
 		$article_html = $returned_array['html'];
 		$article = $article_html->find('ARTICLE[role="article"]', 0);
-		$article = str_get_html($article->save());
+//		$article = str_get_html($article->save());
 
 
 		//title
@@ -98,6 +98,10 @@ class SprawdzamAFPBridge extends BridgeAbstract {
 		$author = str_replace(', AFP Polska', '', $author);
 		//tags
 		$tags = returnTagsArray($article_html, 'DIV.tags A[href]');
+		foreach($tags as $tag)
+		{
+			$tags = ucwords($tag);
+		}
 
 		
 		foreach($article_html->find('SCRIPT') as $script_element)
@@ -119,25 +123,22 @@ class SprawdzamAFPBridge extends BridgeAbstract {
 		}
 		$article = str_get_html($article->save());
 		$this->fix_article_photos_sources($article);
-		$article = str_get_html($article->save());
-//		echo $article;
 		fix_article_photos($article, 'DIV.ww-item.image', FALSE, 'src', 'SPAN.legend');
 		fix_article_photos($article, 'DIV.mainPhoto', TRUE);
-		$article = str_get_html($article->save());
-
 		deleteAllDescendantsIfExist($article, 'comment');
 		deleteAllDescendantsIfExist($article, 'script');
 		deleteAllDescendantsIfExist($article, 'SPAN.meta-share.addtoany');
+		deleteAllDescendantsIfExist($article, 'SPAN.meta-separator');
 		$article = str_get_html($article->save());
-		$article->find('SPAN.meta-separator', 0)->outertext = '';
-		$article = str_get_html($article->save());
-		foreach($article->find('SPAN.meta-separator') as $separator)
+		foreach($article->find('DIV.content-meta SPAN[class^="meta-"]') as $separator)
 		{
 			$separator->outertext = $separator->outertext.'<br>';
 		}
-		
-		
-		
+		$article = str_get_html($article->save());
+		addStyle($article, 'FIGURE.photoWrapper', getStylePhotoParent());
+		addStyle($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
+		addStyle($article, 'FIGCAPTION', getStylePhotoCaption());
+		addStyle($article, 'BLOCKQUOTE', getStyleQuote());	
 		$this->items[] = array(
 			'uri' => $url,
 			'title' => $title,
