@@ -1,7 +1,7 @@
 <?php
 class GazetaplBridge extends BridgeAbstract {
-	const NAME = 'Gazeta.pl - strona autora';
-	const URI = 'https://wiadomosci.gazeta.pl/wiadomosci/0,114871.html';
+	const NAME = 'Gazeta.pl';
+	const URI = 'https://gazeta.pl/';
 	const DESCRIPTION = 'No description provided';
 	const MAINTAINER = 'No maintainer';
 	const CACHE_TIMEOUT = 86400; // Can be omitted!
@@ -25,63 +25,113 @@ class GazetaplBridge extends BridgeAbstract {
 		)
 	);
 
-	public function collectData()
-	{
+    public function collectData(){
 		include 'myFunctions.php';
-//		Warning: https://wiadomosci.gazeta.pl/wiadomosci/7,114884,26406112,dr-hab-wigura-najwiekszym-problemem-nowej-solidarnosci-jest.html
-//		Twitter frame: https://wiadomosci.gazeta.pl/wiadomosci/7,114884,25947207,trzaskowski-za-kidawe-blonska-kiedys-bylo-tusku-musisz.html
-//		error_reporting(E_ALL & ~E_NOTICE & ~E_WARNING);
-//		error_reporting(E_ALL & ~E_WARNING);
-		$url_articles_list = $this->getInput('url');
-		$GLOBALS['number_of_wanted_articles'] = $this->getInput('wanted_number_of_articles');
-		while (count($this->items) < $GLOBALS['number_of_wanted_articles'])
+		$GLOBALS['my_debug'] = FALSE;
+//		$GLOBALS['my_debug'] = TRUE;
+		if (TRUE === $GLOBALS['my_debug'])
 		{
-			$html_articles_list = getSimpleHTMLDOM($url_articles_list);
-			if (0 !== count($found_urls = $html_articles_list->find('LI.entry')))
+			$GLOBALS['all_articles_time'] = 0;
+			$GLOBALS['all_articles_counter'] = 0;
+		}
+		$this->setGlobalArticlesParams();
+		$found_urls = $this->getArticlesUrls();
+//		var_dump_print($found_urls);
+		foreach($found_urls as $url)
+		{
+			$this->addArticle($url);
+		}
+    }
+	
+	public function getName()
+	{
+		if (FALSE === isset($GLOBALS['author_name']))
+			return self::NAME;
+		else
+			$author_name = $GLOBALS['author_name'];
+
+		$url = $this->getInput('url');
+		if (is_null($url))
+			return self::NAME;
+		else
+		{
+			$url_array = parse_url($this->getInput('url'));
+			$host_name = $url_array["host"];
+			$host_name = ucwords($host_name);
+		}
+		return $host_name." - ".$author_name;
+	}
+	
+	public function getURI()
+	{
+		$url = $this->getInput('url');
+		if (is_null($url))
+			return self::URI;
+		else
+			return $this->getInput('url');
+	}
+
+	private function setGlobalArticlesParams()
+	{
+		$GLOBALS['wanted_number_of_articles'] = intval($this->getInput('wanted_number_of_articles'));
+	}
+
+	private function getArticlesUrls()
+	{
+		$articles_urls = array();
+		$url_articles_list = $this->getInput('url');
+		while (count($articles_urls) < $GLOBALS['wanted_number_of_articles'] && "empty" != $url_articles_list)
+		{
+			$returned_array = $this->my_get_html($url_articles_list);
+			$html_articles_list = $returned_array['html'];
+			if (200 !== $returned_array['code'] || 0 === count($found_hrefs = $html_articles_list->find('UL.list_tiles LI.entry ARTICLE.article A[href]')))
 			{
-				foreach($found_urls as $article_link)
+				break;
+			}
+			else
+			{
+				$GLOBALS['author_name'] = getTextPlaintext($html_articles_list, 'DIV.index_body H1', "");
+				foreach($found_hrefs as $href_element)
 				{
-					if (count($this->items) < $GLOBALS['number_of_wanted_articles'])
-					{
-						$href = $article_link->find('A', 0)->getAttribute('href');
-						$this->addArticle($href);
-					}
+					if(isset($href_element->href))
+						$articles_urls[] = $href_element->href;
 				}
 			}
-			else
-			{
-				break;
-			}
-
-			if (FALSE === is_null($html_articles_list->find('A.next', 0)))
-				$url_articles_list = $html_articles_list->find('A.next', 0)->getAttribute('href');
-			else
-				break;
+			$url_articles_list = $this->getNextPageUrl($html_articles_list);
 		}
+		return array_slice($articles_urls, 0, $GLOBALS['wanted_number_of_articles']);
+	}
+
+	private function getNextPageUrl($html_articles_list)
+	{		
+		$next_page_element = $html_articles_list->find('FOOTER.footer DIV.pagination A.next[href]', 0);
+		if (FALSE === is_null($next_page_element) && $next_page_element->hasAttribute('href'))
+		{
+			return $next_page_element->getAttribute('href');
+		}
+		else
+			return "empty";
 	}
 
 	private function addArticle($url_article)
 	{
-//		$article_html = getSimpleHTMLDOMCached($url_article, (86400/(count($this->items)+1)*$GLOBALS['number_of_wanted_articles']));
-		$article_html = getSimpleHTMLDOMCached($url_article, 86400 * 14);
-		if (is_bool($article_html))
+		$returned_array = $this->my_get_html($url_article);
+		if (200 !== $returned_array['code'])
 		{
-			$this->items[] = array(
-				'uri' => $url_article,
-				'title' => "file_get_html($url_article) jest boolem $article_html",
-				'timestamp' => '',
-				'author' => '',
-				'content' => '',
-				'categories' => ''
-			);
 			return;
 		}
+		$article_html = $returned_array['html'];
 		
 		$article = $article_html->find('SECTION#article_wrapper', 0);
+		$article->tag = 'DIV';
 
-		$title = trim($article->find('H1#article_title', 0)->plaintext);
-		$timestamp = trim($article->find('TIME', 0)->getAttribute('datetime'));
-		$author = trim($article->find('A[rel="author"]', 0)->plaintext);
+
+		$title = getTextPlaintext($article, 'H1#article_title', $url_article);
+//		$title = trim($article->find('H1#article_title', 0)->plaintext);
+		$timestamp = getTextAttribute($article, 'TIME', 'datetime', "");
+//		$timestamp = trim($article->find('TIME', 0)->getAttribute('datetime'));
+		$author = returnAuthorsAsString($article, 'A[rel="author"]');
+//		$author = trim($article->find('A[rel="author"]', 0)->plaintext);
 		$tags = returnTagsArray($article, 'LI.tags_item');
 
 		deleteAllDescendantsIfExist($article, 'comment');
@@ -99,17 +149,21 @@ class GazetaplBridge extends BridgeAbstract {
 		deleteAllDescendantsIfExist($article, 'DIV.related_image_open');
 		deleteAllDescendantsIfExist($article, 'SECTION.tags');
 		clearParagraphsFromTaglinks($article, 'P.art_paragraph', array('/\?tag=/'));
+		deleteAncestorIfContainsTextForEach($article, 'div.art_embed', array('Zobacz wideo'));
+		//https://next.gazeta.pl/next/7,151003,26558939,europa-nam-to-zapamieta-wsciekli-nie-beda-eurokraci-tylko.html
+		deleteAllDescendantsIfExist($article, 'P.art_embed.relatedBox');
+//		$article = str_get_html($article->save());
+		replaceAllBiggerOutertextWithSmallerInnertext($article, 'DIV.bottom_section', 'SECTION.art_content');
+//		$article = str_get_html($article->save());
 
-		$interview_question_style = array(
-			'font-weight: bold;'
-		);
-		addStyle($article, 'H4.art_interview_question', $interview_question_style);
+		if (FALSE === is_null($element = $article->find('SPAN.article_data', 0)))
+		{
+			$element->outertext = '<BR>'.$element->outertext;
+		}
 
 
 		foreach($article->find('div.art_embed') as $art_embed)
 		{
-			deleteAncestorIfDescendantExists($art_embed, 'SCRIPT[src*="video.onnetwork.tv"]');
-			
 			if (FALSE === is_null($art_embed->find('A[href*="twitter.com/user/status/"]', 0)))
 			{
 				$twitter_url = $art_embed->find('a', 0)->getAttribute('href');
@@ -125,7 +179,18 @@ class GazetaplBridge extends BridgeAbstract {
 					.'<br></strong>';
 			}
 		}
-		
+		$article = str_get_html($article->save());
+		fix_article_photos($article, 'DIV.related_images', TRUE, 'src', 'P.desc');
+		//https://wiadomosci.gazeta.pl/wiadomosci/7,114884,26873712,sondazowe-eldorado-polski-2050-i-szymona-holowni-trwa-to-oni.html
+		fix_article_photos($article, 'DIV.art_embed', FALSE, 'src', 'P.desc');
+
+		$article = str_get_html($article->save());
+		addStyle($article, 'H4.art_interview_question, DIV#gazeta_article_lead', array('font-weight: bold;'));
+		addStyle($article, 'FIGURE.photoWrapper', getStylePhotoParent());
+		addStyle($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
+		addStyle($article, 'FIGCAPTION', getStylePhotoCaption());
+		addStyle($article, 'BLOCKQUOTE', getStyleQuote());
+		$article = str_get_html($article->save());
 
 		$this->items[] = array(
 			'uri' => $url_article,
@@ -135,5 +200,40 @@ class GazetaplBridge extends BridgeAbstract {
 			'content' => $article,
 			'categories' => $tags
 		);
+	}
+
+	private function my_get_html($url)
+	{
+		$context = stream_context_create(array('http' => array('ignore_errors' => true)));
+		if (TRUE === $GLOBALS['my_debug'])
+		{
+			$start_request = microtime(TRUE);
+			$page_content = file_get_contents($url, false, $context);
+			$end_request = microtime(TRUE);
+			echo "<br>Article  took " . ($end_request - $start_request) . " seconds to complete - url: $url.";
+			$GLOBALS['all_articles_counter']++;
+			$GLOBALS['all_articles_time'] = $GLOBALS['all_articles_time'] + $end_request - $start_request;
+		}
+		else
+			$page_content = file_get_contents($url, false, $context);
+		$code = getHttpCode($http_response_header);
+		if (200 !== $code)
+		{
+			$html_error = createErrorContent($http_response_header);
+			$date = new DateTime("now", new DateTimeZone('Europe/Warsaw'));
+			$date_string = date_format($date, 'Y-m-d H:i:s');
+			$this->items[] = array(
+				'uri' => $url,
+				'title' => "Error ".$code.": ".$url,
+				'timestamp' => $date_string,
+				'content' => $html_error
+			);
+		}
+		$page_html = str_get_html($page_content);
+		$return_array = array(
+			'code' => $code,
+			'html' => $page_html,
+		);
+		return $return_array;
 	}
 }

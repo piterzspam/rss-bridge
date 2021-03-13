@@ -1,7 +1,7 @@
 <?php
 class NewsweekBridge extends BridgeAbstract {
-	const NAME = 'Newsweek Autor';
-	const URI = 'https://www.newsweek.pl/autorzy/';
+	const NAME = 'Newsweek';
+	const URI = 'https://www.newsweek.pl/';
 	const DESCRIPTION = 'No description provided';
 	const MAINTAINER = 'No maintainer';
 	const CACHE_TIMEOUT = 86400; // Can be omitted!
@@ -41,30 +41,47 @@ class NewsweekBridge extends BridgeAbstract {
 			$this->addArticle($url);
 		}
 	}
+	
+	public function getName()
+	{
+		if (FALSE === isset($GLOBALS['author_name']))
+			return self::NAME;
+		else
+			$author_name = $GLOBALS['author_name'];
+
+		$url = $this->getInput('url');
+		if (is_null($url))
+			return self::NAME;
+		else
+		{
+			$url_array = parse_url($this->getInput('url'));
+			$host_name = $url_array["host"];
+			$host_name = str_replace('www.', '', $host_name);
+			$host_name = ucwords($host_name);
+		}
+		return $host_name." - ".$author_name;
+	}
+	
+	public function getURI()
+	{
+		$url = $this->getInput('url');
+		if (is_null($url))
+			return self::URI;
+		else
+			return $this->getInput('url');
+	}
 
 	private function addArticle($url)
 	{
 		$returned_array = $this->my_get_html($url);
 		if (200 !== $returned_array['code'])
-		{
 			return;
-		}
 		else
-		{
 			$article_html = $returned_array['html'];
-		}
 
-		if (FALSE === is_null($article_html->find('ARTICLE', 0)))
-		{
-			$article = $article_html->find('ARTICLE', 0);
-		}
-		else
-		{
-			return;
-		}
-
-		//author
-		$author = $article->find('H4.name', 0)->plaintext;
+		$article = $article_html->find('ARTICLE', 0);
+		//title
+		$title = getTextPlaintext($article, 'H1.detailTitle', $url);
 		//authors
 		$author = returnAuthorsAsString($article, 'DIV.authorBox H4.name');
 		//tags
@@ -73,8 +90,8 @@ class NewsweekBridge extends BridgeAbstract {
 		$article_data = $article_html->find('SCRIPT[type="application/ld+json"]', 0)->innertext;
 		$article_data_parsed = parse_article_data(json_decode($article_data));
 		$date = trim($article_data_parsed["datePublished"]);
-		//title
-		$title = trim($article->find('H1.detailTitle', 0)->innertext);
+//		$title = trim($article->find('H1.detailTitle', 0)->innertext);
+
 		if (FALSE === is_null($article_html->find('H1.detailTitle', 0)->find('SPAN.label', 0)))
 		{
 			$title = '[OPINIA] '.$title;
@@ -117,33 +134,26 @@ class NewsweekBridge extends BridgeAbstract {
 			}
 			$span->innertext = trim($span->innertext);
 		}
+		foreach($article->find('P[class=""][data-scroll="paragraph"]') as $empty_class_element)
+		{
+			$empty_class_element->class = NULL;
+			$empty_class_element->setAttribute('data-scroll', NULL);
+		}
+		replaceAllOutertextWithInnertext($article, '.contentPremium');
+		
 		//paragrafy, czytaj inne artykuly
-		foreach($article->find('P') as $paragraph)
-		{
-			$paragraph->innertext = trim($paragraph->innertext);
-			deleteAncestorIfContainsText($paragraph, 'Czytaj też: ');
-			deleteAncestorIfContainsText($paragraph, 'Czytaj także: ');
-			deleteAncestorIfContainsText($paragraph, 'Zobacz też: ');
-//https://www.newsweek.pl/polska/polityka/nowa-odslona-konfliktu-w-porozumieniu/d18e6y6
-			deleteAncestorIfContainsText($paragraph, 'Zobacz więcej: ');
-			deleteAncestorIfContainsText($paragraph, 'Zobacz także: ');
-			deleteAncestorIfContainsText($paragraph, 'Czytaj więcej: ');
-//https://www.newsweek.pl/polska/polityka/paulina-hennig-kloska-w-szeregach-polska-2050-nowa-poslanka-szymona-holowni/5cj9tqx
-			deleteAncestorIfContainsText($paragraph, 'Zobacz: ');
-		}
+		//https://www.newsweek.pl/polska/polityka/nowa-odslona-konfliktu-w-porozumieniu/d18e6y6
+		//https://www.newsweek.pl/polska/polityka/paulina-hennig-kloska-w-szeregach-polska-2050-nowa-poslanka-szymona-holowni/5cj9tqx
+		$article = str_get_html($article->save());
+		deleteAncestorIfContainsTextForEach($article, 'P', array('Czytaj także:', 'Czytaj też:', 'Czytaj więcej:', 'Zobacz:', 'Zobacz także:', 'Zobacz też:', 'Zobacz więcej:'));
+		$article = str_get_html($article->save());
+
 		//Przenoszenie tresci premium poziom wyzej
-		if (FALSE === is_null($offerView = $article->find('DIV.offerView', 0)) && FALSE === is_null($article->find('DIV.contentPremium', 0)))
-		{
-			$offerView = $article->find('DIV.offerView', 0);
-			foreach($article->find('DIV.contentPremium', 0)->childNodes() as $element)
-			{
-				$offerView->outertext = $offerView->outertext.$element->outertext;
-			}
-			deleteDescendantIfExists($article, 'DIV.contentPremium');
-		}
+
 
 		deleteAllDescendantsIfExist($article, 'comment');
 		deleteAllDescendantsIfExist($article, 'script');
+		deleteAllDescendantsIfExist($article, 'DIV.offerView');
 		deleteAllDescendantsIfExist($article, 'DIV.articleSocials');
 		deleteAllDescendantsIfExist($article, 'DIV.detailFeed');
 		deleteAllDescendantsIfExist($article, 'DIV.bottomArtticleAds');
@@ -151,15 +161,18 @@ class NewsweekBridge extends BridgeAbstract {
 		deleteAllDescendantsIfExist($article, 'DIV#fbComments');
 		deleteAllDescendantsIfExist($article, 'UL.breadCrumb');
 		deleteAllDescendantsIfExist($article, 'DIV.tags');
+//		$article = str_get_html($article->save());
 
-		$lead_style = array(
-			'font-weight: bold;'
-		);
-		addStyle($article, 'P.lead', $lead_style);
-		addStyle($article, 'DIV.artPhoto', getStylePhotoParent());
-		addStyle($article, 'PICTURE', getStylePhotoImg());
-		addStyle($article, 'SPAN.descPhoto', getStylePhotoCaption());
-		
+		fix_article_photos($article, 'DIV.artPhoto', FALSE, 'src', 'SPAN');
+		$article = str_get_html($article->save());
+
+		addStyle($article, 'P.lead', array('font-weight: bold;'));
+		addStyle($article, 'FIGURE.photoWrapper', getStylePhotoParent());
+		addStyle($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
+		addStyle($article, 'FIGCAPTION', getStylePhotoCaption());
+		addStyle($article, 'BLOCKQUOTE', getStyleQuote());
+//		$article = str_get_html($article->save());
+	
 		$this->items[] = array(
 			'uri' => $url,
 			'title' => $title,
@@ -175,6 +188,7 @@ class NewsweekBridge extends BridgeAbstract {
 	{
 		$articles_urls = array();
 		$url_articles_list = $this->getInput('url');
+		$GLOBALS['author_name'] = "";
 		while (count($articles_urls) < $GLOBALS['number_of_wanted_articles'])
 		{
 			$returned_array = $this->my_get_html($url_articles_list);
@@ -191,6 +205,7 @@ class NewsweekBridge extends BridgeAbstract {
 				}
 				else
 				{
+					$GLOBALS['author_name'] = getTextPlaintext($html_articles_list, 'DIV.authorsInfo H1[itemprop="name"]', $GLOBALS['author_name']);
 					foreach($found_hrefs as $href_element)
 					{
 						if(isset($href_element->href) && FALSE === in_array($href_element->href, $articles_urls))

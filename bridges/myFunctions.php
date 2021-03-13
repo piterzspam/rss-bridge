@@ -1,19 +1,21 @@
 <?php
 
-	function var_dump_print($variable)
-	{
-		echo "Zmienna: <br><pre>"; var_dump($variable); echo "</pre>";
-	}
-
-	function html_print($variable)
-	{
-		echo "Zmienna_html: <br><pre>".htmlspecialchars($variable)."</pre><br>";
-	}
-
-	function element_print($element, $name, $prefix = "")
+	function var_dump_print($variable, $name = "nazwa zmiennej", $prefix = "<br>")
 	{
 		echo $prefix;
-		echo "<br>Element $name:<br>$element<br><br>";
+		echo "Var dump zmiennej $name: <br><pre>"; var_dump($variable); echo "</pre>";
+	}
+
+	function html_print($variable, $name = "nazwa zmiennej", $prefix = "<br>")
+	{
+		echo $prefix;
+		echo "Kod html zmiennej $name: <br><pre>".htmlspecialchars($variable)."</pre><br><br>";
+	}
+
+	function element_print($element, $name = "nazwa zmiennej", $prefix = "<br>")
+	{
+		echo $prefix;
+		echo "Element $name:<br>$element<br><br>";
 	}
 
 	function getStylePhotoParent()
@@ -78,17 +80,49 @@
 
 	function fixAmpArticles($article)
 	{
-		foreach($article->find('amp-img') as $ampimg)
-			$ampimg->tag = "img";
+		deleteAllDescendantsIfExist($article, 'amp-analytics');
+		deleteAllDescendantsIfExist($article, 'amp-ad');
+		deleteAllDescendantsIfExist($article, 'i-amphtml-sizer');
+		deleteAllDescendantsIfExist($article, 'amp-image-lightbox');
 		foreach($article->find('amp-img, img') as $photo_element)
 		{
 			if(isset($photo_element->width)) $photo_element->width = NULL;
 			if(isset($photo_element->height)) $photo_element->height = NULL;
 		}
-		deleteAllDescendantsIfExist($article, 'amp-analytics');
-		deleteAllDescendantsIfExist($article, 'amp-ad');
-		deleteAllDescendantsIfExist($article, 'i-amphtml-sizer');
-		deleteAllDescendantsIfExist($article, 'amp-image-lightbox');
+		//https://opinie.wp.pl/wielka-zmiana-mezczyzn-wirus-ja-tylko-przyspieszyl-6604913984391297a?amp=1&_js_v=0.1
+		foreach($article->find('amp-img') as $ampimg)
+		{
+			if ('p' === strtolower($ampimg->parent->tag))
+				$ampimg->parent->tag = "DIV";
+			if (FALSE === $ampimg->parent->class)
+				$ampimg->parent->class = "photo from amp";
+			
+			$img_new_element = '<img ';
+			foreach($ampimg->getAllAttributes() as $key=>$element)
+			{
+				if (FALSE === is_null($element))
+					$img_new_element = $img_new_element.' '.$key.'="'.$element.'"';
+			}
+			$img_new_element = $img_new_element.'>';
+			
+			$new_amp_caption = "";
+			$photo_params = array('data-author', 'data-source');
+			foreach($photo_params as $param_name)
+			{
+				if($ampimg->hasAttribute($param_name))
+				{
+					$param = $ampimg->getAttribute($param_name);
+					if ("" === $new_amp_caption)
+						$new_amp_caption = $param;
+					else
+						$new_amp_caption = $new_amp_caption.'/'.$param;
+				}
+			}
+			if ("" !== $new_amp_caption)
+				$ampimg->outertext = $img_new_element.'<figcaption>'.$new_amp_caption.'</figcaption>';
+			else
+				$ampimg->outertext = $img_new_element;
+		}
 	}
 
 	function formatAmpLinks($article)
@@ -464,6 +498,10 @@
 				if (0 !== strlen($str_selectror_photo_caption) && FALSE === is_null($caption_element = $old_photo_wrapper->find($str_selectror_photo_caption, 0)))
 				{
 					$caption_text = trim($caption_element->plaintext);
+					//na nauka o klimacie w opisach są linki
+					//https://naukaoklimacie.pl/aktualnosci/jak-nam-idzie-realizacja-porozumienia-paryskiego-jak-pokazuje-raport-emissions-gap-bardzo-zle-460
+//					$caption_text = trim($caption_element->innertext);
+					$caption_innertext = $caption_element->innertext;
 				}
 				$href = '';
 				if (FALSE === is_null($href_element = $old_photo_wrapper->find('A[href]', 0)))
@@ -485,7 +523,7 @@
 				}
 				if (0 !== strlen($href) && 0 !== strlen($caption_text))
 				{
-					$new_photo_wrapper = str_get_html('<figure class="'.$class_string.'"><a href="'.$href.'"><img src="'.$img_src.'" ></a><figcaption>'.$caption_text.'</figcaption></figure>');
+					$new_photo_wrapper = str_get_html('<figure class="'.$class_string.'"><a href="'.$href.'"><img src="'.$img_src.'" ></a><figcaption>'.$caption_innertext.'</figcaption></figure>');
 				}
 				else if (0 !== strlen($href) && 0 === strlen($caption_text))
 				{
@@ -493,7 +531,7 @@
 				}
 				else if (0 === strlen($href) && 0 !== strlen($caption_text))
 				{
-					$new_photo_wrapper = str_get_html('<figure class="'.$class_string.'"><img src="'.$img_src.'" ><figcaption>'.$caption_text.'</figcaption></figure>');
+					$new_photo_wrapper = str_get_html('<figure class="'.$class_string.'"><img src="'.$img_src.'" ><figcaption>'.$caption_innertext.'</figcaption></figure>');
 				}
 				else if (0 === strlen($href) && 0 === strlen($caption_text))
 				{
@@ -526,5 +564,31 @@
 				$old_photo_wrapper->outertext = $new_photo_wrapper;
 			}
 		}
+	}
+
+	function getTextPlaintext($article, $selector_string, $backup_value = "Tekst zapasowy")
+	{
+		if (FALSE === is_null($text_element = $article->find($selector_string, 0)))
+			return trim($text_element->plaintext);
+		else
+			return $backup_value;
+	}
+
+	function getTextAttribute($article, $selector_string, $attribute_name, $backup_value = "Tekst zapasowy")
+	{
+		if (FALSE === is_null($element_selected = $article->find($selector_string, 0)))
+		{
+			if($element_selected->hasAttribute($attribute_name))
+			{
+				$attribute = $element_selected->getAttribute($attribute_name);
+				return trim($attribute);
+			}
+			else
+			{
+				return $backup_value;
+			}
+		}
+		else
+			return $backup_value;
 	}
 
