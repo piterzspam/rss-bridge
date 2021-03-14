@@ -10,7 +10,7 @@ class ToTylkoTeoriaBridge extends BridgeAbstract {
 	(
 		'Parametry' => array
 		(
-			'wanted_number_of_articles' => array
+			'limit' => array
 			(
 				'name' => 'Liczba artykułów',
 				'type' => 'number',
@@ -27,7 +27,7 @@ class ToTylkoTeoriaBridge extends BridgeAbstract {
 	public function collectData()
 	{
 
-		$GLOBALS['number_of_wanted_articles'] = $this->getInput('wanted_number_of_articles');
+		$GLOBALS['limit'] = $this->getInput('limit');
 		$main_page_url = 'https://www.totylkoteoria.pl/';
 		$html_main_page = getSimpleHTMLDOM($main_page_url);
 
@@ -36,7 +36,7 @@ class ToTylkoTeoriaBridge extends BridgeAbstract {
 		foreach($html_main_page->find('ARTICLE.hentry') as $hentry)
 		{
 			$a_element=$hentry->find('A[href]', 0);
-			if (count($urls) < $GLOBALS['number_of_wanted_articles'])
+			if (count($urls) < $GLOBALS['limit'])
 			{
 				$href = $a_element->getAttribute('href');
 				$this->addArticle($href);

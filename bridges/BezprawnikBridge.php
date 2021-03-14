@@ -1,7 +1,7 @@
 <?php
 class BezprawnikBridge extends BridgeAbstract {
-	const NAME = 'Bezprawnik - strona autora';
-	const URI = 'https://bezprawnik.pl/author/';
+	const NAME = 'Bezprawnik';
+	const URI = 'https://bezprawnik.pl/';
 	const DESCRIPTION = 'No description provided';
 	const MAINTAINER = 'No maintainer';
 	const CACHE_TIMEOUT = 86400; // Can be omitted!
@@ -16,7 +16,7 @@ class BezprawnikBridge extends BridgeAbstract {
 				'type' => 'text',
 				'required' => true
 			),
-			'wanted_number_of_articles' => array
+			'limit' => array
 			(
 				'name' => 'Liczba artykułów',
 				'type' => 'number',
@@ -24,6 +24,35 @@ class BezprawnikBridge extends BridgeAbstract {
 			),
 		)
 	);
+
+	public function getName()
+	{
+		if (FALSE === isset($GLOBALS['author_name']))
+			return self::NAME;
+		else
+			$author_name = $GLOBALS['author_name'];
+
+		$url = $this->getInput('url');
+		if (is_null($url))
+			return self::NAME;
+		else
+		{
+			$url_array = parse_url($this->getInput('url'));
+			$host_name = $url_array["host"];
+			$host_name = ucwords($host_name);
+		}
+		return $host_name." - ".$author_name;
+	}
+	
+	public function getURI()
+	{
+		$url = $this->getInput('url');
+		if (is_null($url))
+			return self::URI;
+		else
+			return $this->getInput('url');
+	}
+
 
 	public function getIcon()
 	{
@@ -35,42 +64,68 @@ class BezprawnikBridge extends BridgeAbstract {
 	public function collectData()
 	{
 		include 'myFunctions.php';
-		$url_articles_list = $this->getInput('url');
-		$url_articles_list = preg_replace('/(.*\/author\/([a-z]+)-([a-z]+)\/).*/', '$1', $url_articles_list);
-		$GLOBALS['number_of_wanted_articles'] = $this->getInput('wanted_number_of_articles');
-		while (count($this->items) < $GLOBALS['number_of_wanted_articles'])
+		$GLOBALS['my_debug'] = FALSE;
+//		$GLOBALS['my_debug'] = TRUE;
+		if (TRUE === $GLOBALS['my_debug'])
 		{
-//			$html_articles_list = getSimpleHTMLDOM($url_articles_list);
-			$html_articles_list = getSimpleHTMLDOMCached($url_articles_list, 86400 * 14);
-			
-			if (0 !== count($found_urls = $html_articles_list->find("A.linkbg")))
-				foreach($found_urls as $article__link)
-					if (count($this->items) < $GLOBALS['number_of_wanted_articles'])
-					{
-						$url_article = $article__link->getAttribute('href');
-						$amp_url = $this->getCustomizedLink($url_article);
-						$this->addArticle($amp_url);
-					}
-					else
-						break;
-			else
+			$GLOBALS['all_articles_time'] = 0;
+			$GLOBALS['all_articles_counter'] = 0;
+		}
+		$GLOBALS['limit'] = intval($this->getInput('limit'));
+		$found_urls = $this->getArticlesUrls();
+		foreach($found_urls as $url)
+		{
+			$amp_url = $this->getCustomizedLink($url);
+			$this->addArticle($amp_url);
+		}
+	}
+
+
+	private function getArticlesUrls()
+	{
+		$articles_urls = array();
+		$url_articles_list = $this->getInput('url');
+		while (count($articles_urls) < $GLOBALS['limit'] && "empty" != $url_articles_list)
+		{
+			$returned_array = $this->my_get_html($url_articles_list);
+			$html_articles_list = $returned_array['html'];
+			if (200 !== $returned_array['code'] || 0 === count($found_hrefs = $html_articles_list->find('A.linkbg[href]')))
+			{
 				break;
-		
-			if (TRUE === is_null($html_articles_list->find('A.nextpostslink', 0)))
-				break;
+			}
 			else
 			{
-				$next_page_element = $html_articles_list->find('A.nextpostslink', 0);
-				$url_articles_list = $next_page_element->getAttribute('href');
+				$GLOBALS['author_name'] = getTextPlaintext($html_articles_list, 'SECTION.autor-header H2', "");
+				foreach($found_hrefs as $href_element)
+				{
+					if(isset($href_element->href))
+						$articles_urls[] = $href_element->href;
+				}
 			}
+			$url_articles_list = $this->getNextPageUrl($html_articles_list);
 		}
+		return array_slice($articles_urls, 0, $GLOBALS['limit']);
+	}
 
+	private function getNextPageUrl($html_articles_list)
+	{		
+		$next_page_element = $html_articles_list->find('DIV.wp-pagenavi A.nextpostslink[href]', 0);
+		if (FALSE === is_null($next_page_element) && $next_page_element->hasAttribute('href'))
+		{
+			return $next_page_element->getAttribute('href');
+		}
+		else
+			return "empty";
 	}
 
 	private function addArticle($url_article)
 	{
-//		$article_html = getSimpleHTMLDOMCached($url_article, (86400/(count($this->items)+1)*$GLOBALS['number_of_wanted_articles']));
-		$article_html = getSimpleHTMLDOMCached($url_article, 86400 * 14);
+		$returned_array = $this->my_get_html($url_article);
+		if (200 !== $returned_array['code'])
+		{
+			return;
+		}
+		$article_html = $returned_array['html'];
 		$article = $article_html->find('article', 0);
 		$article_data = $article_html->find('SCRIPT[type="application/ld+json"]', 0)->innertext;
 		$article_data_parsed = parse_article_data(json_decode($article_data));
@@ -79,31 +134,33 @@ class BezprawnikBridge extends BridgeAbstract {
 		$author = $article_data_parsed["@graph"][3]["name"];
 //		$title = $article_html->find('META[property="og:title"]', 0)->content;
 //		$date = $article_html->find('META[property="article:published_time]', 0)->content;
-		
-		$tags = array();
-		foreach($article_html->find('DIV.amp-wp-tax-tag A[href*="bezprawnik.pl/tag/"][rel="tag"]') as $tag_element)
-			$tags[] = trim($tag_element->plaintext);
+		$tags = returnTagsArray($article, 'DIV.amp-wp-tax-tag [rel="tag"]');
 		fixAmpArticles($article);
 		formatAmpLinks($article);
+//https://bezprawnik.pl/korwin-mikke-wyrzucony-z-facebooka/amp/
+//https://bezprawnik.pl/rzad-zmienil-ustroj-polski/amp/
+		deleteAncestorIfChildMatches($article, array('ul', 'li', 'h3', 'a'));
 		deleteAllDescendantsIfExist($article, 'comment');
 		//może pomoże na drugie zdjęcie pod zdjęciem głównynm w czytniku
 		deleteAllDescendantsIfExist($article, 'script');
 		//może pomoże na drugie zdjęcie pod zdjęciem głównynm w czytniku - 2
 		deleteAllDescendantsIfExist($article, 'NOSCRIPT');
 		deleteAllDescendantsIfExist($article, 'DIV.amp-autor');
-		deleteAllDescendantsIfExist($article, 'FIGURE[id^="attachment_"]');
 		deleteAllDescendantsIfExist($article, 'FOOTER');
-
+		clearParagraphsFromTaglinks($article, 'P', array('/bezprawnik.pl\/tag\//'));
+		//zdjęcie autora
+		$article->find('FIGURE[id^="attachment_"][class^="wp-caption alignright amp-wp-"]', 0)->outertext = '';
+		
+		fix_article_photos($article, 'FIGURE.amp-wp-article-featured-image.wp-caption', TRUE);
+		
+/*
 		foreach($article->find('amp-img, img') as $photo_element)
 		{
 			if(isset($photo_element->layout)) $photo_element->layout = NULL;
 			if(isset($photo_element->srcset)) $photo_element->srcset = NULL;
 		}
+*/
 		
-		clearParagraphsFromTaglinks($article, 'P', array('/bezprawnik.pl\/tag\//'));
-//https://bezprawnik.pl/korwin-mikke-wyrzucony-z-facebooka/amp/
-//https://bezprawnik.pl/rzad-zmienil-ustroj-polski/amp/
-		deleteAncestorIfChildMatches($article, array('ul', 'li', 'h3', 'a'));
 
 		$this->items[] = array(
 			'uri' => $url_article,
@@ -115,13 +172,40 @@ class BezprawnikBridge extends BridgeAbstract {
 		);
 	}
 
-	
-
-
-
-
-
-
+	private function my_get_html($url)
+	{
+		$context = stream_context_create(array('http' => array('ignore_errors' => true)));
+		if (TRUE === $GLOBALS['my_debug'])
+		{
+			$start_request = microtime(TRUE);
+			$page_content = file_get_contents($url, false, $context);
+			$end_request = microtime(TRUE);
+			echo "<br>Article  took " . ($end_request - $start_request) . " seconds to complete - url: $url.";
+			$GLOBALS['all_articles_counter']++;
+			$GLOBALS['all_articles_time'] = $GLOBALS['all_articles_time'] + $end_request - $start_request;
+		}
+		else
+			$page_content = file_get_contents($url, false, $context);
+		$code = getHttpCode($http_response_header);
+		if (200 !== $code)
+		{
+			$html_error = createErrorContent($http_response_header);
+			$date = new DateTime("now", new DateTimeZone('Europe/Warsaw'));
+			$date_string = date_format($date, 'Y-m-d H:i:s');
+			$this->items[] = array(
+				'uri' => $url,
+				'title' => "Error ".$code.": ".$url,
+				'timestamp' => $date_string,
+				'content' => $html_error
+			);
+		}
+		$page_html = str_get_html($page_content);
+		$return_array = array(
+			'code' => $code,
+			'html' => $page_html,
+		);
+		return $return_array;
+	}
 
 	private function getCustomizedLink($url)
 	{

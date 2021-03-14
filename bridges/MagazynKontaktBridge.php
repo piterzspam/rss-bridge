@@ -11,7 +11,7 @@ class MagazynKontaktBridge extends FeedExpander {
 	(
 		'Parametry' => array
 		(
-			'wanted_number_of_articles' => array
+			'limit' => array
 			(
 				'name' => 'Liczba artykułów',
 				'type' => 'number',
@@ -45,7 +45,7 @@ class MagazynKontaktBridge extends FeedExpander {
 		$item = parent::parseItem($newsItem);
 		if (FALSE === strpos($item['uri'], 'magazynkontakt.pl/profil/') && FALSE === strpos($item['uri'], 'magazynkontakt.pl/ramki/'))
 		{
-			if (count($this->items) >= intval($this->getInput('wanted_number_of_articles')))
+			if (count($this->items) >= intval($this->getInput('limit')))
 			{
 				if (TRUE === $GLOBALS['include_not_downloaded'])
 				{

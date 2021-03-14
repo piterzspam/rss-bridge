@@ -8,9 +8,9 @@ class LiberteBridge extends BridgeAbstract {
 
 	const PARAMETERS = array
 	(
-		'Artykuły kategorii' => array
+		'Kategoria' => array
 		(
-			'wanted_number_of_articles' => array
+			'limit' => array
 			(
 				'name' => 'Liczba artykułów',
 				'type' => 'number',
@@ -31,7 +31,7 @@ class LiberteBridge extends BridgeAbstract {
 		),
 		'Wydania' => array
 		(
-			'wanted_number_of_issues' => array
+			'limit' => array
 			(
 				'name' => 'Liczba wydań',
 				'type' => 'number',
@@ -40,7 +40,7 @@ class LiberteBridge extends BridgeAbstract {
 		),
 		'Najnowsze' => array
 		(
-			'wanted_number_of_articles' => array
+			'limit' => array
 			(
 				'name' => 'Liczba artykułów',
 				'type' => 'number',
@@ -56,7 +56,7 @@ class LiberteBridge extends BridgeAbstract {
 //		$GLOBALS['my_debug'] = TRUE;
 		switch($this->queriedContext)
 		{
-			case 'Artykuły kategorii':
+			case 'Kategoria':
 				$this->collectCategoryArticles();
 				break;
 			case 'Wydania':
@@ -70,7 +70,7 @@ class LiberteBridge extends BridgeAbstract {
 
 	public function collectCategoryArticles()
 	{
-		$GLOBALS['wanted_number_of_articles'] = $this->getInput('wanted_number_of_articles');
+		$GLOBALS['limit'] = $this->getInput('limit');
 		$GLOBALS['chosen_category_url'] = $this->getInput('category');
 		$found_urls = $this->getArticlesUrlsCategoryArticles();
 		foreach($found_urls as $url)
@@ -80,7 +80,7 @@ class LiberteBridge extends BridgeAbstract {
 	{
 		$articles_urls = array();
 		$url_articles_list = $GLOBALS['chosen_category_url'];
-		while (count($articles_urls) < $GLOBALS['wanted_number_of_articles'] && "empty" != $url_articles_list)
+		while (count($articles_urls) < $GLOBALS['limit'] && "empty" != $url_articles_list)
 		{
 			$returned_array = $this->my_get_html($url_articles_list);
 			$html_articles_list = $returned_array['html'];
@@ -98,7 +98,7 @@ class LiberteBridge extends BridgeAbstract {
 			}
 			$url_articles_list = $this->getNextPageUrl($html_articles_list);
 		}
-		return array_slice($articles_urls, 0, $GLOBALS['wanted_number_of_articles']);
+		return array_slice($articles_urls, 0, $GLOBALS['limit']);
 	}
 	private function getNextPageUrl($html_articles_list)
 	{		
@@ -114,7 +114,7 @@ class LiberteBridge extends BridgeAbstract {
 
 	public function collectNewest()
 	{
-		$GLOBALS['wanted_number_of_articles'] = $this->getInput('wanted_number_of_articles');
+		$GLOBALS['limit'] = $this->getInput('limit');
 		$found_urls = $this->getArticlesUrlsNewest();
 		foreach($found_urls as $url)
 			$this->addArticle($url);
@@ -122,7 +122,7 @@ class LiberteBridge extends BridgeAbstract {
 	private function getArticlesUrlsNewest()
 	{
 		$articles_urls = array();
-		$GLOBALS['wanted_number_of_articles'] = $this->getInput('wanted_number_of_articles');
+		$GLOBALS['limit'] = $this->getInput('limit');
 
 		$returned_array = $this->my_get_html('https://liberte.pl/');
 		$html_articles_list = $returned_array['html'];
@@ -138,12 +138,12 @@ class LiberteBridge extends BridgeAbstract {
 					$articles_urls[] = $href_element->href;
 			}
 		}
-		return array_slice($articles_urls, 0, $GLOBALS['wanted_number_of_articles']);
+		return array_slice($articles_urls, 0, $GLOBALS['limit']);
 	}
 
 	public function collectIssues()
 	{
-		$GLOBALS['wanted_number_of_issues'] = $this->getInput('wanted_number_of_issues');
+		$GLOBALS['limit'] = $this->getInput('limit');
 		$found_urls = $this->getArticlesUrlsIssues();
 //		var_dump_print($found_urls);
 		foreach($found_urls as $url)
@@ -167,7 +167,7 @@ class LiberteBridge extends BridgeAbstract {
 				$issues_urls[] = $href_element->href;
 			}
 		}
-		$issues_urls = array_slice($issues_urls, 0, $GLOBALS['wanted_number_of_issues']);
+		$issues_urls = array_slice($issues_urls, 0, $GLOBALS['limit']);
 
 		foreach($issues_urls as $issue_url)
 		{

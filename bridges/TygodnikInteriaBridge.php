@@ -10,7 +10,7 @@ class TygodnikInteriaBridge extends BridgeAbstract {
 	(
 		'Parametry' => array
 		(
-			'wanted_number_of_articles' => array
+			'limit' => array
 			(
 				'name' => 'Liczba artykułów',
 				'type' => 'number',
@@ -23,7 +23,7 @@ class TygodnikInteriaBridge extends BridgeAbstract {
 	public function collectData()
 	{
 		include 'myFunctions.php';
-		$GLOBALS['number_of_wanted_articles'] = $this->getInput('wanted_number_of_articles');		
+		$GLOBALS['limit'] = $this->getInput('limit');		
 		$found_urls = $this->getArticlesUrls();
 		foreach($found_urls as $url)
 		{
@@ -87,7 +87,7 @@ class TygodnikInteriaBridge extends BridgeAbstract {
 		$url_articles_list = 'https://tygodnik.interia.pl/frontpage-mixer-ajax-elements,nPack,1';
 		$if_next_page_exists = TRUE;
 
-		while (count($articles_urls) < $GLOBALS['number_of_wanted_articles'] && TRUE === $if_next_page_exists)
+		while (count($articles_urls) < $GLOBALS['limit'] && TRUE === $if_next_page_exists)
 		{
 			$returned_array = $this->my_get_html($url_articles_list, TRUE);
 			if (200 !== $returned_array['code'])
@@ -113,7 +113,7 @@ class TygodnikInteriaBridge extends BridgeAbstract {
 			}
 			$url_articles_list = $this->getNextPageUrl($url_articles_list);
 		}
-		return array_slice($articles_urls, 0, $GLOBALS['number_of_wanted_articles']);
+		return array_slice($articles_urls, 0, $GLOBALS['limit']);
 	}
 
 	private function getNextPageUrl($url_articles_list)

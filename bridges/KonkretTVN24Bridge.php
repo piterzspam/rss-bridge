@@ -10,7 +10,7 @@ class KonkretTVN24Bridge extends BridgeAbstract {
 	(
 		'Parametry' => array
 		(
-			'wanted_number_of_articles' => array
+			'limit' => array
 			(
 				'name' => 'Liczba artykułów',
 				'type' => 'number',
@@ -39,7 +39,7 @@ class KonkretTVN24Bridge extends BridgeAbstract {
 	public function collectData()
 	{
 		include 'myFunctions.php';
-		$GLOBALS['number_of_wanted_articles'] = $this->getInput('wanted_number_of_articles');
+		$GLOBALS['limit'] = $this->getInput('limit');
 		$GLOBALS['chosen_category_url'] = $this->getInput('category');
 		
 		$found_urls = $this->getArticlesUrls();
@@ -55,7 +55,7 @@ class KonkretTVN24Bridge extends BridgeAbstract {
 	{
 		$articles_urls = array();
 		$url_articles_list = $GLOBALS['chosen_category_url'];
-		while (count($articles_urls) < $GLOBALS['number_of_wanted_articles'] && "empty" != $url_articles_list)
+		while (count($articles_urls) < $GLOBALS['limit'] && "empty" != $url_articles_list)
 		{
 			$html_articles_list = getSimpleHTMLDOM($url_articles_list);
 			if (0 === count($found_hrefs = $html_articles_list->find('ARTICLE.news-teaser A.news-teaser__link[href]')))
@@ -69,7 +69,7 @@ class KonkretTVN24Bridge extends BridgeAbstract {
 			}
 			$url_articles_list = $this->getNextPageUrl($html_articles_list);
 		}
-		return array_slice($articles_urls, 0, $GLOBALS['number_of_wanted_articles']);
+		return array_slice($articles_urls, 0, $GLOBALS['limit']);
 	}
 
 	private function getNextPageUrl($html_articles_list)

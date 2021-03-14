@@ -8,9 +8,9 @@ class DemagogBridge extends BridgeAbstract {
 
 	const PARAMETERS = array
 	(
-		'Artykuły kategorii' => array
+		'Kategoria' => array
 		(
-			'wanted_number_of_articles' => array
+			'limit' => array
 			(
 				'name' => 'Liczba artykułów',
 				'type' => 'number',
@@ -31,7 +31,7 @@ class DemagogBridge extends BridgeAbstract {
 		),
 		'Najnowsze' => array
 		(
-			'wanted_number_of_articles' => array
+			'limit' => array
 			(
 				'name' => 'Liczba artykułów',
 				'type' => 'number',
@@ -45,6 +45,7 @@ class DemagogBridge extends BridgeAbstract {
 		include 'myFunctions.php';
 		$GLOBALS['my_debug'] = FALSE;
 //		$GLOBALS['my_debug'] = TRUE;
+		
 		if (TRUE === $GLOBALS['my_debug'])
 		{
 			$GLOBALS['all_articles_time'] = 0;
@@ -52,7 +53,7 @@ class DemagogBridge extends BridgeAbstract {
 		}
 		switch($this->queriedContext)
 		{
-			case 'Artykuły kategorii':
+			case 'Kategoria':
 				$this->collectCategoryArticles();
 				break;
 			case 'Najnowsze':
@@ -61,9 +62,55 @@ class DemagogBridge extends BridgeAbstract {
 		}
 	}
 
+	public function getName()
+	{
+		switch($this->queriedContext)
+		{
+			case 'Kategoria':
+				if(FALSE === is_null($this->getInput('category')))
+				{
+					$url_array = parse_url($this->getInput('category'));
+					$path = $url_array["path"];
+					$path = str_replace('/', '', $path);
+					$path = str_replace('-', ' ', $path);
+					$path = str_replace('_', ' ', $path);
+					$path = ucwords($path);
+					return "Demagog.org.pl - ".$path;
+				}
+				else
+					return parent::getName();
+				break;
+			case 'Najnowsze':
+					return "Demagog.org.pl - Najnowsze";
+				break;
+			default:
+				return parent::getName();
+		}
+	}
+
+	public function getURI()
+	{
+		switch($this->queriedContext)
+		{
+			case 'Kategoria':
+				if(FALSE === is_null($this->getInput('category')))
+				{
+					return $this->getInput('category');
+				}
+				else
+					return parent::getURI();
+				break;
+			case 'Najnowsze':
+				return parent::getURI();
+				break;
+			default:
+				return parent::getURI();
+		}
+	}
+
 	private function collectCategoryArticles()
 	{
-		$GLOBALS['number_of_wanted_articles'] = $this->getInput('wanted_number_of_articles');
+		$GLOBALS['limit'] = $this->getInput('limit');
 		$GLOBALS['chosen_category_url'] = $this->getInput('category');
 		$found_urls = $this->getArticlesUrlsCategoryArticles();
 		foreach($found_urls as $url)
@@ -76,7 +123,7 @@ class DemagogBridge extends BridgeAbstract {
 	{
 		$articles_urls = array();
 		$url_articles_list = $GLOBALS['chosen_category_url'];
-		while (count($articles_urls) < $GLOBALS['number_of_wanted_articles'] && "empty" != $url_articles_list)
+		while (count($articles_urls) < $GLOBALS['limit'] && "empty" != $url_articles_list)
 		{
 			$returned_array = $this->my_get_html($url_articles_list);
 			$html_articles_list = $returned_array['html'];
@@ -94,12 +141,12 @@ class DemagogBridge extends BridgeAbstract {
 			}
 			$url_articles_list = $this->getNextPageUrl($html_articles_list);
 		}
-		return array_slice($articles_urls, 0, $GLOBALS['number_of_wanted_articles']);
+		return array_slice($articles_urls, 0, $GLOBALS['limit']);
 	}
 
 	private function collectNewest()
 	{
-		$GLOBALS['wanted_number_of_articles'] = $this->getInput('wanted_number_of_articles');
+		$GLOBALS['limit'] = $this->getInput('limit');
 		$found_urls = $this->getArticlesUrlsNewest();
 		foreach($found_urls as $url)
 			$this->addArticle($url);
@@ -110,7 +157,7 @@ class DemagogBridge extends BridgeAbstract {
 	private function getArticlesUrlsNewest()
 	{
 		$articles_urls = array();
-		$GLOBALS['wanted_number_of_articles'] = $this->getInput('wanted_number_of_articles');
+		$GLOBALS['limit'] = $this->getInput('limit');
 
 		$returned_array = $this->my_get_html('https://demagog.org.pl/');
 		$html_articles_list = $returned_array['html'];
@@ -123,7 +170,7 @@ class DemagogBridge extends BridgeAbstract {
 					$articles_urls[] = $href_element->href;
 			}
 		}
-		return array_slice($articles_urls, 0, $GLOBALS['wanted_number_of_articles']);
+		return array_slice($articles_urls, 0, $GLOBALS['limit']);
 	}
 
 	private function getNextPageUrl($html_articles_list)
@@ -163,10 +210,17 @@ class DemagogBridge extends BridgeAbstract {
 		$tags = returnTagsArray($article, 'DIV.tags A[href]');
 		//data
 		$date = "";
-		if (FALSE === is_null($article_data = $article_html->find('SCRIPT.yoast-schema-graph--main', 0)))
+		if (FALSE === is_null($article_data = $article_html->find('SCRIPT.yoast-schema-graph', 0)))
 		{
 			$article_data_parsed = parse_article_data(json_decode($article_data->innertext));
-			$date = $article_data_parsed["@graph"][2]["datePublished"];
+			if(isset($article_data_parsed["@graph"][3]["datePublished"]))
+			{
+				$date = $article_data_parsed["@graph"][3]["datePublished"];
+			}
+		}
+		if ("" === $date || is_null($date))
+		{
+			$date = getTextAttribute($article_html, 'META[property="article:modified_time"][content]', 'content', "");
 		}
 
 		deleteAllDescendantsIfExist($article, 'DIV#share-fact');

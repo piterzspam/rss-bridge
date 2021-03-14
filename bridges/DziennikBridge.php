@@ -16,7 +16,7 @@ class DziennikBridge extends BridgeAbstract {
 				'type' => 'text',
 				'required' => true
 			),
-			'wanted_number_of_articles' => array
+			'limit' => array
 			(
 				'name' => 'Liczba artykułów',
 				'type' => 'number',
@@ -48,22 +48,22 @@ class DziennikBridge extends BridgeAbstract {
 	public function collectData()
 	{
 		$url_articles_list = $this->getInput('url');
-		$GLOBALS['number_of_wanted_articles'] = $this->getInput('wanted_number_of_articles');
+		$GLOBALS['limit'] = $this->getInput('limit');
 
 		$titles = array();
-		while (count($this->items) < $GLOBALS['number_of_wanted_articles'])
+		while (count($this->items) < $GLOBALS['limit'])
 		{
 			$html_articles_list = getSimpleHTMLDOM($url_articles_list);
 			if (0 !== count($found_urls = $html_articles_list->find('DIV.boxArticleList', 0)->find('A[href][title]')))
 			{
 				foreach($found_urls as $article_link)
 				{
-					if (count($this->items) < $GLOBALS['number_of_wanted_articles'])
+					if (count($this->items) < $GLOBALS['limit'])
 					{
 						$title = $article_link->getAttribute('title');
 						$href = $article_link->getAttribute('href');
 						$href = $href.".amp";
-//						$article_html = getSimpleHTMLDOMCached($href, (86400/(count($this->items)+1)*$GLOBALS['number_of_wanted_articles']));
+//						$article_html = getSimpleHTMLDOMCached($href, (86400/(count($this->items)+1)*$GLOBALS['limit']));
 						$article_html = getSimpleHTMLDOMCached($href, 86400 * 14);
 						$GLOBALS['is_article_free'] = $this->isArticleFree($article_html);
 						$GLOBALS['is_article_opinion'] = $this->isArticleOpinion($article_html);

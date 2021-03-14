@@ -10,7 +10,7 @@ class GazetaWeekendBridge extends BridgeAbstract {
 	(
 		'Parametry' => array
 		(
-			'wanted_number_of_articles' => array
+			'limit' => array
 			(
 				'name' => 'Liczba artykułów',
 				'type' => 'number',
@@ -27,7 +27,7 @@ class GazetaWeekendBridge extends BridgeAbstract {
 	public function collectData()
 	{
 		include 'myFunctions.php';
-		$GLOBALS['number_of_wanted_articles'] = $this->getInput('wanted_number_of_articles');
+		$GLOBALS['limit'] = $this->getInput('limit');
 		$GLOBALS['my_debug'] = FALSE;
 //		$GLOBALS['my_debug'] = TRUE;
 		if (TRUE === $GLOBALS['my_debug'])
@@ -49,7 +49,7 @@ class GazetaWeekendBridge extends BridgeAbstract {
 	{
 		$articles_urls = array();
 		$url_articles_list = 'https://weekend.gazeta.pl/weekend/0,0.html';
-		while (count($articles_urls) < $GLOBALS['number_of_wanted_articles'] && "empty" != $url_articles_list)
+		while (count($articles_urls) < $GLOBALS['limit'] && "empty" != $url_articles_list)
 		{
 			$html_articles_list = getSimpleHTMLDOM($url_articles_list);
 			if (0 === count($found_hrefs = $html_articles_list->find('DIV.title A[href]')))
@@ -63,7 +63,7 @@ class GazetaWeekendBridge extends BridgeAbstract {
 			}
 			$url_articles_list = $this->getNextPageUrl($html_articles_list);
 		}
-		return array_slice($articles_urls, 0, $GLOBALS['number_of_wanted_articles']);
+		return array_slice($articles_urls, 0, $GLOBALS['limit']);
 	}
 
 	private function getNextPageUrl($html_articles_list)

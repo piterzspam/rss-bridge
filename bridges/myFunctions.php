@@ -592,3 +592,25 @@
 			return $backup_value;
 	}
 
+	function replaceAttribute($article, $selector_string, $attribute_to_replace, $attribute_to_replace_with = NULL)
+	{
+		foreach($article->find($selector_string) as $element_selected)
+		{
+			if($element_selected->hasAttribute($attribute_to_replace))
+			{
+				if (is_null($attribute_to_replace_with))
+				{
+					$element_selected->removeAttribute($attribute_to_replace);
+				}
+				else
+				{
+					if($element_selected->hasAttribute($attribute_to_replace_with))
+					{
+						$new_attribute = $element_selected->getAttribute($attribute_to_replace_with);
+						$element_selected->setAttribute($attribute_to_replace, $new_attribute);
+					}
+				}
+			}
+		}
+	}
+

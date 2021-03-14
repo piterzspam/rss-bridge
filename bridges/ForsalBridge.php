@@ -16,7 +16,7 @@ class ForsalBridge extends BridgeAbstract {
 				'type' => 'text',
 				'required' => true
 			),
-			'wanted_number_of_articles' => array
+			'limit' => array
 			(
 				'name' => 'Liczba artykułów',
 				'type' => 'number',
@@ -46,23 +46,23 @@ class ForsalBridge extends BridgeAbstract {
 */
 	public function collectData()
 	{
-		$GLOBALS['number_of_wanted_articles'] = $this->getInput('wanted_number_of_articles');
+		$GLOBALS['limit'] = $this->getInput('limit');
 		$url_articles_list = $this->getInput('url');
 		$url_articles_list = preg_replace('/(.*\/autor\/[0-9]+,([a-z]+)-([a-z]+)).*/', '$1', $url_articles_list);
 
-		while (count($this->items) < $GLOBALS['number_of_wanted_articles'])
+		while (count($this->items) < $GLOBALS['limit'])
 		{
 			$html_articles_list = getSimpleHTMLDOM($url_articles_list);
 			if (0 !== count($found_urls = $html_articles_list->find('DIV.boxArticleList', 0)->find('A[href][title]')))
 			{
 				foreach($found_urls as $a_element)
 				{
-					if (count($this->items) < $GLOBALS['number_of_wanted_articles'])
+					if (count($this->items) < $GLOBALS['limit'])
 					{
 						//link to articles
 						$url_article_link = $a_element->href;
 						$url_article_link = $url_article_link.".amp";
-//						$article_html = getSimpleHTMLDOMCached($url_article_link, (86400/(count($this->items)+1)*$GLOBALS['number_of_wanted_articles']));
+//						$article_html = getSimpleHTMLDOMCached($url_article_link, (86400/(count($this->items)+1)*$GLOBALS['limit']));
 						$article_html = getSimpleHTMLDOMCached($url_article_link, 86400 * 14);
 						
 						$GLOBALS['is_article_free'] = $this->isArticleFree($article_html);

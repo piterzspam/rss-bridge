@@ -11,7 +11,7 @@ class KulturaLiberalnaBridge extends FeedExpander {
 	(
 		'Parametry' => array
 		(
-			'wanted_number_of_articles' => array
+			'limit' => array
 			(
 				'name' => 'Liczba artykułów',
 				'type' => 'number',
@@ -43,7 +43,7 @@ class KulturaLiberalnaBridge extends FeedExpander {
 	protected function parseItem($newsItem)
 	{
 		$item = parent::parseItem($newsItem);
-		if (count($this->items) >= intval($this->getInput('wanted_number_of_articles')))
+		if (count($this->items) >= intval($this->getInput('limit')))
 		{
 			if (TRUE === $GLOBALS['include_not_downloaded'])
 			{

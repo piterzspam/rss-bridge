@@ -16,7 +16,7 @@ class GazetaplBridge extends BridgeAbstract {
 				'type' => 'text',
 				'required' => true
 			),
-			'wanted_number_of_articles' => array
+			'limit' => array
 			(
 				'name' => 'Liczba artykułów',
 				'type' => 'number',
@@ -42,7 +42,7 @@ class GazetaplBridge extends BridgeAbstract {
 			$this->addArticle($url);
 		}
     }
-	
+
 	public function getName()
 	{
 		if (FALSE === isset($GLOBALS['author_name']))
@@ -73,14 +73,14 @@ class GazetaplBridge extends BridgeAbstract {
 
 	private function setGlobalArticlesParams()
 	{
-		$GLOBALS['wanted_number_of_articles'] = intval($this->getInput('wanted_number_of_articles'));
+		$GLOBALS['limit'] = intval($this->getInput('limit'));
 	}
 
 	private function getArticlesUrls()
 	{
 		$articles_urls = array();
 		$url_articles_list = $this->getInput('url');
-		while (count($articles_urls) < $GLOBALS['wanted_number_of_articles'] && "empty" != $url_articles_list)
+		while (count($articles_urls) < $GLOBALS['limit'] && "empty" != $url_articles_list)
 		{
 			$returned_array = $this->my_get_html($url_articles_list);
 			$html_articles_list = $returned_array['html'];
@@ -99,7 +99,7 @@ class GazetaplBridge extends BridgeAbstract {
 			}
 			$url_articles_list = $this->getNextPageUrl($html_articles_list);
 		}
-		return array_slice($articles_urls, 0, $GLOBALS['wanted_number_of_articles']);
+		return array_slice($articles_urls, 0, $GLOBALS['limit']);
 	}
 
 	private function getNextPageUrl($html_articles_list)

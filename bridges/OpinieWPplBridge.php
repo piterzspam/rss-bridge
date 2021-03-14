@@ -16,7 +16,7 @@ class OpinieWPplBridge extends BridgeAbstract {
 				'type' => 'text',
 				'required' => true
 			),
-			'wanted_number_of_articles' => array
+			'limit' => array
 			(
 				'name' => 'Liczba artykułów',
 				'type' => 'number',
@@ -30,7 +30,7 @@ class OpinieWPplBridge extends BridgeAbstract {
 	public function collectData()
 	{
 		include 'myFunctions.php';
-		$GLOBALS['number_of_wanted_articles'] = intval($this->getInput('wanted_number_of_articles'));
+		$GLOBALS['limit'] = intval($this->getInput('limit'));
 		$GLOBALS['my_debug'] = FALSE;
 //		$GLOBALS['my_debug'] = TRUE;
 		if (TRUE === $GLOBALS['my_debug'])
@@ -167,7 +167,7 @@ class OpinieWPplBridge extends BridgeAbstract {
 	{
 		$articles_urls = array();
 		$url_articles_list = $this->getInput('url');
-		while (count($articles_urls) < $GLOBALS['number_of_wanted_articles'] && "empty" != $url_articles_list)
+		while (count($articles_urls) < $GLOBALS['limit'] && "empty" != $url_articles_list)
 		{
 			$returned_array = $this->my_get_html($url_articles_list);
 			if (200 !== $returned_array['code'])
@@ -191,7 +191,7 @@ class OpinieWPplBridge extends BridgeAbstract {
 			}
 			$url_articles_list = $this->getNextPageUrl($html_articles_list);
 		}
-		return array_slice($articles_urls, 0, $GLOBALS['number_of_wanted_articles']);
+		return array_slice($articles_urls, 0, $GLOBALS['limit']);
 	}
 
 	private function getNextPageUrl($html_articles_list)

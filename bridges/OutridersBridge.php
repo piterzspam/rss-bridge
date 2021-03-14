@@ -11,7 +11,7 @@ class OutridersBridge extends FeedExpander {
 	(
 		'Brief' => array
 		(
-			'wanted_number_of_briefs' => array
+			'limit' => array
 			(
 				'name' => 'Liczba briefów',
 				'type' => 'number',
@@ -21,7 +21,7 @@ class OutridersBridge extends FeedExpander {
 		),
 		'Rss' => array
 		(
-			'wanted_number_of_articles' => array
+			'limit' => array
 			(
 				'name' => 'Liczba artykułów',
 				'type' => 'number',
@@ -79,7 +79,7 @@ class OutridersBridge extends FeedExpander {
 
 	private function getArticlesBriefs()
 	{
-		$GLOBALS['wanted_number_of_briefs'] = $this->getInput('wanted_number_of_briefs');
+		$GLOBALS['limit'] = $this->getInput('limit');
 		$articles_urls = array();
 		$returned_array = $this->my_get_html('https://brief.outride.rs/pl');
 		$html_issues_list = $returned_array['html'];
@@ -95,7 +95,7 @@ class OutridersBridge extends FeedExpander {
 				$issues_urls[] = 'https://brief.outride.rs'.$href_element->href;
 			}
 		}
-		$issues_urls = array_slice($issues_urls, 0, $GLOBALS['wanted_number_of_briefs']);
+		$issues_urls = array_slice($issues_urls, 0, $GLOBALS['limit']);
 		foreach($issues_urls as $issue_url)
 		{
 			$returned_array = $this->my_get_html($issue_url);
@@ -170,7 +170,7 @@ class OutridersBridge extends FeedExpander {
 	protected function parseItem($newsItem)
 	{
 		$item = parent::parseItem($newsItem);
-		if (count($this->items) >= intval($this->getInput('wanted_number_of_articles')))
+		if (count($this->items) >= intval($this->getInput('limit')))
 		{
 			if (TRUE === $GLOBALS['include_not_downloaded'])
 			{

@@ -16,7 +16,7 @@ class NewsweekBridge extends BridgeAbstract {
 				'type' => 'text',
 				'required' => true
 			),
-			'wanted_number_of_articles' => array
+			'limit' => array
 			(
 				'name' => 'Liczba artykułów',
 				'type' => 'number',
@@ -32,7 +32,7 @@ class NewsweekBridge extends BridgeAbstract {
 	public function collectData()
 	{
 		include 'myFunctions.php';
-		$GLOBALS['number_of_wanted_articles'] = $this->getInput('wanted_number_of_articles');
+		$GLOBALS['limit'] = $this->getInput('limit');
 		
 		$urls = $this->getArticlesUrls();
 		
@@ -189,7 +189,7 @@ class NewsweekBridge extends BridgeAbstract {
 		$articles_urls = array();
 		$url_articles_list = $this->getInput('url');
 		$GLOBALS['author_name'] = "";
-		while (count($articles_urls) < $GLOBALS['number_of_wanted_articles'])
+		while (count($articles_urls) < $GLOBALS['limit'])
 		{
 			$returned_array = $this->my_get_html($url_articles_list);
 			if (200 !== $returned_array['code'])
@@ -217,7 +217,7 @@ class NewsweekBridge extends BridgeAbstract {
 				$url_articles_list = $this->getNextPageUrl($url_articles_list);
 			}
 		}
-		return array_slice($articles_urls, 0, $GLOBALS['number_of_wanted_articles']);
+		return array_slice($articles_urls, 0, $GLOBALS['limit']);
 	}
 
 	private function getNextPageUrl($url_articles_list)

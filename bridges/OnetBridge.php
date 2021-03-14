@@ -16,7 +16,7 @@ class OnetBridge extends BridgeAbstract {
 				'type' => 'text',
 				'required' => true
 			),
-			'wanted_number_of_articles' => array
+			'limit' => array
 			(
 				'name' => 'Liczba artykułów',
 				'type' => 'number',
@@ -31,7 +31,7 @@ class OnetBridge extends BridgeAbstract {
 		include 'myFunctions.php';
 		$url_articles_list = $this->getInput('url');
 		$url_articles_list = preg_replace('/(.*\/autorzy\/[a-z]+-[a-z]+).*/', '$1', $url_articles_list);
-		$GLOBALS['number_of_wanted_articles'] = $this->getInput('wanted_number_of_articles');
+		$GLOBALS['limit'] = $this->getInput('limit');
 		$GLOBALS['my_debug'] = FALSE;
 //		$GLOBALS['my_debug'] = TRUE;
 		if (TRUE === $GLOBALS['my_debug'])
@@ -41,7 +41,7 @@ class OnetBridge extends BridgeAbstract {
 		}
 		$urls = array();
 		$page_number = 0;
-		while (count($urls) < $GLOBALS['number_of_wanted_articles'])
+		while (count($urls) < $GLOBALS['limit'])
 		{
 			$current_url = $url_articles_list.'?ajax=1&page='.$page_number;
 			$html_articles_list = getSimpleHTMLDOM($current_url);
@@ -52,7 +52,7 @@ class OnetBridge extends BridgeAbstract {
 			{
 				foreach($found_urls as $article__link)
 				{
-					if (count($urls) < $GLOBALS['number_of_wanted_articles'])
+					if (count($urls) < $GLOBALS['limit'])
 					{
 						$url = $article__link->getAttribute('href');
 						$amp_url = $this->getCustomizedLink($url);
@@ -75,7 +75,7 @@ class OnetBridge extends BridgeAbstract {
 		if (TRUE === $GLOBALS['my_debug'])
 		{
 			$start_request = microtime(TRUE);
-//			$article_html = getSimpleHTMLDOMCached($url_article, (86400/(count($this->items)+1)*$GLOBALS['number_of_wanted_articles']));
+//			$article_html = getSimpleHTMLDOMCached($url_article, (86400/(count($this->items)+1)*$GLOBALS['limit']));
 			$article_html = getSimpleHTMLDOMCached($url_article, 86400 * 14);
 			$end_request = microtime(TRUE);
 			echo "<br>Article  took " . ($end_request - $start_request) . " seconds to complete - url: $url_article.";
@@ -84,7 +84,7 @@ class OnetBridge extends BridgeAbstract {
 		}
 		else
 		{
-//			$article_html = getSimpleHTMLDOMCached($url_article, (86400/(count($this->items)+1)*$GLOBALS['number_of_wanted_articles']));
+//			$article_html = getSimpleHTMLDOMCached($url_article, (86400/(count($this->items)+1)*$GLOBALS['limit']));
 			$article_html = getSimpleHTMLDOMCached($url_article, 86400 * 14);
 		}
 		if (is_bool($article_html))
