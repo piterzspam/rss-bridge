@@ -3,19 +3,59 @@ class ZaufanaTrzeciaStronaBridge extends FeedExpander {
 
 	const MAINTAINER = 'No maintainer';
 	const NAME = 'Zaufana Trzecia Strona';
-	const URI = '';
+	const URI = 'https://zaufanatrzeciastrona.pl/';
 	const DESCRIPTION = 'No description provided';
-	const PARAMETERS = array();
 	const CACHE_TIMEOUT = 86400;
+ 
+	const PARAMETERS = array
+	(
+		'Parametry' => array
+		(
+			'limit' => array
+			(
+				'name' => 'Liczba artykułów',
+				'type' => 'number',
+				'required' => true,
+				'defaultValue' => 3,
+			),
+			'include_not_downloaded' => array
+			(
+				'name' => 'Uwzględnij niepobrane',
+				'type' => 'checkbox',
+				'required' => false,
+				'title' => 'Uwzględnij niepobrane'
+			),
+		)
+	);
 
     public function collectData(){
 //		include 'myFunctions.php';
+		$this->setGlobalArticlesParams();
         $this->collectExpandableDatas('https://zaufanatrzeciastrona.pl/feed/');
     }
+
+	private function setGlobalArticlesParams()
+	{
+		if (TRUE === $this->getInput('include_not_downloaded'))
+			$GLOBALS['include_not_downloaded'] = TRUE;
+		else
+			$GLOBALS['include_not_downloaded'] = FALSE;
+	}
 
 	protected function parseItem($newsItem)
 	{
 		$item = parent::parseItem($newsItem);
+		if (count($this->items) >= intval($this->getInput('limit')))
+		{
+			if (TRUE === $GLOBALS['include_not_downloaded'])
+			{
+				return $item;
+			}
+			else
+			{
+				return;
+			}
+		}
 		$articlePage = getSimpleHTMLDOMCached($newsItem->link, 86400 * 14);
 		$article = $articlePage->find('DIV#main DIV.postcontent', 0);
 		foreach($article->find('IMG') as $img)

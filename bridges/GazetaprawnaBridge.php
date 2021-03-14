@@ -14,7 +14,8 @@ class GazetaprawnaBridge extends BridgeAbstract {
 			(
 				'name' => 'URL',
 				'type' => 'text',
-				'required' => true
+				'required' => true,
+				'defaultValue' => 3,
 			),
 			'limit' => array
 			(

@@ -3,7 +3,7 @@ class OutridersBridge extends FeedExpander {
 
 	const MAINTAINER = 'No maintainer';
 	const NAME = 'Outriders Brief';
-	const URI = '';
+	const URI = 'https://outride.rs/';
 	const DESCRIPTION = 'No description provided';
 	const CACHE_TIMEOUT = 86400;
 
@@ -17,6 +17,7 @@ class OutridersBridge extends FeedExpander {
 				'type' => 'number',
 				'required' => true,
 				'title' => 'Liczba briefów',
+				'defaultValue' => 3,
 			)
 		),
 		'Rss' => array
@@ -27,12 +28,13 @@ class OutridersBridge extends FeedExpander {
 				'type' => 'number',
 				'required' => true,
 				'title' => 'Liczba artykułów',
+				'defaultValue' => 3,
 			),
 			'include_not_downloaded' => array
 			(
 				'name' => 'Uwzględnij niepobrane',
 				'type' => 'checkbox',
-				'required' => true,
+				'required' => false,
 				'title' => 'Uwzględnij niepobrane'
 			),
 		)
@@ -161,8 +163,9 @@ class OutridersBridge extends FeedExpander {
 
 	private function getArticlesRss()
 	{
-		$GLOBALS['include_not_downloaded'] = $this->getInput('include_not_downloaded');
-		if (TRUE === is_null($GLOBALS['include_not_downloaded']))
+		if (TRUE === $this->getInput('include_not_downloaded'))
+			$GLOBALS['include_not_downloaded'] = TRUE;
+		else
 			$GLOBALS['include_not_downloaded'] = FALSE;
         $this->collectExpandableDatas('https://outride.rs/feed');
 	}

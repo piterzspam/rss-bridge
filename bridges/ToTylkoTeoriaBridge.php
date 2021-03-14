@@ -14,7 +14,8 @@ class ToTylkoTeoriaBridge extends BridgeAbstract {
 			(
 				'name' => 'Liczba artykułów',
 				'type' => 'number',
-				'required' => true
+				'required' => true,
+				'defaultValue' => 3,
 			),
 		)
 	);

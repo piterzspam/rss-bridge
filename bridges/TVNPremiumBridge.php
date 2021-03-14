@@ -3,7 +3,7 @@ class TVNPremiumBridge extends FeedExpander {
 
 	const MAINTAINER = 'No maintainer';
 	const NAME = 'TVN Premium';
-	const URI = '';
+	const URI = 'https://tvn24.pl/premium';
 	const DESCRIPTION = 'No description provided';
 	const CACHE_TIMEOUT = 86400;
 
@@ -15,19 +15,47 @@ class TVNPremiumBridge extends FeedExpander {
 			(
 				'name' => 'Liczba artykułów',
 				'type' => 'number',
-				'required' => true
-			)
+				'required' => true,
+				'defaultValue' => 3,
+			),
+			'include_not_downloaded' => array
+			(
+				'name' => 'Uwzględnij niepobrane',
+				'type' => 'checkbox',
+				'required' => false,
+				'title' => 'Uwzględnij niepobrane'
+			),
 		)
 	);
 
     public function collectData(){
 		include 'myFunctions.php';
+		$this->setGlobalArticlesParams();
         $this->collectExpandableDatas('https://tvn24.pl/premium.xml');
     }
+
+	private function setGlobalArticlesParams()
+	{
+		if (TRUE === $this->getInput('include_not_downloaded'))
+			$GLOBALS['include_not_downloaded'] = TRUE;
+		else
+			$GLOBALS['include_not_downloaded'] = FALSE;
+	}
 
 	protected function parseItem($newsItem)
 	{
 		$item = parent::parseItem($newsItem);
+		if (count($this->items) >= intval($this->getInput('limit')))
+		{
+			if (TRUE === $GLOBALS['include_not_downloaded'])
+			{
+				return $item;
+			}
+			else
+			{
+				return;
+			}
+		}
 
 		if (count($this->items) >= $this->getInput('limit'))
 		{

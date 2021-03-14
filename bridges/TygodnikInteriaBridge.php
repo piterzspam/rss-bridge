@@ -15,7 +15,8 @@ class TygodnikInteriaBridge extends BridgeAbstract {
 				'name' => 'Liczba artykułów',
 				'type' => 'number',
 				'required' => true,
-				'title' => 'Liczba artykułów'
+				'title' => 'Liczba artykułów',
+				'defaultValue' => 3,
 			),
 		)
 	);

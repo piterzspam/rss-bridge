@@ -3,7 +3,7 @@ class KrytykaPolitycznaBridge extends FeedExpander {
 
 	const MAINTAINER = 'No maintainer';
 	const NAME = 'Krytyka polityczna';
-	const URI = '';
+	const URI = 'https://krytykapolityczna.pl/';
 	const DESCRIPTION = 'No description provided';
 	const CACHE_TIMEOUT = 86400;
 
@@ -15,13 +15,14 @@ class KrytykaPolitycznaBridge extends FeedExpander {
 			(
 				'name' => 'Liczba artykułów',
 				'type' => 'number',
-				'required' => true
+				'required' => true,
+				'defaultValue' => 3,
 			),
 			'include_not_downloaded' => array
 			(
 				'name' => 'Uwzględnij niepobrane',
 				'type' => 'checkbox',
-				'required' => true,
+				'required' => false,
 				'title' => 'Uwzględnij niepobrane'
 			),
 		)
@@ -35,8 +36,9 @@ class KrytykaPolitycznaBridge extends FeedExpander {
 
 	private function setGlobalArticlesParams()
 	{
-		$GLOBALS['include_not_downloaded'] = $this->getInput('include_not_downloaded');
-		if (TRUE === is_null($GLOBALS['include_not_downloaded']))
+		if (TRUE === $this->getInput('include_not_downloaded'))
+			$GLOBALS['include_not_downloaded'] = TRUE;
+		else
 			$GLOBALS['include_not_downloaded'] = FALSE;
 	}
 

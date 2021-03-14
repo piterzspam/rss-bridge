@@ -3,7 +3,7 @@ class WiezBridge extends FeedExpander {
 
 	const MAINTAINER = 'No maintainer';
 	const NAME = 'Więź';
-	const URI = '';
+	const URI = 'https://wiez.pl/';
 	const DESCRIPTION = 'No description provided';
 	const CACHE_TIMEOUT = 86400;
  
@@ -15,13 +15,14 @@ class WiezBridge extends FeedExpander {
 			(
 				'name' => 'Liczba artykułów',
 				'type' => 'number',
-				'required' => true
+				'required' => true,
+				'defaultValue' => 3,
 			),
 			'include_not_downloaded' => array
 			(
 				'name' => 'Uwzględnij niepobrane',
 				'type' => 'checkbox',
-				'required' => true,
+				'required' => false,
 				'title' => 'Uwzględnij niepobrane'
 			),
 		)
@@ -35,15 +36,15 @@ class WiezBridge extends FeedExpander {
 
 	private function setGlobalArticlesParams()
 	{
-		$GLOBALS['include_not_downloaded'] = $this->getInput('include_not_downloaded');
-		if (TRUE === is_null($GLOBALS['include_not_downloaded']))
+		if (TRUE === $this->getInput('include_not_downloaded'))
+			$GLOBALS['include_not_downloaded'] = TRUE;
+		else
 			$GLOBALS['include_not_downloaded'] = FALSE;
 	}
 
 	protected function parseItem($newsItem)
 	{
 		$item = parent::parseItem($newsItem);
-		
 		if (count($this->items) >= intval($this->getInput('limit')))
 		{
 			if (TRUE === $GLOBALS['include_not_downloaded'])

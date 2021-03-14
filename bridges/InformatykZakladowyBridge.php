@@ -3,19 +3,59 @@ class InformatykZakladowyBridge extends FeedExpander {
 
 	const MAINTAINER = 'No maintainer';
 	const NAME = 'Informatyk Zakładowy';
-	const URI = '';
+	const URI = 'https://informatykzakladowy.pl/';
 	const DESCRIPTION = 'No description provided';
-	const PARAMETERS = array();
 	const CACHE_TIMEOUT = 86400;
+
+	const PARAMETERS = array
+	(
+		'Parametry' => array
+		(
+			'limit' => array
+			(
+				'name' => 'Liczba artykułów',
+				'type' => 'number',
+				'required' => true,
+				'defaultValue' => 3,
+			),
+			'include_not_downloaded' => array
+			(
+				'name' => 'Uwzględnij niepobrane',
+				'type' => 'checkbox',
+				'required' => false,
+				'title' => 'Uwzględnij niepobrane'
+			),
+		)
+	);
 
     public function collectData(){
 		include 'myFunctions.php';
+		$this->setGlobalArticlesParams();
         $this->collectExpandableDatas('https://informatykzakladowy.pl/feed/');
     }
+
+	private function setGlobalArticlesParams()
+	{
+		if (TRUE === $this->getInput('include_not_downloaded'))
+			$GLOBALS['include_not_downloaded'] = TRUE;
+		else
+			$GLOBALS['include_not_downloaded'] = FALSE;
+	}
 
 	protected function parseItem($newsItem)
 	{
 		$item = parent::parseItem($newsItem);
+		if (count($this->items) >= intval($this->getInput('limit')))
+		{
+			if (TRUE === $GLOBALS['include_not_downloaded'])
+			{
+				return $item;
+			}
+			else
+			{
+				return;
+			}
+		}
 		$articlePage = getSimpleHTMLDOMCached($item['uri'], 86400 * 14);
 		$article = $articlePage->find('MAIN#site-content', 0);
 		deleteAllDescendantsIfExist($article, 'DIV.comments-wrapper');

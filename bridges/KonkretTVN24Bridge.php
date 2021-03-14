@@ -14,7 +14,8 @@ class KonkretTVN24Bridge extends BridgeAbstract {
 			(
 				'name' => 'Liczba artykułów',
 				'type' => 'number',
-				'required' => true
+				'required' => true,
+				'defaultValue' => 3,
 			),
 			'category' => array(
 				'name' => 'Kategoria',
