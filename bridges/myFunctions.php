@@ -260,7 +260,7 @@
 	
 	function getTwitterElement($twitter_url)
 	{
-		$twitter_proxy = 'nitter.net';
+		$twitter_proxy = 'nitter.snopyta.org';
 		$twitter_url = str_replace('twitter.com', $twitter_proxy, $twitter_url);
 		$html_twitter = getSimpleHTMLDOM($twitter_url);
 		$main_tweet = $html_twitter->find('DIV#m.main-tweet', 0);
@@ -341,10 +341,10 @@
 
 	function redirectUrl($social_url)
 	{
-		$twitter_proxy = 'nitter.net';
-		$instagram_proxy = 'bibliogram.art';
-		$facebook_proxy = 'mbasic.facebook.com';
+		$twitter_proxy = 'nitter.snopyta.org';
+		$instagram_proxy = 'bibliogram.snopyta.org';
 		$youtube_proxy = 'invidious.snopyta.org';
+		$facebook_proxy = 'mbasic.facebook.com';
 		$social_url = preg_replace('/.*[\.\/]twitter\.com(.*)/', 'https://'.$twitter_proxy.'${1}', $social_url);
 		$social_url = preg_replace('/.*[\.\/]instagram\.com(.*)/', 'https://'.$instagram_proxy.'${1}', $social_url);
 		$social_url = preg_replace('/.*[\.\/]facebook\.com(.*)/', 'https://'.$facebook_proxy.'${1}', $social_url);
@@ -596,20 +596,14 @@
 	{
 		foreach($article->find($selector_string) as $element_selected)
 		{
-			if($element_selected->hasAttribute($attribute_to_replace))
+			if($element_selected->hasAttribute($attribute_to_replace) && is_null($attribute_to_replace_with))
 			{
-				if (is_null($attribute_to_replace_with))
-				{
-					$element_selected->removeAttribute($attribute_to_replace);
-				}
-				else
-				{
-					if($element_selected->hasAttribute($attribute_to_replace_with))
-					{
-						$new_attribute = $element_selected->getAttribute($attribute_to_replace_with);
-						$element_selected->setAttribute($attribute_to_replace, $new_attribute);
-					}
-				}
+				$element_selected->removeAttribute($attribute_to_replace);
+			}
+			else if($element_selected->hasAttribute($attribute_to_replace_with))
+			{
+				$new_attribute_value = $element_selected->getAttribute($attribute_to_replace_with);
+				$element_selected->setAttribute($attribute_to_replace, $new_attribute_value);
 			}
 		}
 	}

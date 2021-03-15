@@ -99,11 +99,10 @@ class SprawdzamAFPBridge extends BridgeAbstract {
 		$author = str_replace(', AFP Polska', '', $author);
 		//tags
 		$tags = returnTagsArray($article_html, 'DIV.tags A[href]');
-		foreach($tags as $tag)
+		foreach($tags as $key => $tag)
 		{
-			$tags = ucwords($tag);
+			$tags[$key] = ucwords(strtolower($tag));
 		}
-
 		
 		foreach($article_html->find('SCRIPT') as $script_element)
 		{
