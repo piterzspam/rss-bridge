@@ -65,6 +65,8 @@ class KlubJagiellonskiBridge extends FeedExpander {
 		foreach_delete_element($article_post, 'DIV[data-source="ramka-polecane"]');
 		foreach_delete_element($article_post, 'DIV.meta_mobile.desktop-hide');
 		foreach_delete_element_containing_subelement($article_post, 'DIV.block-content_breaker.block-content_breaker_ramka', 'A[href*="/temat/"]');
+		//https://klubjagiellonski.pl/2021/03/12/egzotyczny-sojusz-przeciwko-500-najbardziej-krytyczni-zwolennicy-konfederacji-lewica-i-najbogatsi/
+		foreach_delete_element_containing_subelement($article_post, 'DIV.block-content_breaker.block-content_breaker_ramka', 'IMG[src*="1-procent"]');
 
 		$tags = return_tags_array($article_post, 'A.block-catbox SPAN.catboxfg');
 		$author = return_authors_as_string($article_post, 'A.block-author_bio P.imienazwisko');

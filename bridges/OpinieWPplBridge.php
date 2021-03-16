@@ -50,7 +50,6 @@ class OpinieWPplBridge extends BridgeAbstract {
 		{
 			$ampproject_url = $this->getAmpprojectLink($canonical_url);
 			$ampproject_returned_array = $this->my_get_html($ampproject_url);
-
 			if (200 === $ampproject_returned_array['code'])
 			{
 				$ampproject_article_html = $ampproject_returned_array['html'];
@@ -111,7 +110,6 @@ class OpinieWPplBridge extends BridgeAbstract {
 
 	private function addArticleAmp($url_article, $article_html)
 	{
-//		echo "url_article: $url_article<br>";
 		$article = $article_html->find('main#content', 0);
 		$article_data = $article_html->find('SCRIPT[type="application/ld+json"]', 0)->innertext;
 		$article_data_parsed = parse_article_data(json_decode($article_data));
@@ -152,10 +150,12 @@ class OpinieWPplBridge extends BridgeAbstract {
 		add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
 		add_style($article, 'FIGCAPTION', getStylePhotoCaption());
 		add_style($article, 'BLOCKQUOTE', getStyleQuote());
+		$article = str_get_html($article->save());
 
-		$url_article = str_replace('https://opinie-wp-pl.cdn.ampproject.org/v/s/', 'https://', $url_article);
+//		$url_article = str_replace('https://opinie-wp-pl.cdn.ampproject.org/v/s/', 'https://', $url_article);
 		$this->items[] = array(
-			'uri' => $url_article,
+			//Fix &amp z linku
+			'uri' => htmlentities($url_article, ENT_QUOTES, 'UTF-8'),
 			'title' => $title,
 			'timestamp' => $date,
 			'author' => $author,
@@ -274,7 +274,6 @@ class OpinieWPplBridge extends BridgeAbstract {
 
 	private function getAmpprojectLink($url)
 	{
-//		$url = 'https://opinie.wp.pl'.$url;
 		$new_url = $url.'?amp=1&amp_js_v=0.1';
 		$new_url = str_replace('https://', 'https://opinie-wp-pl.cdn.ampproject.org/v/s/', $new_url);
 		return $new_url;

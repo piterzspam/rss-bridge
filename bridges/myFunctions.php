@@ -119,7 +119,6 @@
 			else
 				$ampimg->outertext = $img_new_element;
 		}
-		$main = str_get_html($main->save());
 	}
 
 	function format_amp_links($main)
@@ -148,7 +147,6 @@
 				$amp_youtube->outertext = get_frame_outertext($youtube_url);
 			}
 		}
-		$main = str_get_html($main->save());
 	}
 
 	function parse_article_data($article_data)
@@ -185,7 +183,6 @@
 				}
 			}
 		}
-		$main = str_get_html($main->save());
 	}
 	
 	function single_delete_element_containing_text($element, $subelement_search_textstring)
@@ -212,7 +209,6 @@
 				}
 			}
 		}
-		$main = str_get_html($main->save());
 	}
 
 	function foreach_delete_element_containing_elements_hierarchy($main, $subelements_hierarchy_array)
@@ -231,7 +227,6 @@
 				$subelement->outertext = '';
 			}
 		}
-		$main = str_get_html($main->save());
 	}
 
 	function single_delete_element_containing_subelement($element, $subelement_search_string)
@@ -248,7 +243,6 @@
 		{
 			$element->outertext = '';
 		}
-		$main = str_get_html($main->save());
 	}
 
 	function single_delete_subelement($element, $subelement_search_string)
@@ -268,7 +262,6 @@
 				$element->outertext = '';
 			}
 		}
-		$main = str_get_html($main->save());
 	}
 
 	function foreach_replace_outertext_with_subelement_innertext($main, $element_search_string, $subelement_search_string)
@@ -280,7 +273,6 @@
 				$element->outertext = $subelement->innertext;
 			}
 		}
-		$main = str_get_html($main->save());
 	}
 
 	function foreach_replace_outertext_with_subelement_outertext($main, $element_search_string, $subelement_search_string)
@@ -292,7 +284,6 @@
 				$element->outertext = $subelement->outertext;
 			}
 		}
-		$main = str_get_html($main->save());
 	}
 
 	function foreach_replace_outertext_with_innertext($main, $element_search_string)
@@ -301,7 +292,6 @@
 		{
 			$element->outertext = $element->innertext;
 		}
-		$main = str_get_html($main->save());
 	}
 
 
@@ -480,7 +470,6 @@
 				$element->setAttribute($attribute_to_replace, $new_attribute_value);
 			}
 		}
-		$main = str_get_html($main->save());
 	}
 
 	function fix_all_photos($main)
@@ -504,7 +493,6 @@
 			$img_new_element = $img_new_element.'>';
 			$photo_element->outertext = $img_new_element;
 		}
-		$main = str_get_html($main->save());
 	}
 
 	function fix_article_photos($main, $element_search_string, $is_main = FALSE, $str_photo_url_attribute = 'src', $str_selectror_photo_caption = '')
@@ -596,7 +584,6 @@
 				$old_photo_wrapper->outertext = $new_photo_wrapper;
 			}
 		}
-		$main = str_get_html($main->save());
 	}
 
 	function fix_all_iframes($main)
@@ -606,7 +593,6 @@
 			$url = $frame_element->getAttribute('src');
 			$frame_element->outertext = get_frame_outertext($url);
 		}
-		$main = str_get_html($main->save());
 	}
 	
 	function get_Twitter_element($twitter_url)

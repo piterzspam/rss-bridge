@@ -226,21 +226,32 @@ class DemagogBridge extends BridgeAbstract {
 		foreach_delete_element($article, 'DIV.row-custom.blue.mb-3.pb-2 P[!class]');
 		foreach_delete_element($article, 'DIV.breadcrumbs');
 		foreach_delete_element($article, 'DIV.mb-5.d-none.d-md-flex');
+		foreach_delete_element($article, 'NOSCRIPT');
 		foreach_replace_outertext_with_innertext($article, 'DIV.row-custom.blue.mb-3.pb-2');
 		foreach_replace_outertext_with_innertext($article, 'DIV.mb-5.pb-3.count-text');
-//		foreach_delete_element($article, 'NOSCRIPT');
-		//https://demagog.org.pl/wypowiedzi/ilu-wnioskow-o-skargi-nadzwyczajne-wciaz-nie-rozpatrzono/
-		fix_article_photos($article, 'DIV[id^="attachment_"], IMG.alignnone', FALSE, 'src', 'P.wp-caption-text');
-		fix_article_photos($article, 'DIV.col-12.mb-4.px-0.w-img-100', TRUE);
+		$article = str_get_html($article->save());
 		foreach($article->find('DIV.important-text') as $quote_element)
 		{
 			$new_outertext = '<blockquote>'.$quote_element->innertext.'</blockquote>';
 			$quote_element->outertext = $new_outertext;
 		}
+		$article = str_get_html($article->save());
+		//https://demagog.org.pl/fake_news/nie-ten-mezczyzna-nie-rozdaje-chleba-za-darmo-dla-potrzebujacych/
+		foreach($article->find('DIV.summary-text') as $quote_element)
+		{
+			$new_outertext = '<blockquote>'.$quote_element->innertext.'</blockquote>';
+			$quote_element->outertext = $new_outertext;
+		}
+		$article = str_get_html($article->save());
+		//https://demagog.org.pl/wypowiedzi/ilu-wnioskow-o-skargi-nadzwyczajne-wciaz-nie-rozpatrzono/
+		fix_article_photos($article, 'DIV[id^="attachment_"], IMG.alignnone', FALSE, 'src', 'P.wp-caption-text');
+		fix_article_photos($article, 'DIV.col-12.mb-4.px-0.w-img-100', TRUE);
+		$article = str_get_html($article->save());
 		add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
 		add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
 		add_style($article, 'FIGCAPTION', getStylePhotoCaption());
 		add_style($article, 'BLOCKQUOTE', getStyleQuote());
+		$article = str_get_html($article->save());
 
 		$this->items[] = array(
 			'uri' => $url,
