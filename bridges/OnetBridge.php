@@ -47,7 +47,7 @@ class OnetBridge extends BridgeAbstract {
 			$current_url = $url_articles_list.'?ajax=1&page='.$page_number;
 			$html_articles_list = getSimpleHTMLDOM($current_url);
 			$page_number++;
-			deleteAllDescendantsIfExist($html_articles_list, 'DIV.breadcrumbs');
+			foreach_delete_element($html_articles_list, 'DIV.breadcrumbs');
 
 			if (0 !== ($url_counter = count($found_urls = $html_articles_list->find("DIV.listItem A[href][title]"))))
 			{
@@ -108,19 +108,19 @@ class OnetBridge extends BridgeAbstract {
 		$title = $this->getChangedTitle($title);
 		$author = trim($article_data_parsed["author"]["name"]);
 
-		deleteAllDescendantsIfExist($article, 'comment');
-		deleteAllDescendantsIfExist($article, 'script');
-		deleteAllDescendantsIfExist($article, 'DIV.social-box');
-		deleteAllDescendantsIfExist($article, 'DIV[style="margin:auto;width:300px;"]');
+		foreach_delete_element($article, 'comment');
+		foreach_delete_element($article, 'script');
+		foreach_delete_element($article, 'DIV.social-box');
+		foreach_delete_element($article, 'DIV[style="margin:auto;width:300px;"]');
 //https:iadomosci-onet-pl.cdn.ampproject.org/v/s/wiadomosci.onet.pl/tylko-w-onecie/wybory-w-usa-2020-andrzej-stankiewicz-dzis-jest-czas-wielkiej-smuty-w-pis/fcktclw.amp?amp_js_v=0.1
 //Glińskłumaczy się kryteriami obiektywnymi.
-		clearParagraphsFromTaglinks($article, 'P.hyphenate', array('/onet\.pl\/[^\/]*$/'));
-		deleteAncestorIfChildMatches($article, array('ul', 'li', 'A[href*="onet.pl"][target="_top"]'));
+		clear_paragraphs_from_taglinks($article, 'P.hyphenate', array('/onet\.pl\/[^\/]*$/'));
+		foreach_delete_element_containing_elements_hierarchy($article, array('ul', 'li', 'A[href*="onet.pl"][target="_top"]'));
 		
 		foreach($article->find('P.hyphenate') as $paragraph)
 		{
-			deleteAncestorIfContainsText($paragraph, 'Poniżej lista wszystkich dotychczasowych odcinków podcastu:');
-			deleteAncestorIfContainsText($paragraph, 'Cieszymy się, że jesteś z nami. Zapisz się na newsletter Onetu, aby otrzymywać od nas najbardziej wartościowe treści');
+			single_delete_element_containing_text($paragraph, 'Poniżej lista wszystkich dotychczasowych odcinków podcastu:');
+			single_delete_element_containing_text($paragraph, 'Cieszymy się, że jesteś z nami. Zapisz się na newsletter Onetu, aby otrzymywać od nas najbardziej wartościowe treści');
 //https://wiadomosci-onet-pl.cdn.ampproject.org/v/s/wiadomosci.onet.pl/tylko-w-onecie/michal-cholewinski-krytykowal-orzeczenie-tk-ws-aborcji-zostal-zdjety-z-anteny/31zq2s2.amp?amp_js_v=0.1
 //https://wiadomosci-onet-pl.cdn.ampproject.org/v/s/wiadomosci.onet.pl/kraj/20-lecie-platformy-obywatelskiej-partia-oklejona-nekrologami-analiza/7cwsve3.amp?amp_js_v=0.1
 //Dalsza część tekstu znajduje się pod wideo
@@ -139,12 +139,12 @@ class OnetBridge extends BridgeAbstract {
 				$paragraph->outertext='';
 			}
 		}
-		fixAmpArticles($article);
-		formatAmpLinks($article);
+		format_amp_article($article);
+		format_amp_links($article);
 
 		foreach($article->find('LI') as $li)
 		{
-			deleteAncestorIfContainsText($li, 'Więcej informacji i podcastów znajdziesz na stronie głównej Onet.pl');
+			single_delete_element_containing_text($li, 'Więcej informacji i podcastów znajdziesz na stronie głównej Onet.pl');
 		}
 
 		foreach($article->find('IMG') as $photo_element)
@@ -158,9 +158,9 @@ class OnetBridge extends BridgeAbstract {
 			if($photo_element->hasAttribute('tabindex')) $photo_element->setAttribute('tabindex', NULL);
 		}
 
-//		addStyle($article, 'BLOCKQUOTE', getStyleQuote());
-		addStyle($article, 'FIGURE DIV.wrapper', getStylePhotoParent());
-		addStyle($article, 'FIGURE DIV.wrapper IMG', getStylePhotoImg());
+//		add_style($article, 'BLOCKQUOTE', getStyleQuote());
+		add_style($article, 'FIGURE DIV.wrapper', getStylePhotoParent());
+		add_style($article, 'FIGURE DIV.wrapper IMG', getStylePhotoImg());
 		$caption_style = array(
 			'bottom: 0;',
 			'left: 0;',
@@ -169,7 +169,7 @@ class OnetBridge extends BridgeAbstract {
 			'color: #fff;',
 			'background-color: rgba(0, 0, 0, 0.7);'
 		);
-		addStyle($article, 'FIGURE DIV.wrapper SPAN', $caption_style);
+		add_style($article, 'FIGURE DIV.wrapper SPAN', $caption_style);
 
 
 		$this->items[] = array(

@@ -166,7 +166,7 @@ class TygodnikInteriaBridge extends BridgeAbstract {
 			$photo_script->outertext = '<img src="'.$photo_url.'">';
 		}
 		//lead
-		deleteAllDescendantsIfExist($article, 'SPAN.article-lead-bg-letter');
+		foreach_delete_element($article, 'SPAN.article-lead-bg-letter');
 		$lead = $article->find('P.article-lead', 0);
 		$new_lead_text_part1 = trim($article->find('SPAN.article-lead-first-letter', 0)->plaintext);
 		$new_lead_text_part2 = trim($article->find('SPAN.article-lead-without-first-letter', 0)->plaintext);
@@ -194,26 +194,26 @@ class TygodnikInteriaBridge extends BridgeAbstract {
 		$date_array[$last] = '20'.$date_array[$last];
 		$date = implode('.', $date_array);
 		
-		deleteAllDescendantsIfExist($article, 'DIV.box.ad');
-		deleteAllDescendantsIfExist($article, 'SPAN.embed-photo-img-container');
-		deleteAllDescendantsIfExist($article, 'SPAN.embed-photo-square');
-		deleteAllDescendantsIfExist($article, 'comment');
-		deleteAllDescendantsIfExist($article, 'SPAN.page-header');
-		deleteAllDescendantsIfExist($article, 'DIV#nav-bar');
-		deleteAllDescendantsIfExist($article, 'SPAN.top-bg');
-		deleteAllDescendantsIfExist($article, 'SPAN#top-icon1');
-		deleteAllDescendantsIfExist($article, 'DIV#fb-root');
-		deleteAllDescendantsIfExist($article, 'FOOTER.page-footer');
-		deleteAllDescendantsIfExist($article, 'DIV.container.page-footer-main');
-		deleteAllDescendantsIfExist($article, 'ASIDE.embed-article-list');
-		deleteAllDescendantsIfExist($article, 'DIV.main-content.col-md-8.col-lg-8');
-		deleteAllDescendantsIfExist($article, 'SPAN.page-header');
-		deleteAllDescendantsIfExist($article, 'DIV#adBox625');
-		deleteAllDescendantsIfExist($article, 'FOOTER.article-footer');
-		deleteAllDescendantsIfExist($article, 'HEADER.article-header');
+		foreach_delete_element($article, 'DIV.box.ad');
+		foreach_delete_element($article, 'SPAN.embed-photo-img-container');
+		foreach_delete_element($article, 'SPAN.embed-photo-square');
+		foreach_delete_element($article, 'comment');
+		foreach_delete_element($article, 'SPAN.page-header');
+		foreach_delete_element($article, 'DIV#nav-bar');
+		foreach_delete_element($article, 'SPAN.top-bg');
+		foreach_delete_element($article, 'SPAN#top-icon1');
+		foreach_delete_element($article, 'DIV#fb-root');
+		foreach_delete_element($article, 'FOOTER.page-footer');
+		foreach_delete_element($article, 'DIV.container.page-footer-main');
+		foreach_delete_element($article, 'ASIDE.embed-article-list');
+		foreach_delete_element($article, 'DIV.main-content.col-md-8.col-lg-8');
+		foreach_delete_element($article, 'SPAN.page-header');
+		foreach_delete_element($article, 'DIV#adBox625');
+		foreach_delete_element($article, 'FOOTER.article-footer');
+		foreach_delete_element($article, 'HEADER.article-header');
 		$str = $article->save();
 		$article = str_get_html($str);
-		deleteAllDescendantsIfExist($article, 'script');
+		foreach_delete_element($article, 'script');
 
 		//Przesunięcie artykułu wyżej w drzewie
 		if (FALSE === is_null($container_outer = $article->find('DIV.container-outer', 0)) && FALSE === is_null($article_body = $article->find('DIV.article-body', 0)))
@@ -227,12 +227,12 @@ class TygodnikInteriaBridge extends BridgeAbstract {
 		);
 		$str = $article->save();
 		$article = str_get_html($str);
-		addStyle($article, 'P.article-lead', $lead_style);
-		addStyle($article, 'ASIDE[id^="embed-photo"]', getStylePhotoParent());
-		addStyle($article, 'DIV.embed-thumbnail', getStylePhotoImg());
-		addStyle($article, 'DIV.embed-work-detail', getStylePhotoCaption());
+		add_style($article, 'P.article-lead', $lead_style);
+		add_style($article, 'ASIDE[id^="embed-photo"]', getStylePhotoParent());
+		add_style($article, 'DIV.embed-thumbnail', getStylePhotoImg());
+		add_style($article, 'DIV.embed-work-detail', getStylePhotoCaption());
 		//https://tygodnik.interia.pl/news-kolejowy-efekt-motyla-jedna-zmiana-wplywa-na-cala-polske,nId,5029602
-		addStyle($article, 'BLOCKQUOTE', getStyleQuote());
+		add_style($article, 'BLOCKQUOTE', getStyleQuote());
 		//Ramka IG
 		//https://tygodnik.interia.pl/news-mowili-ze-boli-przez-stres-lata-blednych-diagnoz,nId,5029594
 		//https://tygodnik.interia.pl/news-z-bolu-nie-wiedzialam-co-robic-gryzlam-sciany-dominika-strac,nId,4984520

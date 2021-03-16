@@ -38,7 +38,7 @@ class MagazynWPBridge extends BridgeAbstract {
 		}
 		
 		$found_urls = $this->getArticlesUrls();
-//		var_dump_print($found_urls);
+//		print_var_dump($found_urls);
 //		$found_urls[] = 'https://wiadomosci.wp.pl/poprosil-o-ekstradycje-do-polski-dostal-70-dni-w-karcerze-polak-z-rosyjskiego-lagru-potrzebuje-pomocy-6604992688413312a';
 //		$found_urls[] = 'https://opinie.wp.pl/kataryna-zyjemy-w-okrutnym-swiecie-ale-aborcja-embriopatologiczna-musi-pozostac-opinia-6567085945505921a';
 		
@@ -100,7 +100,7 @@ class MagazynWPBridge extends BridgeAbstract {
 			$article_html = $article_html->parentNode();
 
 			//kategorie - tagi
-			$tags = returnTagsArray($article_html, 'A[class^="subjectsList"][href^="/tag/"]');
+			$tags = return_tags_array($article_html, 'A[class^="subjectsList"][href^="/tag/"]');
 
 			//usunięcie elementu z kategoriami
 			if (FALSE === is_null($header_element = $article_html->find('DIV[data-st-area="article-header"]', 0)))
@@ -138,13 +138,13 @@ class MagazynWPBridge extends BridgeAbstract {
 					$lead_element->nextSibling()->outertext = '';
 			}
 
-			deleteAllDescendantsIfExist($article_html, 'comment');
+			foreach_delete_element($article_html, 'comment');
 			//usuniecie elementu z reklamami w tresci
-			deleteAllDescendantsIfExist($article_html, '//div/div/div[count(*)=3][img[@class][@src]][*[count(*)=1]/*[count(*)=1]/*[count(*)=1]/*[count(*)=1]/*[count(*)=0]]');
+			foreach_delete_element($article_html, '//div/div/div[count(*)=3][img[@class][@src]][*[count(*)=1]/*[count(*)=1]/*[count(*)=1]/*[count(*)=1]/*[count(*)=0]]');
 			//usuniecie pustego elementu
-			deleteAllDescendantsIfExist($article_html, 'DIV[data-st-area="article-header"]');
+			foreach_delete_element($article_html, 'DIV[data-st-area="article-header"]');
 			//usuniecie niepotrzebnego elementu w leadzaie
-			deleteAllDescendantsIfExist($article_html, 'DIV.premium--full FIGURE SPAN DIV');
+			foreach_delete_element($article_html, 'DIV.premium--full FIGURE SPAN DIV');
 
 			//usunięcie ostatniego elementu z linkiem do dziejesie.wp.pl
 			foreach($article_html->find('DIV.article--text') as $article_text_element)
@@ -204,13 +204,13 @@ class MagazynWPBridge extends BridgeAbstract {
 			$lead_style = array(
 				'font-weight: bold;'
 			);
-			addStyle($article_html, 'DIV.article--lead', $lead_style);
+			add_style($article_html, 'DIV.article--lead', $lead_style);
 			//styl cytatu
-			addStyle($article_html, 'blockquote', getStyleQuote());
+			add_style($article_html, 'blockquote', getStyleQuote());
 			//styl holdera zdjęcia w treści i leadzie
-			addStyle($article_html, 'DIV.premium--wide.photo, DIV.premium--full FIGURE', getStylePhotoParent());
+			add_style($article_html, 'DIV.premium--wide.photo, DIV.premium--full FIGURE', getStylePhotoParent());
 			//styl zdjecia a treści i leadzie
-			addStyle($article_html, 'DIV.photo-holder, DIV.premium--full FIGURE SPAN[class]', getStylePhotoImg());
+			add_style($article_html, 'DIV.photo-holder, DIV.premium--full FIGURE SPAN[class]', getStylePhotoImg());
 
 			//podpis zdjęcia w jednym elemencie
 			foreach($article_html->find('SMALL.article--mainPhotoSource') as $small)
@@ -222,10 +222,10 @@ class MagazynWPBridge extends BridgeAbstract {
 					$span->outertext = '';
 				}
 				$span_text = trim(implode('; ', $span_array));
-				$span_text = removeSubstringIfExistsFirst($span_text, '; ');
+				$span_text = remove_substring_if_exists_first($span_text, '; ');
 				$small->innertext = '<span>'.$span_text.'</span>';
 			}
-			addStyle($article_html, 'SMALL.article--mainPhotoSource', getStylePhotoCaption());
+			add_style($article_html, 'SMALL.article--mainPhotoSource', getStylePhotoCaption());
 
 			//tytul
 			if (FALSE === is_null($title_element = $article_html->find('H1.article--title', 0)))
@@ -234,7 +234,7 @@ class MagazynWPBridge extends BridgeAbstract {
 			if (FALSE === is_null($date_element = $article_html->find('META[itemprop="datePublished"][content]', 0)))
 				$date = $date_element->getAttribute('content');
 			//autor
-			$author = returnAuthorsAsString($article_html, 'SPAN.signature--author');
+			$author = return_authors_as_string($article_html, 'SPAN.signature--author');
 
 //DIV.article--lead + DIV[class] + ASIDE[class] + DIV.article--text
 			
@@ -297,7 +297,7 @@ class MagazynWPBridge extends BridgeAbstract {
 			$lead_style = array(
 				'font-weight: bold;'
 			);
-			addStyle($article, 'DIV.article--lead.fb-quote', $lead_style);
+			add_style($article, 'DIV.article--lead.fb-quote', $lead_style);
 
 			//Fix zdjęć
 			foreach($article->find('IMG') as $photo_element)
@@ -319,20 +319,20 @@ class MagazynWPBridge extends BridgeAbstract {
 				}
 				$caption->innertext = $caption_text;
 			}
-			addStyle($article, 'figure', getStylePhotoParent());
-			addStyle($article, 'img', getStylePhotoImg());
-			addStyle($article, 'figcaption, DIV.foto-desc', getStylePhotoCaption());
+			add_style($article, 'figure', getStylePhotoParent());
+			add_style($article, 'img', getStylePhotoImg());
+			add_style($article, 'figcaption, DIV.foto-desc', getStylePhotoCaption());
 			//https://magazyn.wp.pl/ksiazki/artykul/zapomniana-epidemia
-			addStyle($article, 'blockquote', getStyleQuote());
+			add_style($article, 'blockquote', getStyleQuote());
 
-			deleteAllDescendantsIfExist($article, 'FIGURE.a--instream');
-			deleteAllDescendantsIfExist($article, 'SCRIPT');
-			deleteAllDescendantsIfExist($article, 'A[href="#"]');
-			deleteAllDescendantsIfExist($article, 'DIV.article--footer');
-			deleteAllDescendantsIfExist($article, 'DIV.socials');
-			deleteAllDescendantsIfExist($article, 'FIGURE.a--instream');
-			deleteAllDescendantsIfExist($article, 'SCRIPT');
-//			deleteAllDescendantsIfExist($article, '//div/div/div[count(*)=3][img[@class][@src]][*[count(*)=1]/*[count(*)=1]/*[count(*)=1]/*[count(*)=1]/*[count(*)=0]]');
+			foreach_delete_element($article, 'FIGURE.a--instream');
+			foreach_delete_element($article, 'SCRIPT');
+			foreach_delete_element($article, 'A[href="#"]');
+			foreach_delete_element($article, 'DIV.article--footer');
+			foreach_delete_element($article, 'DIV.socials');
+			foreach_delete_element($article, 'FIGURE.a--instream');
+			foreach_delete_element($article, 'SCRIPT');
+//			foreach_delete_element($article, '//div/div/div[count(*)=3][img[@class][@src]][*[count(*)=1]/*[count(*)=1]/*[count(*)=1]/*[count(*)=1]/*[count(*)=0]]');
 
 //			:xpath(//DIV[@class="opbox-listing"]//DIV//SECTION//H2[text()="Oferty promowane"]/following-sibling::ARTICLE | //DIV[@class="opbox-listing"]//DIV//SECTION//H2[text()="Oferty"]/preceding-sibling::ARTICLE)
 		}

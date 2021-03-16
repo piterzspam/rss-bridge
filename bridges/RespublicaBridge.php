@@ -59,17 +59,17 @@ class RespublicaBridge extends FeedExpander {
 		$article_page = getSimpleHTMLDOMCached($item['uri'], 86400 * 14);
 		$article = $article_page->find('DIV.container.container-fix.moon_post_container[post_id]', 0);
 		$this->fix_main_photo($article);
-		deleteAllDescendantsIfExist($article, 'comment');
-		deleteAllDescendantsIfExist($article, 'script');
-		deleteAllDescendantsIfExist($article, 'NOSCRIPT');
-		deleteAllDescendantsIfExist($article, 'DIV.main-column-social-icons');
-		deleteAllDescendantsIfExist($article, 'DIV[role="main"] DIV.row');
-		deleteAllDescendantsIfExist($article, 'DIV.social_bottom_container');
-		deleteAllDescendantsIfExist($article, 'ARTICLE[id^="post-"] DIV[style="clear:both;"]');
-		deleteAllDescendantsIfExist($article, 'DL.komentarze-w-akordeonie');
+		foreach_delete_element($article, 'comment');
+		foreach_delete_element($article, 'script');
+		foreach_delete_element($article, 'NOSCRIPT');
+		foreach_delete_element($article, 'DIV.main-column-social-icons');
+		foreach_delete_element($article, 'DIV[role="main"] DIV.row');
+		foreach_delete_element($article, 'DIV.social_bottom_container');
+		foreach_delete_element($article, 'ARTICLE[id^="post-"] DIV[style="clear:both;"]');
+		foreach_delete_element($article, 'DL.komentarze-w-akordeonie');
 		//https://publica.pl/teksty/ue-zawiodla-w-sprawie-szczepionek-68348.html
-		deleteAllAncestorsIfDescendantExists($article, 'FIGURE.figure', 'A[href*="publica.pl/produkt"]');
-		deleteAllAncestorsIfDescendantExists($article, 'FIGURE.figure', 'IMG[title^="Zadeklaruj 1%"]');
+		foreach_delete_element_containing_subelement($article, 'FIGURE.figure', 'A[href*="publica.pl/produkt"]');
+		foreach_delete_element_containing_subelement($article, 'FIGURE.figure', 'IMG[title^="Zadeklaruj 1%"]');
 		
 		$tags = array();
 		if (FALSE === is_null($tags_element = $article_page->find('META[name="keywords"][content]', 0)))
@@ -91,8 +91,8 @@ class RespublicaBridge extends FeedExpander {
 			$style_string = $article_element->getAttribute('style');
 			$style_string = str_replace('background-image:', '', $style_string);
 			$style_string = trim($style_string);
-			$style_string = removeSubstringIfExistsFirst($style_string, 'url(');
-			$style_string = removeSubstringIfExistsLast($style_string, ');');
+			$style_string = remove_substring_if_exists_first($style_string, 'url(');
+			$style_string = remove_substring_if_exists_last($style_string, ');');
 			$style_string = trim($style_string);
 			$img_src = $style_string;
 			$img_src = str_replace('\'', '', $img_src);

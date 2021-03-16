@@ -59,23 +59,23 @@ class KrytykaPolitycznaBridge extends FeedExpander {
 		$article_html = getSimpleHTMLDOMCached($item['uri'], 86400 * 14);
 		$article = $article_html->find('DIV#content', 0);
 		//tagi
-		$tags = returnTagsArray($article, 'DIV.single-post-tags A[rel="tag"]');
-		deleteAllDescendantsIfExist($article, 'DIV.single-post-tags');
+		$tags = return_tags_array($article, 'DIV.single-post-tags A[rel="tag"]');
+		foreach_delete_element($article, 'DIV.single-post-tags');
 
-		deleteAllDescendantsIfExist($article, 'SCRIPT');
-		deleteAllDescendantsIfExist($article, 'NOSCRIPT');
-		deleteAllDescendantsIfExist($article, 'LINK');
-		deleteAllDescendantsIfExist($article, 'DIV.entry-meta-footer');
-		deleteAllDescendantsIfExist($article, 'DIV.read-also');
-		deleteAllDescendantsIfExist($article, 'ASIDE.book-item.site-commerc');
-		deleteAllDescendantsIfExist($article, 'DIV.addthis_tool');
-		deleteAllDescendantsIfExist($article, 'DIV.article-donate-bottom');
-		deleteAllDescendantsIfExist($article, 'DIV[id^="kppromo"]');
-		deleteAllDescendantsIfExist($article, 'DIV.hidden-meta');
+		foreach_delete_element($article, 'SCRIPT');
+		foreach_delete_element($article, 'NOSCRIPT');
+		foreach_delete_element($article, 'LINK');
+		foreach_delete_element($article, 'DIV.entry-meta-footer');
+		foreach_delete_element($article, 'DIV.read-also');
+		foreach_delete_element($article, 'ASIDE.book-item.site-commerc');
+		foreach_delete_element($article, 'DIV.addthis_tool');
+		foreach_delete_element($article, 'DIV.article-donate-bottom');
+		foreach_delete_element($article, 'DIV[id^="kppromo"]');
+		foreach_delete_element($article, 'DIV.hidden-meta');
 		//https://krytykapolityczna.pl/nauka/psychologia/witkowski-bujany-fotel-z-wachlarzem-skad-wiemy-czy-psychoterapia-w-ogole-dziala/
-		deleteAllDescendantsIfExist($article, 'DIV.article-top-advertisement');
-		deleteAncestorIfChildMatches($article, array('BLOCKQUOTE', 'P', 'A[href^="https://krytykapolityczna.pl/"]'));
-		deleteAncestorIfChildMatches($article, array('DIV', 'A[href][rel="author"]'));
+		foreach_delete_element($article, 'DIV.article-top-advertisement');
+		foreach_delete_element_containing_elements_hierarchy($article, array('BLOCKQUOTE', 'P', 'A[href^="https://krytykapolityczna.pl/"]'));
+		foreach_delete_element_containing_elements_hierarchy($article, array('DIV', 'A[href][rel="author"]'));
 		
 		if (FALSE === is_null($date_created_element = $article->find('TIME.published', 0)))
 		{
@@ -93,8 +93,8 @@ class KrytykaPolitycznaBridge extends FeedExpander {
 		$this->fix_main_photo($article);
 		//https://krytykapolityczna.pl/swiat/jagpda-grondecka-afganistan-talibowie-chca-znow-rzadzic/
 		$this->fix_article_photos($article);
-		replaceAllBiggerOutertextWithSmallerOutertext($article, 'ASIDE.single-post-sidebar', 'SPAN.meta-date');
-		replaceAllBiggerOutertextWithSmallerOutertext($article, 'DIV.single-post-content-holder', 'DIV.single-post-content');
+		foreach_replace_outertext_with_subelement_outertext($article, 'ASIDE.single-post-sidebar', 'SPAN.meta-date');
+		foreach_replace_outertext_with_subelement_outertext($article, 'DIV.single-post-content-holder', 'DIV.single-post-content');
 		$article = str_get_html($article->save());
 		
 		//Fix zdjęcia autora
@@ -117,10 +117,10 @@ class KrytykaPolitycznaBridge extends FeedExpander {
 		}
 		//lead - https://krytykapolityczna.pl/kraj/galopujacy-major-aborcja-opozycjo-musisz-dac-kobietom-nadzieje/
 
-		addStyle($article, 'P.post-lead', array('font-weight: bold;'));
-		addStyle($article, 'FIGURE.photoWrapper', getStylePhotoParent());
-		addStyle($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
-		addStyle($article, 'FIGCAPTION', getStylePhotoCaption());
+		add_style($article, 'P.post-lead', array('font-weight: bold;'));
+		add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
+		add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
+		add_style($article, 'FIGCAPTION', getStylePhotoCaption());
 		$item['content'] = $article;
 		$item['categories'] = $tags;
 		return $item;

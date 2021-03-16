@@ -139,13 +139,13 @@ class ForsalBridge extends BridgeAbstract {
 			if(isset($photo_element->width)) $photo_element->width = NULL;
 			if(isset($photo_element->height)) $photo_element->height = NULL;
 		}
-		$this->deleteAllDescendantsIfExist($article, 'comment');
-		$this->deleteAllDescendantsIfExist($article, 'DIV.social-box');
-		$this->deleteAllDescendantsIfExist($article, 'amp-image-lightbox');
-		$this->deleteAllDescendantsIfExist($article, 'DIV.adBoxTop');
-		$this->deleteAllDescendantsIfExist($article, 'DIV.adBox');
-		$this->deleteAllDescendantsIfExist($article, 'DIV.widget.video');
-		$this->clearParagraphsFromTaglinks($article, 'P.hyphenate', array('/forsal\.pl\/tagi\//'));
+		$this->foreach_delete_element($article, 'comment');
+		$this->foreach_delete_element($article, 'DIV.social-box');
+		$this->foreach_delete_element($article, 'amp-image-lightbox');
+		$this->foreach_delete_element($article, 'DIV.adBoxTop');
+		$this->foreach_delete_element($article, 'DIV.adBox');
+		$this->foreach_delete_element($article, 'DIV.widget.video');
+		$this->clear_paragraphs_from_taglinks($article, 'P.hyphenate', array('/forsal\.pl\/tagi\//'));
 
 
 		$this->items[] = array(
@@ -156,7 +156,7 @@ class ForsalBridge extends BridgeAbstract {
 			'content' => $article
 		);
 	}
-	private function clearParagraphsFromTaglinks($article, $paragrapghSearchString, $regexArray)
+	private function clear_paragraphs_from_taglinks($article, $paragrapghSearchString, $regexArray)
 	{
 		foreach($article->find($paragrapghSearchString) as $paragraph)
 			foreach($paragraph->find('A') as $a_element)
@@ -224,32 +224,32 @@ class ForsalBridge extends BridgeAbstract {
 			return FALSE;
 	}
 
-	private function deleteDescendantIfExists($ancestor, $descendant_string)
+	private function single_delete_element_containing_subelement($ancestor, $descendant_string)
 	{
 		if (FALSE === is_null($descendant = $ancestor->find($descendant_string, 0)))
 			$descendant->outertext = '';
 	}
 
-	private function deleteAncestorIfDescendantExists($ancestor, $descendant_string)
+	private function single_delete_subelement($ancestor, $descendant_string)
 	{
 		if (FALSE === is_null($descendant = $ancestor->find($descendant_string, 0)))
 			$ancestor->outertext = '';
 	}
 
-	private function deleteAncestorIfContainsText($ancestor, $descendant_string)
+	private function single_delete_element_containing_text($ancestor, $descendant_string)
 	{
 		if (FALSE === is_null($ancestor))
 			if (FALSE !== strpos($ancestor->plaintext, $descendant_string))
 				$ancestor->outertext = '';
 	}
 
-	private function deleteAllDescendantsIfExist($ancestor, $descendant_string)
+	private function foreach_delete_element($ancestor, $descendant_string)
 	{
 		foreach($ancestor->find($descendant_string) as $descendant)
 			$descendant->outertext = '';
 	}
 
-	private function deleteAncestorIfChildMatches($element, $hierarchy)
+	private function foreach_delete_element_containing_elements_hierarchy($element, $hierarchy)
 	{
 		$last = count($hierarchy)-1;
 		$counter = 0;
@@ -269,7 +269,7 @@ class ForsalBridge extends BridgeAbstract {
 		}
 	}
 
-	private function redirectUrl($url)
+	private function get_proxy_url($url)
 	{
 		$twitter_proxy = 'nitter.net';
 		$instagram_proxy = 'bibliogram.art';

@@ -58,7 +58,7 @@ class TygodnikPowszechnyBridge extends FeedExpander {
 		}
 		$article_page = getSimpleHTMLDOMCached($item['uri'], 86400 * 14);
 		$article_post = $article_page->find('DIV.view-full-article', 0);
-		deleteAllDescendantsIfExist($article_post, 'DIV.views-field.views-field-body-1');
+		foreach_delete_element($article_post, 'DIV.views-field.views-field-body-1');
 
 		$article_post = str_get_html($article_post->save());
 
@@ -68,7 +68,7 @@ class TygodnikPowszechnyBridge extends FeedExpander {
 		$lead_style = array(
 			'font-weight: bold;'
 		);
-		addStyle($article_post, 'DIV.views-field-field-summary', $lead_style);
+		add_style($article_post, 'DIV.views-field-field-summary', $lead_style);
 		
 		$item['content'] = $article_post;
 		return $item;
@@ -108,10 +108,10 @@ class TygodnikPowszechnyBridge extends FeedExpander {
 			
 			$main_image->parent->parent->outertext = $new_element;
 			
-//			element_print($main_image, "main_image", "<br>");
-//			element_print($new_element, "new_element", "<br>");
-//			element_print($date, "date_element", "<br>");
-//			var_dump_print($date);
+//			print_element($main_image, "main_image", "<br>");
+//			print_element($new_element, "new_element", "<br>");
+//			print_element($date, "date_element", "<br>");
+//			print_var_dump($date);
 		}
 	}
 

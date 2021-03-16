@@ -51,7 +51,7 @@ class TygodnikPolsatNewsBridge extends BridgeAbstract {
 		
 		$this->setGlobalArticlesParams();
 		$found_urls = $this->getArticlesUrls();
-//		var_dump_print($found_urls);
+//		print_var_dump($found_urls);
 		foreach($found_urls as $url)
 		{
 			$this->addArticle($url);
@@ -183,17 +183,17 @@ class TygodnikPolsatNewsBridge extends BridgeAbstract {
 
 		foreach($article->find('p') as $paragraph)
 		{
-			deleteAncestorIfDescendantExists($paragraph, 'SPAN.article__more');
-			deleteAncestorIfContainsText($paragraph, 'ZOBACZ: ');
+			single_delete_subelement($paragraph, 'SPAN.article__more');
+			single_delete_element_containing_text($paragraph, 'ZOBACZ: ');
 		}
 
-		deleteAllDescendantsIfExist($article, 'SCRIPT');
-		deleteAllDescendantsIfExist($article, 'UL.menu__list');
-		deleteAllDescendantsIfExist($article, 'DIV.article__comments');
-		deleteAllDescendantsIfExist($article, 'DIV.article__related');
-		deleteAllDescendantsIfExist($article, 'DIV.article__share');
-		deleteAllDescendantsIfExist($article, 'DIV#fb-root');
-		deleteAncestorIfChildMatches($article, array('A', 'STRONG', 'SPAN.article__more'));
+		foreach_delete_element($article, 'SCRIPT');
+		foreach_delete_element($article, 'UL.menu__list');
+		foreach_delete_element($article, 'DIV.article__comments');
+		foreach_delete_element($article, 'DIV.article__related');
+		foreach_delete_element($article, 'DIV.article__share');
+		foreach_delete_element($article, 'DIV#fb-root');
+		foreach_delete_element_containing_elements_hierarchy($article, array('A', 'STRONG', 'SPAN.article__more'));
 
 		foreach($article->find('amp-img, img') as $photo_element)
 		{
@@ -234,14 +234,14 @@ class TygodnikPolsatNewsBridge extends BridgeAbstract {
 		$lead_style = array(
 			'font-weight: bold;'
 		);
-		addStyle($article, 'DIV.article__preview', $lead_style);
+		add_style($article, 'DIV.article__preview', $lead_style);
 		//https://tygodnik.polsatnews.pl/news/2021-01-23/kiedys-bano-sie-zbydlecenia-dzis-mikroczipow/
-		addStyle($article, 'FIGURE.article__figure, FIGURE.article-image', getStylePhotoParent());
-		addStyle($article, 'IMG.article__img, DIV.article-image-wrap', getStylePhotoImg());
+		add_style($article, 'FIGURE.article__figure, FIGURE.article-image', getStylePhotoParent());
+		add_style($article, 'IMG.article__img, DIV.article-image-wrap', getStylePhotoImg());
 		//https://tygodnik.polsatnews.pl/news/2021-01-30/sladami-maurow-na-polwyspie-iberyjskim/
-		addStyle($article, 'DIV.article__source, FIGCAPTION.article-image-capition, SPAN.article-image-src', getStylePhotoCaption());
+		add_style($article, 'DIV.article__source, FIGCAPTION.article-image-capition, SPAN.article-image-src', getStylePhotoCaption());
 		//https://tygodnik.polsatnews.pl/news/2021-01-30/sladami-maurow-na-polwyspie-iberyjskim/
-		addStyle($article, 'BLOCKQUOTE', getStyleQuote());
+		add_style($article, 'BLOCKQUOTE', getStyleQuote());
 
 		$this->items[] = array(
 			'uri' => $url_article,

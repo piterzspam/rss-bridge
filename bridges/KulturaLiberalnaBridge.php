@@ -59,17 +59,17 @@ class KulturaLiberalnaBridge extends FeedExpander {
 		$article_page = getSimpleHTMLDOMCached($item['uri'], 86400 * 14);
 		$article_post = $article_page->find('ARTICLE[id^="post-"]', 0);
 		
-		deleteAllDescendantsIfExist($article_post, 'script');
-		deleteAllDescendantsIfExist($article_post, 'DIV.kl-10lat-box');
-		deleteAllDescendantsIfExist($article_post, 'DIV.go-to-comments');
-		deleteAllDescendantsIfExist($article_post, 'DIV.nr-info');
-		deleteAllDescendantsIfExist($article_post, 'DIV.more-in-number-container');
-		deleteAllDescendantsIfExist($article_post, 'DIV.fb-comm');
-		deleteAllDescendantsIfExist($article_post, 'P.section-name.mobile-section-name');
+		foreach_delete_element($article_post, 'script');
+		foreach_delete_element($article_post, 'DIV.kl-10lat-box');
+		foreach_delete_element($article_post, 'DIV.go-to-comments');
+		foreach_delete_element($article_post, 'DIV.nr-info');
+		foreach_delete_element($article_post, 'DIV.more-in-number-container');
+		foreach_delete_element($article_post, 'DIV.fb-comm');
+		foreach_delete_element($article_post, 'P.section-name.mobile-section-name');
 		//https://kulturaliberalna.pl/2021/01/12/cena-osobnosci-nie-jest-wysoka-na-razie/
-		deleteAllDescendantsIfExist($article_post, 'DIV.promobox');
-		$tags = returnTagsArray($article_post, 'DIV.post-tags A');
-		$author = returnAuthorsAsString($article_post, 'DIV.article-footer H2');
+		foreach_delete_element($article_post, 'DIV.promobox');
+		$tags = return_tags_array($article_post, 'DIV.post-tags A');
+		$author = return_authors_as_string($article_post, 'DIV.article-footer H2');
 
 		foreach($article_post->find('DIV[id^="attachment_"]') as $attachment_element)
 		{
@@ -84,10 +84,10 @@ class KulturaLiberalnaBridge extends FeedExpander {
 			if(isset($photo_element->sizes)) $photo_element->sizes = NULL;
 		}
 //https://kulturaliberalna.pl/2021/01/26/dlaczego-maly-sklepik-jest-otwarty-a-duza-restauracja-zamknieta-latwiej-zarazic-sie-w-sklepiku/
-		addStyle($article_post, 'blockquote', getStyleQuote());
-		addStyle($article_post, 'DIV[id^="attachment_"]', getStylePhotoParent());
-		addStyle($article_post, 'IMG[class^="wp-image-"]', getStylePhotoImg());
-		addStyle($article_post, 'P.wp-caption-text', getStylePhotoCaption());
+		add_style($article_post, 'blockquote', getStyleQuote());
+		add_style($article_post, 'DIV[id^="attachment_"]', getStylePhotoParent());
+		add_style($article_post, 'IMG[class^="wp-image-"]', getStylePhotoImg());
+		add_style($article_post, 'P.wp-caption-text', getStylePhotoCaption());
 		$str = $article_post->save();
 		$article_post = str_get_html($str);
 

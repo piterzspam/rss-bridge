@@ -94,17 +94,17 @@ class DziennikBridge extends BridgeAbstract {
 		$title = trim($article_data_parsed["headline"]);
 		$author = trim($article_data_parsed["author"]["name"]);
 
-		$this->deleteAllDescendantsIfExist($article, 'comment');
-		$this->deleteAllDescendantsIfExist($article, 'script');
-		$this->deleteAllDescendantsIfExist($article, 'DIV.social-box');
-		$this->deleteAllDescendantsIfExist($article, 'DIV#lightbox');
-		$this->deleteAllDescendantsIfExist($article, 'DIV#lightbox2');
-		$this->deleteAllDescendantsIfExist($article, 'DIV.adBoxTop');
-		$this->deleteAllDescendantsIfExist($article, 'DIV.adBox');
-		$this->deleteAllDescendantsIfExist($article, 'DIV.widget.video');
-		$this->deleteAllDescendantsIfExist($article, 'amp-analytics');
-		$this->deleteAllDescendantsIfExist($article, 'DIV.listArticle');
-		$this->clearParagraphsFromTaglinks($article, 'P.hyphenate', array('/dziennik\.pl\/tagi\//'));
+		$this->foreach_delete_element($article, 'comment');
+		$this->foreach_delete_element($article, 'script');
+		$this->foreach_delete_element($article, 'DIV.social-box');
+		$this->foreach_delete_element($article, 'DIV#lightbox');
+		$this->foreach_delete_element($article, 'DIV#lightbox2');
+		$this->foreach_delete_element($article, 'DIV.adBoxTop');
+		$this->foreach_delete_element($article, 'DIV.adBox');
+		$this->foreach_delete_element($article, 'DIV.widget.video');
+		$this->foreach_delete_element($article, 'amp-analytics');
+		$this->foreach_delete_element($article, 'DIV.listArticle');
+		$this->clear_paragraphs_from_taglinks($article, 'P.hyphenate', array('/dziennik\.pl\/tagi\//'));
 
 		foreach($article->find('amp-img') as $ampimg)
 			$ampimg->tag = "img";
@@ -134,7 +134,7 @@ class DziennikBridge extends BridgeAbstract {
 		);
 	}
 
-	private function clearParagraphsFromTaglinks($article, $paragrapghSearchString, $regexArray)
+	private function clear_paragraphs_from_taglinks($article, $paragrapghSearchString, $regexArray)
 	{
 		foreach($article->find($paragrapghSearchString) as $paragraph)
 			foreach($paragraph->find('A') as $a_element)
@@ -214,32 +214,32 @@ class DziennikBridge extends BridgeAbstract {
 			return FALSE;
 	}
 
-	private function deleteDescendantIfExists($ancestor, $descendant_string)
+	private function single_delete_element_containing_subelement($ancestor, $descendant_string)
 	{
 		if (FALSE === is_null($descendant = $ancestor->find($descendant_string, 0)))
 			$descendant->outertext = '';
 	}
 
-	private function deleteAncestorIfDescendantExists($ancestor, $descendant_string)
+	private function single_delete_subelement($ancestor, $descendant_string)
 	{
 		if (FALSE === is_null($descendant = $ancestor->find($descendant_string, 0)))
 			$ancestor->outertext = '';
 	}
 
-	private function deleteAncestorIfContainsText($ancestor, $descendant_string)
+	private function single_delete_element_containing_text($ancestor, $descendant_string)
 	{
 		if (FALSE === is_null($ancestor))
 			if (FALSE !== strpos($ancestor->plaintext, $descendant_string))
 				$ancestor->outertext = '';
 	}
 
-	private function deleteAllDescendantsIfExist($ancestor, $descendant_string)
+	private function foreach_delete_element($ancestor, $descendant_string)
 	{
 		foreach($ancestor->find($descendant_string) as $descendant)
 			$descendant->outertext = '';
 	}
 
-	private function deleteAncestorIfChildMatches($element, $hierarchy)
+	private function foreach_delete_element_containing_elements_hierarchy($element, $hierarchy)
 	{
 		$last = count($hierarchy)-1;
 		$counter = 0;
@@ -259,7 +259,7 @@ class DziennikBridge extends BridgeAbstract {
 		}
 	}
 
-	private function redirectUrl($url)
+	private function get_proxy_url($url)
 	{
 		$twitter_proxy = 'nitter.net';
 		$instagram_proxy = 'bibliogram.art';

@@ -59,9 +59,9 @@ class OSWBridge extends FeedExpander {
 		$article_page = getSimpleHTMLDOMCached($item['uri'], 86400 * 14);
 		$article = $article_page->find('ARTICLE.publikacje[role="article"]', 0);
 		$this->fix_main_photo($article);
-		deleteAllDescendantsIfExist($article, 'comment');
-		deleteAllDescendantsIfExist($article, 'script');
-		deleteAllDescendantsIfExist($article, 'NOSCRIPT');
+		foreach_delete_element($article, 'comment');
+		foreach_delete_element($article, 'script');
+		foreach_delete_element($article, 'NOSCRIPT');
 
 		//https://www.osw.waw.pl/pl/publikacje/komentarze-osw/2021-03-02/przeciaganie-grenlandii-dania-usa-i-chiny-na-lodowej-wyspie
 		$this->fix_article_photos_sources($article);
@@ -78,7 +78,7 @@ class OSWBridge extends FeedExpander {
 		$date = "";
 		if (FALSE === is_null($date_element = $article_page->find('META[property="article:published_time"][content]', 0)))
 		{
-//			element_print($date_element, "date_element", "<br>");
+//			print_element($date_element, "date_element", "<br>");
 			$date = $date_element->getAttribute('content');
 		}
 		
@@ -110,8 +110,8 @@ class OSWBridge extends FeedExpander {
 			$style_string = $article_element->getAttribute('style');
 			$style_string = str_replace('background-image:', '', $style_string);
 			$style_string = trim($style_string);
-			$style_string = removeSubstringIfExistsFirst($style_string, 'url(');
-			$style_string = removeSubstringIfExistsLast($style_string, ');');
+			$style_string = remove_substring_if_exists_first($style_string, 'url(');
+			$style_string = remove_substring_if_exists_last($style_string, ');');
 			$style_string = trim($style_string);
 			$img_src = $style_string;
 			$img_src = str_replace('\'', '', $img_src);

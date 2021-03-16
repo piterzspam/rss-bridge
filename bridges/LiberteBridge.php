@@ -146,7 +146,7 @@ class LiberteBridge extends BridgeAbstract {
 	{
 		$GLOBALS['limit'] = $this->getInput('limit');
 		$found_urls = $this->getArticlesUrlsIssues();
-//		var_dump_print($found_urls);
+//		print_var_dump($found_urls);
 		foreach($found_urls as $url)
 			$this->addArticle($url);
 	}
@@ -184,7 +184,7 @@ class LiberteBridge extends BridgeAbstract {
 				}
 			}
 		}
-//		var_dump_print($articles_urls);
+//		print_var_dump($articles_urls);
 		return $articles_urls;
 	}
 
@@ -209,9 +209,9 @@ class LiberteBridge extends BridgeAbstract {
 			$title = trim($title_element->plaintext);
 		}
 		//autor
-		$author = returnAuthorsAsString($article, 'DIV.entry-autor H5 A.big.black.bold[href*="/author/"]');
+		$author = return_authors_as_string($article, 'DIV.entry-autor H5 A.big.black.bold[href*="/author/"]');
 		//tagi
-		$tags = returnTagsArray($article, 'DIV.entry-autor A.light[href*="/tag/"]');	
+		$tags = return_tags_array($article, 'DIV.entry-autor A.light[href*="/tag/"]');	
 		if (FALSE === is_null($category_element = $article_html->find('META[property="article:section"][content]', 0)))
 		{
 			$tags[] = $category_element->getAttribute('content');
@@ -220,11 +220,11 @@ class LiberteBridge extends BridgeAbstract {
 		$date = "";
 		if (FALSE === is_null($date_element = $article_html->find('META[property="article:published_time"][content]', 0)))
 		{
-//			element_print($date_element, "date_element", "<br>");
+//			print_element($date_element, "date_element", "<br>");
 			$date = $date_element->getAttribute('content');
 		}
-//		element_print($date, "date_element", "<br>");
-//		var_dump_print($date);
+//		print_element($date, "date_element", "<br>");
+//		print_var_dump($date);
 
 		if (FALSE === is_null($header = $article->find('SECTION.single-top', 0)) && FALSE === is_null($article_text = $article->find('DIV.margin-bottom30 DIV.row', 0)))
 		{
@@ -232,15 +232,15 @@ class LiberteBridge extends BridgeAbstract {
 		}
 
 		$article = str_get_html($article->save());
-		deleteAllDescendantsIfExist($article, 'DIV[data-sticky-container]');
-		deleteAllDescendantsIfExist($article, 'DIV.single-bottom.border-top.padding-top30');
-		deleteAllDescendantsIfExist($article, 'DIV.show-for-large');
-		deleteAllAncestorsIfDescendantExists($article, 'DIV.row', 'DIV#disqus_thread');
+		foreach_delete_element($article, 'DIV[data-sticky-container]');
+		foreach_delete_element($article, 'DIV.single-bottom.border-top.padding-top30');
+		foreach_delete_element($article, 'DIV.show-for-large');
+		foreach_delete_element_containing_subelement($article, 'DIV.row', 'DIV#disqus_thread');
 		$article = str_get_html($article->save());
-		replaceAllBiggerOutertextWithSmallerInnertext($article, 'DIV#anchor-link', 'DIV.flexible');
-		replaceAllBiggerOutertextWithSmallerOutertext($article, 'DIV.large-8.medium-12.small-12.columns.text-center', 'H1');
-		replaceAllBiggerOutertextWithSmallerInnertext($article, 'DIV.large-8.medium-12.small-12.columns', 'DIV.row.collapse.align-middle.entry-autor');
-		replaceAllBiggerOutertextWithSmallerInnertext($article, 'qqqqqqqqqqqqqqqq', 'qqqqqqqqqqqqqqqq');
+		foreach_replace_outertext_with_subelement_innertext($article, 'DIV#anchor-link', 'DIV.flexible');
+		foreach_replace_outertext_with_subelement_outertext($article, 'DIV.large-8.medium-12.small-12.columns.text-center', 'H1');
+		foreach_replace_outertext_with_subelement_innertext($article, 'DIV.large-8.medium-12.small-12.columns', 'DIV.row.collapse.align-middle.entry-autor');
+		foreach_replace_outertext_with_subelement_innertext($article, 'qqqqqqqqqqqqqqqq', 'qqqqqqqqqqqqqqqq');
 
 
 		$article = str_get_html($article->save());
@@ -259,10 +259,10 @@ class LiberteBridge extends BridgeAbstract {
 		}
 
 		$article = str_get_html($article->save());
-		addStyle($article, 'FIGURE.photoWrapper', getStylePhotoParent());
-		addStyle($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
-		addStyle($article, 'FIGCAPTION', getStylePhotoCaption());
-		addStyle($article, 'BLOCKQUOTE', getStyleQuote());
+		add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
+		add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
+		add_style($article, 'FIGCAPTION', getStylePhotoCaption());
+		add_style($article, 'BLOCKQUOTE', getStyleQuote());
 		$article = str_get_html($article->save());
 
 		$this->items[] = array(
@@ -282,8 +282,8 @@ class LiberteBridge extends BridgeAbstract {
 			$style_string = $article_element->getAttribute('style');
 			$style_string = str_replace('background-image:', '', $style_string);
 			$style_string = trim($style_string);
-			$style_string = removeSubstringIfExistsFirst($style_string, 'url(');
-			$style_string = removeSubstringIfExistsLast($style_string, ');');
+			$style_string = remove_substring_if_exists_first($style_string, 'url(');
+			$style_string = remove_substring_if_exists_last($style_string, ');');
 			$style_string = trim($style_string);
 			$img_src = $style_string;
 			$new_outertext = '<figure class="photoWrapper mainPhoto"><img src="'.$img_src.'"></figure>';

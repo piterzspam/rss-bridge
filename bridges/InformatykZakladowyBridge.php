@@ -58,9 +58,9 @@ class InformatykZakladowyBridge extends FeedExpander {
 		}
 		$articlePage = getSimpleHTMLDOMCached($item['uri'], 86400 * 14);
 		$article = $articlePage->find('MAIN#site-content', 0);
-		deleteAllDescendantsIfExist($article, 'DIV.comments-wrapper');
-		deleteAllDescendantsIfExist($article, 'comment');
-		deleteAllDescendantsIfExist($article, 'script');
+		foreach_delete_element($article, 'DIV.comments-wrapper');
+		foreach_delete_element($article, 'comment');
+		foreach_delete_element($article, 'script');
 
 		foreach($article->find('img') as $photo_element)
 		{

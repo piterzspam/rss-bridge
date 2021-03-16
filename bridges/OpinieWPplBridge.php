@@ -41,7 +41,7 @@ class OpinieWPplBridge extends BridgeAbstract {
 		}
 
 		$found_urls = $this->getArticlesUrls();
-//		var_dump_print($found_urls);
+//		print_var_dump($found_urls);
 
 //		$found_urls[] = 'https://opinie.wp.pl/kataryna-chcialabym-umiec-sie-tym-bawic-gdyby-to-nie-bylo-takie-grozne-6150491372804225a';
 //		$found_urls[] = 'https://opinie.wp.pl/zakazac-demonstracji-onr-kataryna-problemy-z-demokracja-6119008400492673a';
@@ -119,39 +119,39 @@ class OpinieWPplBridge extends BridgeAbstract {
 		$title = trim($article_data_parsed["headline"]);
 		$author = $article->find('P[data-st-area="Autor"] SPAN.uppercase', 0)->plaintext;
 		$author = str_replace(',', '', $author);
-		$tags = returnTagsArray($article, 'P.text-grey.tags SPAN A[href*="/tag/"]');
+		$tags = return_tags_array($article, 'P.text-grey.tags SPAN A[href*="/tag/"]');
 		//Zduplikowane zdjęcie pod "Spotkania z kumplami": https://opinie.wp.pl/wielka-zmiana-mezczyzn-wirus-ja-tylko-przyspieszyl-6604913984391297a?amp=1&_js_v=0.1
-		deleteAllDescendantsIfExist($article, 'AMP-IMG[src] IMG');
-		deleteAllDescendantsIfExist($article, 'DIV.ad');
-		deleteAllDescendantsIfExist($article, 'P.tags');
-		deleteAllDescendantsIfExist($article, 'comment');
-		deleteAllDescendantsIfExist($article, 'AMP-SOCIAL-SHARE');
-		deleteAllDescendantsIfExist($article, 'SECTION.recommendations');
-		deleteAllDescendantsIfExist($article, 'DIV.seolinks');
-		deleteAllDescendantsIfExist($article, 'A.comment-button');
-		deleteAllDescendantsIfExist($article, 'FOOTER#footer');
-		deleteAllDescendantsIfExist($article, 'amp-video-iframe');
+		foreach_delete_element($article, 'AMP-IMG[src] IMG');
+		foreach_delete_element($article, 'DIV.ad');
+		foreach_delete_element($article, 'P.tags');
+		foreach_delete_element($article, 'comment');
+		foreach_delete_element($article, 'AMP-SOCIAL-SHARE');
+		foreach_delete_element($article, 'SECTION.recommendations');
+		foreach_delete_element($article, 'DIV.seolinks');
+		foreach_delete_element($article, 'A.comment-button');
+		foreach_delete_element($article, 'FOOTER#footer');
+		foreach_delete_element($article, 'amp-video-iframe');
 		//https://opinie.wp.pl/zakazac-demonstracji-onr-kataryna-problemy-z-demokracja-6119008400492673a?amp=1&_js_v=0.1
 		//https://opinie.wp.pl/apel-o-zawieszenie-stosunkow-dyplomatycznych-z-polska-kataryna-jestem-wsciekla-6222729167030401a?amp=1&_js_v=0.1
 		//https://opinie.wp.pl/kataryna-kaczynski-stawia-na-dude-6213466100516481a?amp=1&_js_v=0.1
-		deleteAncestorIfContainsTextForEach($article, 'P, H2', array( 'Masz newsa, zdjęcie lub filmik? Prześlij nam przez', 'dla WP Opinie', 'Zobacz też: ', 'Zobacz też - ', 'Źródło: opinie.wp.pl', 'Czytaj także:', 'Zobacz także:'));
+		foreach_delete_element_containing_text_from_array($article, 'P, H2', array( 'Masz newsa, zdjęcie lub filmik? Prześlij nam przez', 'dla WP Opinie', 'Zobacz też: ', 'Zobacz też - ', 'Źródło: opinie.wp.pl', 'Czytaj także:', 'Zobacz także:'));
 		$this->removeVideoTitles($article);
 
 //		$article = str_get_html($article->save());
-		fixAmpArticles($article);
+		format_amp_article($article);
 		$article = str_get_html($article->save());
 
-		formatAmpLinks($article);
+		format_amp_links($article);
 
 		fix_article_photos($article, 'DIV.header-image-container', TRUE, 'src', 'DIV.header-author');
 		fix_article_photos($article, 'DIV.photo.from.amp', FALSE, 'src', 'FIGCAPTION');
 
 		$article = str_get_html($article->save());
 		//https://opinie.wp.pl/kataryna-zyjemy-w-okrutnym-swiecie-ale-aborcja-embriopatologiczna-musi-pozostac-opinia-6567085945505921a?amp=1&_js_v=0.1
-		addStyle($article, 'FIGURE.photoWrapper', getStylePhotoParent());
-		addStyle($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
-		addStyle($article, 'FIGCAPTION', getStylePhotoCaption());
-		addStyle($article, 'BLOCKQUOTE', getStyleQuote());
+		add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
+		add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
+		add_style($article, 'FIGCAPTION', getStylePhotoCaption());
+		add_style($article, 'BLOCKQUOTE', getStyleQuote());
 
 		$url_article = str_replace('https://opinie-wp-pl.cdn.ampproject.org/v/s/', 'https://', $url_article);
 		$this->items[] = array(
@@ -183,7 +183,7 @@ class OpinieWPplBridge extends BridgeAbstract {
 			}
 			else
 			{
-				$GLOBALS['author_name'] = getTextPlaintext($html_articles_list, 'H1.author--name', "");
+				$GLOBALS['author_name'] = get_text_plaintext($html_articles_list, 'H1.author--name', "");
 				foreach($found_hrefs as $href_element)
 				{
 					if(isset($href_element->href))

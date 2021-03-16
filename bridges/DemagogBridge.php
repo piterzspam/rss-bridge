@@ -194,21 +194,19 @@ class DemagogBridge extends BridgeAbstract {
 			return;
 		}
 		$article_html = $returned_array['html'];
+		replace_attribute($article_html, 'IMG[src^="data:image/"][data-src^="http"]', 'src', 'data-src');
+		fix_all_photos($article_html);
+		fix_all_iframes($article_html);
 
 		$article_html->outertext = str_replace("&nbsp;", '', $article_html->outertext);
 		$article = $article_html->find('MAIN[role="main"] DIV.container', 0);
-		$article = str_get_html($article->save());
 
 		//tytuł
-		$title = "";
-		if (FALSE === is_null($title_element = $article_html->find('TITLE', 0)))
-			$title = trim($title_element->plaintext);
-		else
-			$title = $url;
+		$title = get_text_plaintext($article, 'H1.w-100.mb-1', $url);
 		//autor
 		$author = "Demagog";
 		//tagi
-		$tags = returnTagsArray($article, 'DIV.tags A[href]');
+		$tags = return_tags_array($article, 'DIV.tags A[href]');
 		//data
 		$date = "";
 		if (FALSE === is_null($article_data = $article_html->find('SCRIPT.yoast-schema-graph', 0)))
@@ -221,32 +219,28 @@ class DemagogBridge extends BridgeAbstract {
 		}
 		if ("" === $date || is_null($date))
 		{
-			$date = getTextAttribute($article_html, 'META[property="article:modified_time"][content]', 'content', "");
+			$date = get_text_from_attribute($article_html, 'META[property="article:modified_time"][content]', 'content', "");
 		}
 
-		deleteAllDescendantsIfExist($article, 'DIV#share-fact');
-		deleteAllDescendantsIfExist($article, 'DIV.row-custom.blue.mb-3.pb-2 P[!class]');
-		deleteAllDescendantsIfExist($article, 'DIV.breadcrumbs');
-		deleteAllDescendantsIfExist($article, 'DIV.mb-5.d-none.d-md-flex');
-		$article = str_get_html($article->save());
-		replaceAllOutertextWithInnertext($article, 'DIV.row-custom.blue.mb-3.pb-2');
-		replaceAllOutertextWithInnertext($article, 'DIV.mb-5.pb-3.count-text');
-		$article = str_get_html($article->save());
+		foreach_delete_element($article, 'DIV#share-fact');
+		foreach_delete_element($article, 'DIV.row-custom.blue.mb-3.pb-2 P[!class]');
+		foreach_delete_element($article, 'DIV.breadcrumbs');
+		foreach_delete_element($article, 'DIV.mb-5.d-none.d-md-flex');
+		foreach_replace_outertext_with_innertext($article, 'DIV.row-custom.blue.mb-3.pb-2');
+		foreach_replace_outertext_with_innertext($article, 'DIV.mb-5.pb-3.count-text');
+//		foreach_delete_element($article, 'NOSCRIPT');
 		//https://demagog.org.pl/wypowiedzi/ilu-wnioskow-o-skargi-nadzwyczajne-wciaz-nie-rozpatrzono/
 		fix_article_photos($article, 'DIV[id^="attachment_"], IMG.alignnone', FALSE, 'src', 'P.wp-caption-text');
 		fix_article_photos($article, 'DIV.col-12.mb-4.px-0.w-img-100', TRUE);
-		$article = str_get_html($article->save());
 		foreach($article->find('DIV.important-text') as $quote_element)
 		{
 			$new_outertext = '<blockquote>'.$quote_element->innertext.'</blockquote>';
 			$quote_element->outertext = $new_outertext;
 		}
-		$article = str_get_html($article->save());
-		addStyle($article, 'FIGURE.photoWrapper', getStylePhotoParent());
-		addStyle($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
-		addStyle($article, 'FIGCAPTION', getStylePhotoCaption());
-		addStyle($article, 'BLOCKQUOTE', getStyleQuote());
-		$article = str_get_html($article->save());
+		add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
+		add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
+		add_style($article, 'FIGCAPTION', getStylePhotoCaption());
+		add_style($article, 'BLOCKQUOTE', getStyleQuote());
 
 		$this->items[] = array(
 			'uri' => $url,

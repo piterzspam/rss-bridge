@@ -1,18 +1,18 @@
 <?php
 
-	function var_dump_print($variable, $name = "nazwa zmiennej", $prefix = "<br>")
+	function print_var_dump($variable, $name = "nazwa zmiennej", $prefix = "<br>")
 	{
 		echo $prefix;
 		echo "Var dump zmiennej $name: <br><pre>"; var_dump($variable); echo "</pre>";
 	}
 
-	function html_print($variable, $name = "nazwa zmiennej", $prefix = "<br>")
+	function print_html($variable, $name = "nazwa zmiennej", $prefix = "<br>")
 	{
 		echo $prefix;
 		echo "Kod html zmiennej $name: <br><pre>".htmlspecialchars($variable)."</pre><br><br>";
 	}
 
-	function element_print($element, $name = "nazwa zmiennej", $prefix = "<br>")
+	function print_element($element, $name = "nazwa zmiennej", $prefix = "<br>")
 	{
 		echo $prefix;
 		echo "Element $name:<br>$element<br><br>";
@@ -31,22 +31,18 @@
 	{
 		return array(
 			'vertical-align: bottom;',
-//			'margin-bottom: 10px;'
 		);
 	}
 
 	function getStylePhotoCaption()
 	{
 		return array(
-//			'position: absolute;',
 			'bottom: 0;',
 			'left: 0;',
 			'right: 0;',
 			'text-align: center;',
 			'color: #fff;',
-//			'padding-top: 10px;',
 			'padding-right: 10px;',
-//			'padding-bottom: 10px;',
 			'padding-left: 10px;',
 			'background-color: rgba(0, 0, 0, 0.7);'
 		);
@@ -78,19 +74,19 @@
 		);
 	}
 
-	function fixAmpArticles($article)
+	function format_amp_article($main)
 	{
-		deleteAllDescendantsIfExist($article, 'amp-analytics');
-		deleteAllDescendantsIfExist($article, 'amp-ad');
-		deleteAllDescendantsIfExist($article, 'i-amphtml-sizer');
-		deleteAllDescendantsIfExist($article, 'amp-image-lightbox');
-		foreach($article->find('amp-img, img') as $photo_element)
+		foreach_delete_element($main, 'amp-analytics');
+		foreach_delete_element($main, 'amp-ad');
+		foreach_delete_element($main, 'i-amphtml-sizer');
+		foreach_delete_element($main, 'amp-image-lightbox');
+		foreach($main->find('amp-img, img') as $photo_element)
 		{
 			if(isset($photo_element->width)) $photo_element->width = NULL;
 			if(isset($photo_element->height)) $photo_element->height = NULL;
 		}
 		//https://opinie.wp.pl/wielka-zmiana-mezczyzn-wirus-ja-tylko-przyspieszyl-6604913984391297a?amp=1&_js_v=0.1
-		foreach($article->find('amp-img') as $ampimg)
+		foreach($main->find('amp-img') as $ampimg)
 		{
 			if ('p' === strtolower($ampimg->parent->tag))
 				$ampimg->parent->tag = "DIV";
@@ -123,102 +119,36 @@
 			else
 				$ampimg->outertext = $img_new_element;
 		}
+		$main = str_get_html($main->save());
 	}
 
-	function formatAmpLinks($article)
+	function format_amp_links($main)
 	{
-		foreach($article->find('amp-iframe') as $amp_iframe)
+		foreach($main->find('amp-iframe') as $amp_iframe)
 		{
 			if(FALSE === is_null($src = ($amp_iframe->getAttribute('src'))))
 			{
 				$src = $amp_iframe->src;
-				$amp_iframe->outertext = 
-				'<strong><br>'
-				.'<a href='.$src.'>'
-				."Ramka - ".$src.'<br>'
-				.'</a>'
-				.'<br></strong>';
+				$amp_iframe->outertext = get_frame_outertext($src);
 			}
 		}
-		foreach($article->find('amp-twitter') as $amp_twitter)
+		foreach($main->find('amp-twitter') as $amp_twitter)
 		{
 			if(FALSE === is_null($data_tweetid = ($amp_twitter->getAttribute('data-tweetid'))))
 			{
 				$twitter_url = 'https://twitter.com/anyuser/status/'.$data_tweetid;
-				$twitter_proxy_url = redirectUrl($twitter_url);
-				$amp_twitter->outertext = 
-					'<strong><br>'
-					.'<a href='.$twitter_url.'>'
-					."Ramka - ".$twitter_url.'<br>'
-					.'</a>'
-					.'<a href='.$twitter_proxy_url.'>'
-					."Ramka - ".$twitter_proxy_url.'<br>'
-					.'</a>'
-					.'<br></strong>';
+				$amp_twitter->outertext = get_frame_outertext($twitter_url);
 			}
 		}
-		foreach($article->find('amp-youtube') as $amp_youtube)
+		foreach($main->find('amp-youtube') as $amp_youtube)
 		{
 			if(FALSE === is_null($data_videoid = ($amp_youtube->getAttribute('data-videoid'))))
 			{
 				$youtube_url = 'https://www.youtube.com/watch?v='.$data_videoid;
-				$youtue_proxy_url = redirectUrl($youtube_url);
-				$amp_youtube->outertext = 
-					'<strong><br>'
-					.'<a href='.$youtube_url.'>'
-					."Ramka - ".$youtube_url.'<br>'
-					.'</a>'
-					.'<a href='.$youtue_proxy_url.'>'
-					."Ramka - ".$youtue_proxy_url.'<br>'
-					.'</a>'
-					.'<br></strong>';
+				$amp_youtube->outertext = get_frame_outertext($youtube_url);
 			}
 		}
-	}
-
-	function clearParagraphsFromTaglinks($article, $paragrapghSearchString, $regexArray)
-	{
-//		echo "<br><br><br>";
-		foreach($article->find($paragrapghSearchString) as $paragraph)
-		{
-//			echo "Paragraf przed: <br><pre>".htmlspecialchars($paragraph)."</pre><br>";
-			foreach($paragraph->find('A') as $a_element)
-			{
-//				echo "a_element przed: <br><pre>".htmlspecialchars($a_element)."</pre><br>";
-				foreach($regexArray as $regex)
-				{
-//					echo "Testowany regex: $regex, Testowany link: $a_element->href, <br>";
-					if(1 === preg_match($regex, $a_element->href))
-					{
-						$paragraph->outertext = str_replace($a_element->outertext, $a_element->plaintext, $paragraph->outertext);
-					}
-				}
-//				echo "a_element po: <br><pre>".htmlspecialchars($a_element)."</pre><br>";
-			}
-//			echo "Paragraf po: <br><pre>".htmlspecialchars($paragraph)."</pre><br>";
-		}
-	}
-	
-	function deleteAncestorIfContainsText($ancestor, $descendant_string)
-	{
-		if (FALSE === is_null($ancestor))
-			if (FALSE !== strpos($ancestor->plaintext, $descendant_string))
-				$ancestor->outertext = '';
-	}
-	
-	function deleteAncestorIfContainsTextForEach($main, $ancestor_string, $descendant_string_array)
-	{
-		foreach($main->find($ancestor_string) as $ancestor)
-		{
-			foreach($descendant_string_array as $descendant_string)
-			{
-				if (FALSE !== strpos($ancestor->plaintext, $descendant_string))
-				{
-					$ancestor->outertext = '';
-					break;
-				}
-			}
-		}
+		$main = str_get_html($main->save());
 	}
 
 	function parse_article_data($article_data)
@@ -240,106 +170,142 @@
 			return $article_data;
 	}
 
-	function deleteAncestorIfChildMatches($element, $hierarchy)
+	function clear_paragraphs_from_taglinks($main, $paragrapgh_search_string, $regexArray)
 	{
-		$last = count($hierarchy)-1;
-		foreach($element->find($hierarchy[$last]) as $found)
+		foreach($main->find($paragrapgh_search_string) as $paragraph)
+		{
+			foreach($paragraph->find('A') as $a_element)
+			{
+				foreach($regexArray as $regex)
+				{
+					if(1 === preg_match($regex, $a_element->href))
+					{
+						$paragraph->outertext = str_replace($a_element->outertext, $a_element->plaintext, $paragraph->outertext);
+					}
+				}
+			}
+		}
+		$main = str_get_html($main->save());
+	}
+	
+	function single_delete_element_containing_text($element, $subelement_search_textstring)
+	{
+		if (FALSE === is_null($element))
+		{
+			if (FALSE !== strpos($element->plaintext, $subelement_search_textstring))
+			{
+				$element->outertext = '';
+			}
+		}
+	}
+	
+	function foreach_delete_element_containing_text_from_array($main, $element_search_string, $subelement_search_textstring_array)
+	{
+		foreach($main->find($element_search_string) as $element)
+		{
+			foreach($subelement_search_textstring_array as $subelement_search_textstring)
+			{
+				if (FALSE !== strpos($element->plaintext, $subelement_search_textstring))
+				{
+					$element->outertext = '';
+					break;
+				}
+			}
+		}
+		$main = str_get_html($main->save());
+	}
+
+	function foreach_delete_element_containing_elements_hierarchy($main, $subelements_hierarchy_array)
+	{
+		$last = count($subelements_hierarchy_array)-1;
+		foreach($main->find($subelements_hierarchy_array[$last]) as $subelement)
 		{
 			$iterator = $last-1;
-			while ($iterator >= 0 && strtolower($found->parent->tag) === strtolower($hierarchy[$iterator]))
+			while ($iterator >= 0 && strtolower($subelement->parent->tag) === strtolower($subelements_hierarchy_array[$iterator]))
 			{
-				$found = $found->parent;
+				$subelement = $subelement->parent;
 				$iterator--;
 			}
 			if ($iterator === -1)
 			{
-				$found->outertext = '';
+				$subelement->outertext = '';
 			}
+		}
+		$main = str_get_html($main->save());
+	}
+
+	function single_delete_element_containing_subelement($element, $subelement_search_string)
+	{
+		if (FALSE === is_null($subelement = $element->find($subelement_search_string, 0)))
+		{
+			$element->outertext = '';
 		}
 	}
 	
-	function getTwitterElement($twitter_url)
+	function foreach_delete_element($main, $element_search_string)
 	{
-		$twitter_proxy = 'nitter.snopyta.org';
-		$twitter_url = str_replace('twitter.com', $twitter_proxy, $twitter_url);
-		$html_twitter = getSimpleHTMLDOM($twitter_url);
-		$main_tweet = $html_twitter->find('DIV#m.main-tweet', 0);
-		foreach($main_tweet->find('a') as $element)
+		foreach($main->find($element_search_string) as $element)
 		{
-			$element_url = $element->getAttribute('href');
-			if(strpos($element_url, '/') === 0)
+			$element->outertext = '';
+		}
+		$main = str_get_html($main->save());
+	}
+
+	function single_delete_subelement($element, $subelement_search_string)
+	{
+		if (FALSE === is_null($subelement = $element->find($subelement_search_string, 0)))
+		{
+			$subelement->outertext = '';
+		}
+	}
+
+	function foreach_delete_element_containing_subelement($main, $element_search_string, $subelement_search_string)
+	{
+		foreach ($main->find($element_search_string) as $element)
+		{
+			if (FALSE === is_null($subelement = $element->find($subelement_search_string, 0)))
 			{
-				$element_url = "https://".$twitter_proxy.$element_url;
-				$element->setAttribute('href', $element_url);
+				$element->outertext = '';
 			}
 		}
-		$date_text = $main_tweet->find('p.tweet-published', 0)->plaintext;
-		$main_tweet->find('p.tweet-published', 0)->outertext = '<a href="'.$twitter_url.'" title="'.$date_text.'">'.$date_text.'</a>';
-		$main_tweet->find('SPAN.tweet-date', 0)->outertext = '';
-		$main_tweet->find('DIV.tweet-stats', 0)->outertext = '';
-		$main_tweet->find('A.fullname', 0)->outertext = '';
-		return $main_tweet;
+		$main = str_get_html($main->save());
 	}
 
-	function deleteDescendantIfExists($ancestor, $descendant_string)
+	function foreach_replace_outertext_with_subelement_innertext($main, $element_search_string, $subelement_search_string)
 	{
-		if (FALSE === is_null($descendant = $ancestor->find($descendant_string, 0)))
-			$descendant->outertext = '';
-	}
-	
-	function deleteAllDescendantsIfExist($ancestor, $descendant_string)
-	{
-		foreach($ancestor->find($descendant_string) as $descendant)
-			$descendant->outertext = '';
-	}
-
-	function deleteAncestorIfDescendantExists($ancestor, $descendant_string)
-	{
-		if (FALSE === is_null($descendant = $ancestor->find($descendant_string, 0)))
-			$ancestor->outertext = '';
-	}
-
-	function deleteAllAncestorsIfDescendantExists($main_element, $ancestor_string, $descendant_string)
-	{
-		foreach ($main_element->find($ancestor_string) as $ancestor_element)
+		foreach($main->find($element_search_string) as $element)
 		{
-			if (FALSE === is_null($descendant_element = $ancestor_element->find($descendant_string, 0)))
-				$ancestor_element->outertext = '';
-		}
-	}
-
-	function replaceAllBiggerOutertextWithSmallerInnertext($main_element, $bigger_string, $smaller_string)
-	{
-		foreach($main_element->find($bigger_string) as $bigger_element)
-		{
-			if (FALSE === is_null($smaller_element = $bigger_element->find($smaller_string, 0)))
+			if (FALSE === is_null($subelement = $element->find($subelement_search_string, 0)))
 			{
-				$bigger_element->outertext = $smaller_element->innertext;
+				$element->outertext = $subelement->innertext;
 			}
 		}
+		$main = str_get_html($main->save());
 	}
 
-	function replaceAllBiggerOutertextWithSmallerOutertext($main_element, $bigger_string, $smaller_string)
+	function foreach_replace_outertext_with_subelement_outertext($main, $element_search_string, $subelement_search_string)
 	{
-		foreach($main_element->find($bigger_string) as $bigger_element)
+		foreach($main->find($element_search_string) as $element)
 		{
-			if (FALSE === is_null($smaller_element = $bigger_element->find($smaller_string, 0)))
+			if (FALSE === is_null($subelement = $element->find($subelement_search_string, 0)))
 			{
-				$bigger_element->outertext = $smaller_element->outertext;
+				$element->outertext = $subelement->outertext;
 			}
 		}
+		$main = str_get_html($main->save());
 	}
 
-	function replaceAllOutertextWithInnertext($main_element, $bigger_string)
+	function foreach_replace_outertext_with_innertext($main, $element_search_string)
 	{
-		foreach($main_element->find($bigger_string) as $bigger_element)
+		foreach($main->find($element_search_string) as $element)
 		{
-			$bigger_element->outertext = $bigger_element->innertext;
+			$element->outertext = $element->innertext;
 		}
+		$main = str_get_html($main->save());
 	}
 
 
-	function redirectUrl($social_url)
+	function get_proxy_url($social_url)
 	{
 		$twitter_proxy = 'nitter.snopyta.org';
 		$instagram_proxy = 'bibliogram.snopyta.org';
@@ -352,10 +318,10 @@
 		return $social_url;
 	}
 
-	function returnTagsArray($article, $tag_selector)
+	function return_tags_array($main, $tag_selector)
 	{
 		$tags = array();
-		foreach($article->find($tag_selector) as $tags_item)
+		foreach($main->find($tag_selector) as $tags_item)
 		{
 			$tag_text = $tags_item->plaintext;
 			$tag_text = str_replace("&nbsp;", '', $tag_text);
@@ -366,10 +332,10 @@
 		return array_unique($tags);
 	}
 
-	function returnAuthorsAsString($article, $author_selector)
+	function return_authors_as_string($main, $author_selector)
 	{
 		$authors = '';
-		foreach($article->find($author_selector) as $author_item)
+		foreach($main->find($author_selector) as $author_item)
 		{
 			$authors = $authors.', '.trim($author_item->plaintext);
 		}
@@ -377,7 +343,7 @@
 		return $authors;
 	}
 
-	function addStyle($article_element, $search_string, $stylesArray)
+	function add_style($article_element, $search_string, $stylesArray)
 	{
 		$styleString = "";
 		foreach ($stylesArray as $style)
@@ -444,7 +410,7 @@
 		return $content;
 	}
 
-	function removeSubstringIfExistsFirst($string, $substring)
+	function remove_substring_if_exists_first($string, $substring)
 	{
 		$length_of_substring_to_remove = strlen($substring);
 		$offset = 0;
@@ -458,7 +424,7 @@
 		return $string;
 	}
 
-	function removeSubstringIfExistsLast($string, $substring)
+	function remove_substring_if_exists_last($string, $substring)
 	{
 		$length_of_string = strlen($string);
 		$length_of_substring_to_remove = strlen($substring);
@@ -474,9 +440,76 @@
 	}
 	
 
-	function fix_article_photos($article, $str_selectror_photo_wrapper, $is_main = FALSE, $str_photo_url_attribute = 'src', $str_selectror_photo_caption = '')
+	function get_text_plaintext($main, $element_search_string, $backup_value = "Tekst zapasowy")
 	{
-		foreach($article->find($str_selectror_photo_wrapper) as $old_photo_wrapper)
+		if (FALSE === is_null($text_element = $main->find($element_search_string, 0)))
+			return trim($text_element->plaintext);
+		else
+			return $backup_value;
+	}
+
+	function get_text_from_attribute($main, $element_search_string, $attribute_name, $backup_value = "Tekst zapasowy")
+	{
+		if (FALSE === is_null($element = $main->find($element_search_string, 0)))
+		{
+			if($element->hasAttribute($attribute_name))
+			{
+				$attribute = $element->getAttribute($attribute_name);
+				return trim($attribute);
+			}
+			else
+			{
+				return $backup_value;
+			}
+		}
+		else
+			return $backup_value;
+	}
+
+	function replace_attribute($main, $element_search_string, $attribute_to_replace, $attribute_to_replace_with = NULL)
+	{
+		foreach($main->find($element_search_string) as $element)
+		{
+			if($element->hasAttribute($attribute_to_replace) && is_null($attribute_to_replace_with))
+			{
+				$element->removeAttribute($attribute_to_replace);
+			}
+			else if($element->hasAttribute($attribute_to_replace_with))
+			{
+				$new_attribute_value = $element->getAttribute($attribute_to_replace_with);
+				$element->setAttribute($attribute_to_replace, $new_attribute_value);
+			}
+		}
+		$main = str_get_html($main->save());
+	}
+
+	function fix_all_photos($main)
+	{
+		$allowed_attributes = array(
+			'class',
+			'src',
+			'alt',
+			'title',
+		);
+		foreach($main->find('IMG') as $photo_element)
+		{
+			$img_new_element = '<img ';
+			foreach($photo_element->getAllAttributes() as $key => $element)
+			{
+				if (FALSE === is_null($element) && TRUE === in_array($key, $allowed_attributes))
+				{
+					$img_new_element = $img_new_element.' '.$key.'="'.$element.'"';
+				}
+			}
+			$img_new_element = $img_new_element.'>';
+			$photo_element->outertext = $img_new_element;
+		}
+		$main = str_get_html($main->save());
+	}
+
+	function fix_article_photos($main, $element_search_string, $is_main = FALSE, $str_photo_url_attribute = 'src', $str_selectror_photo_caption = '')
+	{
+		foreach($main->find($element_search_string) as $old_photo_wrapper)
 		{
 			if ('img' === strtolower($old_photo_wrapper->tag))
 			{
@@ -500,7 +533,6 @@
 					$caption_text = trim($caption_element->plaintext);
 					//na nauka o klimacie w opisach są linki
 					//https://naukaoklimacie.pl/aktualnosci/jak-nam-idzie-realizacja-porozumienia-paryskiego-jak-pokazuje-raport-emissions-gap-bardzo-zle-460
-//					$caption_text = trim($caption_element->innertext);
 					$caption_innertext = $caption_element->innertext;
 				}
 				$href = '';
@@ -564,47 +596,70 @@
 				$old_photo_wrapper->outertext = $new_photo_wrapper;
 			}
 		}
+		$main = str_get_html($main->save());
 	}
 
-	function getTextPlaintext($article, $selector_string, $backup_value = "Tekst zapasowy")
+	function fix_all_iframes($main)
 	{
-		if (FALSE === is_null($text_element = $article->find($selector_string, 0)))
-			return trim($text_element->plaintext);
-		else
-			return $backup_value;
-	}
-
-	function getTextAttribute($article, $selector_string, $attribute_name, $backup_value = "Tekst zapasowy")
-	{
-		if (FALSE === is_null($element_selected = $article->find($selector_string, 0)))
+		foreach($main->find('IFRAME[src^="http"]') as $frame_element)
 		{
-			if($element_selected->hasAttribute($attribute_name))
+			$url = $frame_element->getAttribute('src');
+			$frame_element->outertext = get_frame_outertext($url);
+		}
+		$main = str_get_html($main->save());
+	}
+	
+	function get_Twitter_element($twitter_url)
+	{
+		$twitter_proxy = 'nitter.snopyta.org';
+		$twitter_url = str_replace('twitter.com', $twitter_proxy, $twitter_url);
+		$html_twitter = getSimpleHTMLDOM($twitter_url);
+		$main_tweet = $html_twitter->find('DIV#m.main-tweet', 0);
+		foreach($main_tweet->find('a') as $element)
+		{
+			$element_url = $element->getAttribute('href');
+			if(strpos($element_url, '/') === 0)
 			{
-				$attribute = $element_selected->getAttribute($attribute_name);
-				return trim($attribute);
+				$element_url = "https://".$twitter_proxy.$element_url;
+				$element->setAttribute('href', $element_url);
+			}
+		}
+		$date_text = $main_tweet->find('p.tweet-published', 0)->plaintext;
+		$main_tweet->find('p.tweet-published', 0)->outertext = '<a href="'.$twitter_url.'" title="'.$date_text.'">'.$date_text.'</a>';
+		$main_tweet->find('SPAN.tweet-date', 0)->outertext = '';
+		$main_tweet->find('DIV.tweet-stats', 0)->outertext = '';
+		$main_tweet->find('A.fullname', 0)->outertext = '';
+		return $main_tweet;
+	}
+
+	function get_frame_outertext($url)
+	{
+		$outertext_to_return = "";
+		$proxy_url = get_proxy_url($url);
+		if ("" !== $url)
+		{
+			if ($proxy_url !== $url)
+			{
+				$outertext_to_return = 
+					'<strong><br>'
+					.'<a href='.$url.'>'
+					."Ramka - ".$url.'<br>'
+					.'</a>'
+					.'<a href='.$proxy_url.'>'
+					."Ramka - ".$proxy_url.'<br>'
+					.'</a>'
+					.'<br></strong>';
 			}
 			else
 			{
-				return $backup_value;
+				$outertext_to_return = 
+					'<strong><br>'
+					.'<a href='.$url.'>'
+					."Ramka - ".$url.'<br>'
+					.'</a>'
+					.'<br></strong>';
 			}
 		}
-		else
-			return $backup_value;
-	}
-
-	function replaceAttribute($article, $selector_string, $attribute_to_replace, $attribute_to_replace_with = NULL)
-	{
-		foreach($article->find($selector_string) as $element_selected)
-		{
-			if($element_selected->hasAttribute($attribute_to_replace) && is_null($attribute_to_replace_with))
-			{
-				$element_selected->removeAttribute($attribute_to_replace);
-			}
-			else if($element_selected->hasAttribute($attribute_to_replace_with))
-			{
-				$new_attribute_value = $element_selected->getAttribute($attribute_to_replace_with);
-				$element_selected->setAttribute($attribute_to_replace, $new_attribute_value);
-			}
-		}
+		return $outertext_to_return;
 	}
 

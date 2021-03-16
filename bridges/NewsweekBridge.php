@@ -82,11 +82,11 @@ class NewsweekBridge extends BridgeAbstract {
 
 		$article = $article_html->find('ARTICLE', 0);
 		//title
-		$title = getTextPlaintext($article, 'H1.detailTitle', $url);
+		$title = get_text_plaintext($article, 'H1.detailTitle', $url);
 		//authors
-		$author = returnAuthorsAsString($article, 'DIV.authorBox H4.name');
+		$author = return_authors_as_string($article, 'DIV.authorBox H4.name');
 		//tags
-		$tags = returnTagsArray($article, 'DIV.tags A');
+		$tags = return_tags_array($article, 'DIV.tags A');
 		//date
 		$article_data = $article_html->find('SCRIPT[type="application/ld+json"]', 0)->innertext;
 		$article_data_parsed = parse_article_data(json_decode($article_data));
@@ -104,7 +104,7 @@ class NewsweekBridge extends BridgeAbstract {
 			$data_params = $data_run_module->getAttribute('data-params');
 			$hrml_decoded = html_entity_decode($data_params);
 			$params_decoded=json_decode($hrml_decoded, true);
-			$link = redirectUrl($params_decoded['parameters']['url']);
+			$link = get_proxy_url($params_decoded['parameters']['url']);
 			$link_element = str_get_html('<a href="'.$link.'">'.$link.'</a>');
 			$data_run_module->outertext = $link_element->outertext;
 		}
@@ -140,38 +140,38 @@ class NewsweekBridge extends BridgeAbstract {
 			$empty_class_element->class = NULL;
 			$empty_class_element->setAttribute('data-scroll', NULL);
 		}
-		replaceAllOutertextWithInnertext($article, '.contentPremium');
+		foreach_replace_outertext_with_innertext($article, '.contentPremium');
 		
 		//paragrafy, czytaj inne artykuly
 		//https://www.newsweek.pl/polska/polityka/nowa-odslona-konfliktu-w-porozumieniu/d18e6y6
 		//https://www.newsweek.pl/polska/polityka/paulina-hennig-kloska-w-szeregach-polska-2050-nowa-poslanka-szymona-holowni/5cj9tqx
 		$article = str_get_html($article->save());
-		deleteAncestorIfContainsTextForEach($article, 'P', array('Czytaj także:', 'Czytaj też:', 'Czytaj więcej:', 'Zobacz:', 'Zobacz także:', 'Zobacz też:', 'Zobacz więcej:'));
+		foreach_delete_element_containing_text_from_array($article, 'P', array('Czytaj także:', 'Czytaj też:', 'Czytaj więcej:', 'Zobacz:', 'Zobacz także:', 'Zobacz też:', 'Zobacz więcej:'));
 		$article = str_get_html($article->save());
 
 		//Przenoszenie tresci premium poziom wyzej
 
 
-		deleteAllDescendantsIfExist($article, 'comment');
-		deleteAllDescendantsIfExist($article, 'script');
-		deleteAllDescendantsIfExist($article, 'DIV.offerView');
-		deleteAllDescendantsIfExist($article, 'DIV.articleSocials');
-		deleteAllDescendantsIfExist($article, 'DIV.detailFeed');
-		deleteAllDescendantsIfExist($article, 'DIV.bottomArtticleAds');
-		deleteAllDescendantsIfExist($article, 'DIV.onet-ad');
-		deleteAllDescendantsIfExist($article, 'DIV#fbComments');
-		deleteAllDescendantsIfExist($article, 'UL.breadCrumb');
-		deleteAllDescendantsIfExist($article, 'DIV.tags');
+		foreach_delete_element($article, 'comment');
+		foreach_delete_element($article, 'script');
+		foreach_delete_element($article, 'DIV.offerView');
+		foreach_delete_element($article, 'DIV.articleSocials');
+		foreach_delete_element($article, 'DIV.detailFeed');
+		foreach_delete_element($article, 'DIV.bottomArtticleAds');
+		foreach_delete_element($article, 'DIV.onet-ad');
+		foreach_delete_element($article, 'DIV#fbComments');
+		foreach_delete_element($article, 'UL.breadCrumb');
+		foreach_delete_element($article, 'DIV.tags');
 //		$article = str_get_html($article->save());
 
 		fix_article_photos($article, 'DIV.artPhoto', FALSE, 'src', 'SPAN');
 		$article = str_get_html($article->save());
 
-		addStyle($article, 'P.lead', array('font-weight: bold;'));
-		addStyle($article, 'FIGURE.photoWrapper', getStylePhotoParent());
-		addStyle($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
-		addStyle($article, 'FIGCAPTION', getStylePhotoCaption());
-		addStyle($article, 'BLOCKQUOTE', getStyleQuote());
+		add_style($article, 'P.lead', array('font-weight: bold;'));
+		add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
+		add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
+		add_style($article, 'FIGCAPTION', getStylePhotoCaption());
+		add_style($article, 'BLOCKQUOTE', getStyleQuote());
 //		$article = str_get_html($article->save());
 	
 		$this->items[] = array(
@@ -206,7 +206,7 @@ class NewsweekBridge extends BridgeAbstract {
 				}
 				else
 				{
-					$GLOBALS['author_name'] = getTextPlaintext($html_articles_list, 'DIV.authorsInfo H1[itemprop="name"]', $GLOBALS['author_name']);
+					$GLOBALS['author_name'] = get_text_plaintext($html_articles_list, 'DIV.authorsInfo H1[itemprop="name"]', $GLOBALS['author_name']);
 					foreach($found_hrefs as $href_element)
 					{
 						if(isset($href_element->href) && FALSE === in_array($href_element->href, $articles_urls))

@@ -59,15 +59,15 @@ class KlubJagiellonskiBridge extends FeedExpander {
 		$article_page = getSimpleHTMLDOMCached($item['uri'], 86400 * 14);
 		$article_post = $article_page->find('ARTICLE', 0);
 
-		deleteAllDescendantsIfExist($article_post, 'SECTION.block-content_breaker_sharer');
-		deleteAllDescendantsIfExist($article_post, 'DIV[data-source="ramka-newsletter"]');
-		deleteAllDescendantsIfExist($article_post, 'DIV[data-source="ramka-zbiorka"]');
-		deleteAllDescendantsIfExist($article_post, 'DIV[data-source="ramka-polecane"]');
-		deleteAllDescendantsIfExist($article_post, 'DIV.meta_mobile.desktop-hide');
-		deleteAllAncestorsIfDescendantExists($article_post, 'DIV.block-content_breaker.block-content_breaker_ramka', 'A[href*="/temat/"]');
+		foreach_delete_element($article_post, 'SECTION.block-content_breaker_sharer');
+		foreach_delete_element($article_post, 'DIV[data-source="ramka-newsletter"]');
+		foreach_delete_element($article_post, 'DIV[data-source="ramka-zbiorka"]');
+		foreach_delete_element($article_post, 'DIV[data-source="ramka-polecane"]');
+		foreach_delete_element($article_post, 'DIV.meta_mobile.desktop-hide');
+		foreach_delete_element_containing_subelement($article_post, 'DIV.block-content_breaker.block-content_breaker_ramka', 'A[href*="/temat/"]');
 
-		$tags = returnTagsArray($article_post, 'A.block-catbox SPAN.catboxfg');
-		$author = returnAuthorsAsString($article_post, 'A.block-author_bio P.imienazwisko');
+		$tags = return_tags_array($article_post, 'A.block-catbox SPAN.catboxfg');
+		$author = return_authors_as_string($article_post, 'A.block-author_bio P.imienazwisko');
 
 		foreach($article_post->find('A.block-author_bio') as $block_author)
 		{
@@ -93,11 +93,11 @@ class KlubJagiellonskiBridge extends FeedExpander {
 		{
 			$author_bio->outertext = '<br>'.$author_bio->outertext;
 		}
-		addStyle($article_post, 'DIV.pix', getStylePhotoParent());
-		addStyle($article_post, 'IMG.desktop-hide', getStylePhotoImg());
+		add_style($article_post, 'DIV.pix', getStylePhotoParent());
+		add_style($article_post, 'IMG.desktop-hide', getStylePhotoImg());
 		$caption_style = getStylePhotoCaption();
 		$caption_style[] = 'position: absolute';
-		addStyle($article_post, 'SPAN.pix_source', $caption_style);
+		add_style($article_post, 'SPAN.pix_source', $caption_style);
 		
 		$item['categories'] = $tags;
 		$item['author'] = $author;

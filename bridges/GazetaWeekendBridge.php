@@ -99,9 +99,9 @@ class GazetaWeekendBridge extends BridgeAbstract {
 	private function addArticle1($url_article, $article_html)
 	{
 		$article = $article_html->find('DIV#premiumArticle__mainArticle', 0);
-		$title = getTextPlaintext($article, 'H1.article__title', $url_article);
-		$author = returnAuthorsAsString($article, 'DIV.article__author_date SPAN.article_author');
-		$tags = returnTagsArray($article_html, 'DIV.article__type-wrapper DIV.article__type.article__type--section, DIV.article__type-wrapper SPAN.article__type-title');
+		$title = get_text_plaintext($article, 'H1.article__title', $url_article);
+		$author = return_authors_as_string($article, 'DIV.article__author_date SPAN.article_author');
+		$tags = return_tags_array($article_html, 'DIV.article__type-wrapper DIV.article__type.article__type--section, DIV.article__type-wrapper SPAN.article__type-title');
 		//tagi
 		foreach($tags as $key => $tag)
 		{
@@ -122,20 +122,20 @@ class GazetaWeekendBridge extends BridgeAbstract {
 			$article_data_element->outertext = '<br>'.$article_data_element->outertext;
 		}
 		
-		deleteAllDescendantsIfExist($article, 'comment');
-		deleteAllDescendantsIfExist($article, 'DIV.article__bottomTextFrame');
-//		deleteAllDescendantsIfExist($article, 'SCRIPT');
-		deleteAllDescendantsIfExist($article, 'DIV.article__socialbar');
-		deleteAllDescendantsIfExist($article, 'DIV#adUnit-007-CONTENTBOARD');
-		deleteAllDescendantsIfExist($article, 'DIV[id^="banC"]');
-		deleteAllDescendantsIfExist($article, 'DIV#bottom_wrapper');
-		deleteAllDescendantsIfExist($article, 'DIV#top_wrapper');
-		deleteAllDescendantsIfExist($article, 'DIV.socialBar');
-		deleteAllDescendantsIfExist($article, 'DIV.article__slot');
-		deleteAllDescendantsIfExist($article, 'DIV.article__sidebar_extraContent');
-		deleteAllDescendantsIfExist($article, 'DIV.article__type-wrapper');
-		replaceAttribute($article, 'IMG[data-src][!src]', 'src', 'data-src');
-		replaceAttribute($article, 'BLOCKQUOTE[class="art_blockquote"]', 'class', NULL);
+		foreach_delete_element($article, 'comment');
+		foreach_delete_element($article, 'DIV.article__bottomTextFrame');
+//		foreach_delete_element($article, 'SCRIPT');
+		foreach_delete_element($article, 'DIV.article__socialbar');
+		foreach_delete_element($article, 'DIV#adUnit-007-CONTENTBOARD');
+		foreach_delete_element($article, 'DIV[id^="banC"]');
+		foreach_delete_element($article, 'DIV#bottom_wrapper');
+		foreach_delete_element($article, 'DIV#top_wrapper');
+		foreach_delete_element($article, 'DIV.socialBar');
+		foreach_delete_element($article, 'DIV.article__slot');
+		foreach_delete_element($article, 'DIV.article__sidebar_extraContent');
+		foreach_delete_element($article, 'DIV.article__type-wrapper');
+		replace_attribute($article, 'IMG[data-src][!src]', 'src', 'data-src');
+		replace_attribute($article, 'BLOCKQUOTE[class="art_blockquote"]', 'class', NULL);
 		
 		//podpis głównego zdjęcia
 		$main_photo_image = $article->find('IMG#article__image', 0);
@@ -146,10 +146,10 @@ class GazetaWeekendBridge extends BridgeAbstract {
 			$main_photo_caption->parent->outertext = '';
 			$main_photo_image->outertext = '<div class="mainPhoto">'.$main_photo_image->outertext.'<figcaption>'.$figcaption_text.'</figcaption></div>';
 		}
-		replaceAllOutertextWithInnertext($article, 'SECTION.art_content');
+		foreach_replace_outertext_with_innertext($article, 'SECTION.art_content');
 //		$article = str_get_html($article->save());
 		//https://weekend.gazeta.pl/weekend/7,177333,26878416,mam-33-lata-i-troje-dzieci-to-nie-pora-by-umierac-malgorzata.html
-		replaceAllBiggerOutertextWithSmallerOutertext($article, 'P.art_paragraph', 'SPAN.imageUOM');
+		foreach_replace_outertext_with_subelement_outertext($article, 'P.art_paragraph', 'SPAN.imageUOM');
 
 		$article = str_get_html($article->save());
 		fix_article_photos($article, 'DIV.mainPhoto', TRUE, 'src', 'FIGCAPTION');
@@ -173,7 +173,7 @@ class GazetaWeekendBridge extends BridgeAbstract {
 			}
 			if ("" !== $url)
 			{
-				$proxy_url = redirectUrl($url);
+				$proxy_url = get_proxy_url($url);
 				if ($proxy_url !== $url)
 				{
 					$embed->outertext = 
@@ -197,14 +197,14 @@ class GazetaWeekendBridge extends BridgeAbstract {
 				}
 			}
 		}
-		deleteAllDescendantsIfExist($article, 'SCRIPT');
+		foreach_delete_element($article, 'SCRIPT');
 		$article = str_get_html($article->save());
 		//https://weekend.gazeta.pl/weekend/7,177333,26878416,mam-33-lata-i-troje-dzieci-to-nie-pora-by-umierac-malgorzata.html
-		addStyle($article, 'H4.art_interview_question, DIV.article__lead', array('font-weight: bold;'));
-		addStyle($article, 'FIGURE.photoWrapper', getStylePhotoParent());
-		addStyle($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
-		addStyle($article, 'FIGCAPTION', getStylePhotoCaption());
-		addStyle($article, 'BLOCKQUOTE', getStyleQuote());
+		add_style($article, 'H4.art_interview_question, DIV.article__lead', array('font-weight: bold;'));
+		add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
+		add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
+		add_style($article, 'FIGCAPTION', getStylePhotoCaption());
+		add_style($article, 'BLOCKQUOTE', getStyleQuote());
 		
 //		$article = str_get_html($article->save());
 		$this->items[] = array(
@@ -221,22 +221,22 @@ class GazetaWeekendBridge extends BridgeAbstract {
 	{
 		$article = $article_html->find('DIV#gazeta_article', 0);
 		//tytul
-		$title = getTextPlaintext($article, 'DIV.gazeta_article_header H1', $url_article);
+		$title = get_text_plaintext($article, 'DIV.gazeta_article_header H1', $url_article);
 		//autor
-		$author = getTextPlaintext($article, 'SPAN[itemprop="author"]');
+		$author = get_text_plaintext($article, 'SPAN[itemprop="author"]');
 		$author = str_replace('Tekst: ', '', $author);
 		$author = str_replace('Przygotowanie wideo: ', '', $author);
 		$author = str_replace('Zdjęcia: ', '', $author);
 		$author = str_replace('Montaż: ', '', $author);
 		$author = str_replace(';', ',', $author);
 		//tagi
-		$tags = returnTagsArray($article_html, 'DIV.gazeta_article_header DIV.keyTag');
+		$tags = return_tags_array($article_html, 'DIV.gazeta_article_header DIV.keyTag');
 		foreach($tags as $key => $tag)
 		{
 			$tags[$key] = ucwords(strtolower($tag));
 		}
 		//data
-		$date = getTextAttribute($article_html, '[data-pub]', 'data-pub', "");
+		$date = get_text_from_attribute($article_html, '[data-pub]', 'data-pub', "");
 
 		foreach ($article->find('SCRIPT[src*="video.onnetwork.tv/embed.php?"]') as $script)
 		{
@@ -259,18 +259,18 @@ class GazetaWeekendBridge extends BridgeAbstract {
 			}
 		}
 		$article = str_get_html($article->save());
-		deleteAllDescendantsIfExist($article, 'DIV.keyTag');
-		deleteAllDescendantsIfExist($article, 'DIV#gazeta_article_author');
-		deleteAllDescendantsIfExist($article, 'DIV.shortSocialBar');
-		replaceAllBiggerOutertextWithSmallerInnertext($article, 'DIV#article', 'DIV.cmsArtykulElem');
-		deleteAllDescendantsIfExist($article, 'DIV#sitePath');
-		deleteAllDescendantsIfExist($article, 'DIV#article_comments');
-		deleteAllDescendantsIfExist($article, 'DIV.relatedHolder');
-		deleteAllDescendantsIfExist($article, 'DIV#adUnit-007-CONTENTBOARD');
-		deleteAllDescendantsIfExist($article, 'comment');
-		deleteAllDescendantsIfExist($article, 'SCRIPT');
-		replaceAttribute($article, '[data-pub]', 'data-pub', NULL);
-		replaceAttribute($article, '[data-adv]', 'data-adv', NULL);
+		foreach_delete_element($article, 'DIV.keyTag');
+		foreach_delete_element($article, 'DIV#gazeta_article_author');
+		foreach_delete_element($article, 'DIV.shortSocialBar');
+		foreach_replace_outertext_with_subelement_innertext($article, 'DIV#article', 'DIV.cmsArtykulElem');
+		foreach_delete_element($article, 'DIV#sitePath');
+		foreach_delete_element($article, 'DIV#article_comments');
+		foreach_delete_element($article, 'DIV.relatedHolder');
+		foreach_delete_element($article, 'DIV#adUnit-007-CONTENTBOARD');
+		foreach_delete_element($article, 'comment');
+		foreach_delete_element($article, 'SCRIPT');
+		replace_attribute($article, '[data-pub]', 'data-pub', NULL);
+		replace_attribute($article, '[data-adv]', 'data-adv', NULL);
 		$article = str_get_html($article->save());
 		$main_photo = $article->find('DIV#gazeta_article_image', 0);
 		$title_element = $article->find('DIV.gazeta_article_header', 0);
@@ -287,10 +287,10 @@ class GazetaWeekendBridge extends BridgeAbstract {
 		$article = str_get_html($article->save());
 		fix_article_photos($article, 'DIV#gazeta_article_image', TRUE, 'src', 'P.desc');
 		$article = str_get_html($article->save());
-		addStyle($article, 'FIGURE.photoWrapper', getStylePhotoParent());
-		addStyle($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
-		addStyle($article, 'FIGCAPTION', getStylePhotoCaption());
-		addStyle($article, 'BLOCKQUOTE', getStyleQuote());
+		add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
+		add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
+		add_style($article, 'FIGCAPTION', getStylePhotoCaption());
+		add_style($article, 'BLOCKQUOTE', getStyleQuote());
 		$article = str_get_html($article->save());
 
 

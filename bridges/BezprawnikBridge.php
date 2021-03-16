@@ -96,7 +96,7 @@ class BezprawnikBridge extends BridgeAbstract {
 			}
 			else
 			{
-				$GLOBALS['author_name'] = getTextPlaintext($html_articles_list, 'SECTION.autor-header H2', "");
+				$GLOBALS['author_name'] = get_text_plaintext($html_articles_list, 'SECTION.autor-header H2', "");
 				foreach($found_hrefs as $href_element)
 				{
 					if(isset($href_element->href))
@@ -135,20 +135,20 @@ class BezprawnikBridge extends BridgeAbstract {
 		$author = $article_data_parsed["@graph"][3]["name"];
 //		$title = $article_html->find('META[property="og:title"]', 0)->content;
 //		$date = $article_html->find('META[property="article:published_time]', 0)->content;
-		$tags = returnTagsArray($article, 'DIV.amp-wp-tax-tag [rel="tag"]');
-		fixAmpArticles($article);
-		formatAmpLinks($article);
+		$tags = return_tags_array($article, 'DIV.amp-wp-tax-tag [rel="tag"]');
+		format_amp_article($article);
+		format_amp_links($article);
 //https://bezprawnik.pl/korwin-mikke-wyrzucony-z-facebooka/amp/
 //https://bezprawnik.pl/rzad-zmienil-ustroj-polski/amp/
-		deleteAncestorIfChildMatches($article, array('ul', 'li', 'h3', 'a'));
-		deleteAllDescendantsIfExist($article, 'comment');
+		foreach_delete_element_containing_elements_hierarchy($article, array('ul', 'li', 'h3', 'a'));
+		foreach_delete_element($article, 'comment');
 		//może pomoże na drugie zdjęcie pod zdjęciem głównynm w czytniku
-		deleteAllDescendantsIfExist($article, 'script');
+		foreach_delete_element($article, 'script');
 		//może pomoże na drugie zdjęcie pod zdjęciem głównynm w czytniku - 2
-		deleteAllDescendantsIfExist($article, 'NOSCRIPT');
-		deleteAllDescendantsIfExist($article, 'DIV.amp-autor');
-		deleteAllDescendantsIfExist($article, 'FOOTER');
-		clearParagraphsFromTaglinks($article, 'P', array('/bezprawnik.pl\/tag\//'));
+		foreach_delete_element($article, 'NOSCRIPT');
+		foreach_delete_element($article, 'DIV.amp-autor');
+		foreach_delete_element($article, 'FOOTER');
+		clear_paragraphs_from_taglinks($article, 'P', array('/bezprawnik.pl\/tag\//'));
 		//zdjęcie autora
 		$article->find('FIGURE[id^="attachment_"][class^="wp-caption alignright amp-wp-"]', 0)->outertext = '';
 		

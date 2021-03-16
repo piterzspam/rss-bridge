@@ -44,7 +44,7 @@ class KonkretTVN24Bridge extends BridgeAbstract {
 		$GLOBALS['chosen_category_url'] = $this->getInput('category');
 		
 		$found_urls = $this->getArticlesUrls();
-//		var_dump_print($found_urls);
+//		print_var_dump($found_urls);
 		
 		foreach($found_urls as $url)
 		{
@@ -121,20 +121,20 @@ class KonkretTVN24Bridge extends BridgeAbstract {
 		$tag = ucwords($tag);
 		$tags[] = $tag;
 
-		addStyle($article, 'DIV.article-content__inner-texts--quote', getStyleQuote());
+		add_style($article, 'DIV.article-content__inner-texts--quote', getStyleQuote());
 
-		addStyle($article, 'DIV.article-content__inner-texts--video', getStylePhotoParent());
-		addStyle($article, 'DIV.article-content__inner-texts--video__wrapper', getStylePhotoImg());
-		addStyle($article, 'DIV.article-content__inner-texts--video__metadata', getStylePhotoCaption());
+		add_style($article, 'DIV.article-content__inner-texts--video', getStylePhotoParent());
+		add_style($article, 'DIV.article-content__inner-texts--video__wrapper', getStylePhotoImg());
+		add_style($article, 'DIV.article-content__inner-texts--video__metadata', getStylePhotoCaption());
 
-		addStyle($article, 'FIGURE.photo-figure', getStylePhotoParent());
-		addStyle($article, 'IMG.photo-figure__image', getStylePhotoImg());
-		addStyle($article, 'FIGCAPTION.photo-figure__caption', getStylePhotoCaption());
+		add_style($article, 'FIGURE.photo-figure', getStylePhotoParent());
+		add_style($article, 'IMG.photo-figure__image', getStylePhotoImg());
+		add_style($article, 'FIGCAPTION.photo-figure__caption', getStylePhotoCaption());
 
-		deleteAllDescendantsIfExist($article, 'SCRIPT');
-		deleteAllDescendantsIfExist($article, 'comment');
-		deleteAllDescendantsIfExist($article, 'DIV.adoSlot');
-		deleteAllDescendantsIfExist($article, 'DIV.share-container__position');
+		foreach_delete_element($article, 'SCRIPT');
+		foreach_delete_element($article, 'comment');
+		foreach_delete_element($article, 'DIV.adoSlot');
+		foreach_delete_element($article, 'DIV.share-container__position');
 		
 	
 		$this->items[] = array(

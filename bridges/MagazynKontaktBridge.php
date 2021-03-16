@@ -72,27 +72,27 @@ class MagazynKontaktBridge extends FeedExpander {
 				if(isset($photo_element->sizes)) $photo_element->sizes = NULL;
 			}
 			
-			deleteAllDescendantsIfExist($article, 'DIV.js-pullable_hard_dest_left');
-			deleteAllDescendantsIfExist($article, 'DIV.js-pullable_hard_dest_right');
-			deleteAllDescendantsIfExist($article, 'SECTION.block-sharer');
-			deleteAllDescendantsIfExist($article, 'DIV[data-source="ramka-zbiorka"]');
-			deleteAllDescendantsIfExist($article, 'DIV[data-source="ramka-newsletter"]');
-			deleteAllDescendantsIfExist($article, 'DIV[data-source="block-magazynpromo"]');
-			deleteAllDescendantsIfExist($article, 'DIV[data-source="ramka-polecane-1"]');
-			deleteAllDescendantsIfExist($article, 'DIV.block-content_breaker_ramka');
+			foreach_delete_element($article, 'DIV.js-pullable_hard_dest_left');
+			foreach_delete_element($article, 'DIV.js-pullable_hard_dest_right');
+			foreach_delete_element($article, 'SECTION.block-sharer');
+			foreach_delete_element($article, 'DIV[data-source="ramka-zbiorka"]');
+			foreach_delete_element($article, 'DIV[data-source="ramka-newsletter"]');
+			foreach_delete_element($article, 'DIV[data-source="block-magazynpromo"]');
+			foreach_delete_element($article, 'DIV[data-source="ramka-polecane-1"]');
+			foreach_delete_element($article, 'DIV.block-content_breaker_ramka');
 			
 
-			$tags = returnTagsArray($article, 'DIV.catbox A.block-catbox');
-			$author = returnAuthorsAsString($article, 'DIV.autor');
+			$tags = return_tags_array($article, 'DIV.catbox A.block-catbox');
+			$author = return_authors_as_string($article, 'DIV.autor');
 			//https://magazynkontakt.pl/kosciol-ludu-jest-kosciolem-politycznym/
 			$lead_style = array(
 				'font-weight: bold;'
 			);
-			addStyle($article, 'DIV.lead', $lead_style);
+			add_style($article, 'DIV.lead', $lead_style);
 
-			addStyle($article, 'DIV.pixwrap', getStylePhotoParent());
-			addStyle($article, 'IMG[src][alt]', getStylePhotoImg());
-			addStyle($article, 'DIV.pix_source', getStylePhotoCaption());
+			add_style($article, 'DIV.pixwrap', getStylePhotoParent());
+			add_style($article, 'IMG[src][alt]', getStylePhotoImg());
+			add_style($article, 'DIV.pix_source', getStylePhotoCaption());
 	
 			$item['content'] = $article;
 			$item['author'] = $author;

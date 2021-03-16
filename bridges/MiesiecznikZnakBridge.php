@@ -68,22 +68,22 @@ class MiesiecznikZnakBridge extends FeedExpander {
 			//https://www.miesiecznik.znak.com.pl/co-dalej-z-prawem-aborcyjnym-w-polsce/
 			$article = $articlePage->find('BODY', 0);
 
-			deleteAllDescendantsIfExist($article, 'SECTION.article.w-gradient');
-			deleteAllDescendantsIfExist($article, 'SCRIPT');
-			deleteAllDescendantsIfExist($article, 'SECTION.nav');
-			deleteAllDescendantsIfExist($article, 'SECTION#buy-issue');
-			deleteAllDescendantsIfExist($article, 'SECTION.related-tabs');
-			deleteAllDescendantsIfExist($article, 'FOOTER');
-			deleteAllDescendantsIfExist($article, 'DIV[id^="newsletter-popup"]');
-			deleteAllDescendantsIfExist($article, 'DIV#people-modal');
-			deleteAllDescendantsIfExist($article, 'DIV#mediaModal');
-			deleteAllDescendantsIfExist($article, 'DIV#cookie-notice');
-			deleteAllDescendantsIfExist($article, 'DIV.read-others');
-			deleteAllDescendantsIfExist($article, 'DIV.read-others-content');
-			deleteAllDescendantsIfExist($article, 'DIV.issue-sidebar');
-			deleteAllDescendantsIfExist($article, 'DIV.share-panel');
-			deleteAllDescendantsIfExist($article, 'DIV.article-col-33');
-			deleteAllDescendantsIfExist($article, 'DIV.read-others-content');
+			foreach_delete_element($article, 'SECTION.article.w-gradient');
+			foreach_delete_element($article, 'SCRIPT');
+			foreach_delete_element($article, 'SECTION.nav');
+			foreach_delete_element($article, 'SECTION#buy-issue');
+			foreach_delete_element($article, 'SECTION.related-tabs');
+			foreach_delete_element($article, 'FOOTER');
+			foreach_delete_element($article, 'DIV[id^="newsletter-popup"]');
+			foreach_delete_element($article, 'DIV#people-modal');
+			foreach_delete_element($article, 'DIV#mediaModal');
+			foreach_delete_element($article, 'DIV#cookie-notice');
+			foreach_delete_element($article, 'DIV.read-others');
+			foreach_delete_element($article, 'DIV.read-others-content');
+			foreach_delete_element($article, 'DIV.issue-sidebar');
+			foreach_delete_element($article, 'DIV.share-panel');
+			foreach_delete_element($article, 'DIV.article-col-33');
+			foreach_delete_element($article, 'DIV.read-others-content');
 	
 			//Fix szerokości artykulu
 			if(isset($article->width))
@@ -111,16 +111,16 @@ class MiesiecznikZnakBridge extends FeedExpander {
 
 
 			//https://www.miesiecznik.znak.com.pl/oswiadczenie-ws-tygodnika-powszechnego-na-ul-wislnej/
-			$author = returnAuthorsAsString($article, 'SPAN.author');
-			addStyle($article, 'BLOCKQUOTE', getStyleQuote());
-			addStyle($article, 'DIV[id^="attachment_"]', getStylePhotoParent());
-			addStyle($article, 'IMG[class*="wp-image-"]', getStylePhotoImg());
-			addStyle($article, 'P.wp-caption-text', getStylePhotoCaption());
+			$author = return_authors_as_string($article, 'SPAN.author');
+			add_style($article, 'BLOCKQUOTE', getStyleQuote());
+			add_style($article, 'DIV[id^="attachment_"]', getStylePhotoParent());
+			add_style($article, 'IMG[class*="wp-image-"]', getStylePhotoImg());
+			add_style($article, 'P.wp-caption-text', getStylePhotoCaption());
 			//lead
 			$lead_style = array(
 				'font-weight: bold;'
 			);
-			addStyle($article, 'DIV.lead[itemprop="description"]', $lead_style);
+			add_style($article, 'DIV.lead[itemprop="description"]', $lead_style);
 			$item['author'] = $author;
 			$item['content'] = $article;
 		}

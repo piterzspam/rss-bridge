@@ -37,7 +37,7 @@ class GazetaplBridge extends BridgeAbstract {
 		}
 		$this->setGlobalArticlesParams();
 		$found_urls = $this->getArticlesUrls();
-//		var_dump_print($found_urls);
+//		print_var_dump($found_urls);
 		foreach($found_urls as $url)
 		{
 			$this->addArticle($url);
@@ -91,7 +91,7 @@ class GazetaplBridge extends BridgeAbstract {
 			}
 			else
 			{
-				$GLOBALS['author_name'] = getTextPlaintext($html_articles_list, 'DIV.index_body H1', "");
+				$GLOBALS['author_name'] = get_text_plaintext($html_articles_list, 'DIV.index_body H1', "");
 				foreach($found_hrefs as $href_element)
 				{
 					if(isset($href_element->href))
@@ -127,34 +127,34 @@ class GazetaplBridge extends BridgeAbstract {
 		$article->tag = 'DIV';
 
 
-		$title = getTextPlaintext($article, 'H1#article_title', $url_article);
+		$title = get_text_plaintext($article, 'H1#article_title', $url_article);
 //		$title = trim($article->find('H1#article_title', 0)->plaintext);
-		$timestamp = getTextAttribute($article, 'TIME', 'datetime', "");
+		$timestamp = get_text_from_attribute($article, 'TIME', 'datetime', "");
 //		$timestamp = trim($article->find('TIME', 0)->getAttribute('datetime'));
-		$author = returnAuthorsAsString($article, 'A[rel="author"]');
+		$author = return_authors_as_string($article, 'A[rel="author"]');
 //		$author = trim($article->find('A[rel="author"]', 0)->plaintext);
-		$tags = returnTagsArray($article, 'LI.tags_item');
+		$tags = return_tags_array($article, 'LI.tags_item');
 
-		deleteAllDescendantsIfExist($article, 'comment');
-		deleteAllDescendantsIfExist($article, 'SCRIPT');
-		deleteAllDescendantsIfExist($article, 'DIV[id^="banC"]');
-		deleteAllDescendantsIfExist($article, 'DIV#sitePath');
-		deleteAllDescendantsIfExist($article, 'DIV.left_aside');
-		deleteAllDescendantsIfExist($article, 'DIV.ban000_wrapper');
-		deleteAllDescendantsIfExist($article, 'DIV.ban001_wrapper');
-		deleteAllDescendantsIfExist($article, 'DIV.right_aside');
-		deleteAllDescendantsIfExist($article, 'DIV.top_section_bg');
-		deleteAllDescendantsIfExist($article, 'DIV.bottom_section_bg');
-		deleteAllDescendantsIfExist($article, 'DIV#adUnit-007-CONTENTBOARD');
-		deleteAllDescendantsIfExist($article, 'DIV.related_image_number_of_photo');
-		deleteAllDescendantsIfExist($article, 'DIV.related_image_open');
-		deleteAllDescendantsIfExist($article, 'SECTION.tags');
-		clearParagraphsFromTaglinks($article, 'P.art_paragraph', array('/\?tag=/'));
-		deleteAncestorIfContainsTextForEach($article, 'div.art_embed', array('Zobacz wideo'));
+		foreach_delete_element($article, 'comment');
+		foreach_delete_element($article, 'SCRIPT');
+		foreach_delete_element($article, 'DIV[id^="banC"]');
+		foreach_delete_element($article, 'DIV#sitePath');
+		foreach_delete_element($article, 'DIV.left_aside');
+		foreach_delete_element($article, 'DIV.ban000_wrapper');
+		foreach_delete_element($article, 'DIV.ban001_wrapper');
+		foreach_delete_element($article, 'DIV.right_aside');
+		foreach_delete_element($article, 'DIV.top_section_bg');
+		foreach_delete_element($article, 'DIV.bottom_section_bg');
+		foreach_delete_element($article, 'DIV#adUnit-007-CONTENTBOARD');
+		foreach_delete_element($article, 'DIV.related_image_number_of_photo');
+		foreach_delete_element($article, 'DIV.related_image_open');
+		foreach_delete_element($article, 'SECTION.tags');
+		clear_paragraphs_from_taglinks($article, 'P.art_paragraph', array('/\?tag=/'));
+		foreach_delete_element_containing_text_from_array($article, 'div.art_embed', array('Zobacz wideo'));
 		//https://next.gazeta.pl/next/7,151003,26558939,europa-nam-to-zapamieta-wsciekli-nie-beda-eurokraci-tylko.html
-		deleteAllDescendantsIfExist($article, 'P.art_embed.relatedBox');
+		foreach_delete_element($article, 'P.art_embed.relatedBox');
 //		$article = str_get_html($article->save());
-		replaceAllBiggerOutertextWithSmallerInnertext($article, 'DIV.bottom_section', 'SECTION.art_content');
+		foreach_replace_outertext_with_subelement_innertext($article, 'DIV.bottom_section', 'SECTION.art_content');
 //		$article = str_get_html($article->save());
 
 		if (FALSE === is_null($element = $article->find('SPAN.article_data', 0)))
@@ -168,7 +168,7 @@ class GazetaplBridge extends BridgeAbstract {
 			if (FALSE === is_null($art_embed->find('A[href*="twitter.com/user/status/"]', 0)))
 			{
 				$twitter_url = $art_embed->find('a', 0)->getAttribute('href');
-				$twitter_proxy_url = redirectUrl($twitter_url);
+				$twitter_proxy_url = get_proxy_url($twitter_url);
 				$art_embed->outertext = 
 					'<strong><br>'
 					.'<a href='.$twitter_url.'>'
@@ -186,11 +186,11 @@ class GazetaplBridge extends BridgeAbstract {
 		fix_article_photos($article, 'DIV.art_embed', FALSE, 'src', 'P.desc');
 
 		$article = str_get_html($article->save());
-		addStyle($article, 'H4.art_interview_question, DIV#gazeta_article_lead', array('font-weight: bold;'));
-		addStyle($article, 'FIGURE.photoWrapper', getStylePhotoParent());
-		addStyle($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
-		addStyle($article, 'FIGCAPTION', getStylePhotoCaption());
-		addStyle($article, 'BLOCKQUOTE', getStyleQuote());
+		add_style($article, 'H4.art_interview_question, DIV#gazeta_article_lead', array('font-weight: bold;'));
+		add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
+		add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
+		add_style($article, 'FIGCAPTION', getStylePhotoCaption());
+		add_style($article, 'BLOCKQUOTE', getStyleQuote());
 		$article = str_get_html($article->save());
 
 		$this->items[] = array(

@@ -67,13 +67,13 @@ class ToTylkoTeoriaBridge extends BridgeAbstract {
 			return;
 		}
 
-		$this->deleteAllDescendantsIfExist($article, 'SPAN.label-info');
-		$this->deleteAllDescendantsIfExist($article, 'SPAN.item-control.blog-admin');
-		$this->deleteAllDescendantsIfExist($article, 'A[href="https://patronite.pl/totylkoteoria"][style="margin-left: 1em; margin-right: 1em;"]');
-		$this->deleteAllDescendantsIfExist($article, 'DIV#share-post');
-		$this->deleteAllDescendantsIfExist($article, 'DIV#related-posts');
-		$this->deleteAllDescendantsIfExist($article, 'A[href="https://www.totylkoteoria.pl/2015/06/kim-jestem.html"]');
-		$this->deleteAllDescendantsIfExist($article, 'DIV.author-avatar');
+		$this->foreach_delete_element($article, 'SPAN.label-info');
+		$this->foreach_delete_element($article, 'SPAN.item-control.blog-admin');
+		$this->foreach_delete_element($article, 'A[href="https://patronite.pl/totylkoteoria"][style="margin-left: 1em; margin-right: 1em;"]');
+		$this->foreach_delete_element($article, 'DIV#share-post');
+		$this->foreach_delete_element($article, 'DIV#related-posts');
+		$this->foreach_delete_element($article, 'A[href="https://www.totylkoteoria.pl/2015/06/kim-jestem.html"]');
+		$this->foreach_delete_element($article, 'DIV.author-avatar');
 		//date
 		$date = $article->find('ABBR.published', 0)->getAttribute('title');
 		//title
@@ -92,11 +92,11 @@ class ToTylkoTeoriaBridge extends BridgeAbstract {
 
 		foreach($article->find('P') as $paragraph)
 		{
-			$this->deleteAncestorIfContainsText($paragraph, 'Przeczytaj także: ');
+			$this->single_delete_element_containing_text($paragraph, 'Przeczytaj także: ');
 		}
 		foreach($article->find('DIV[style="text-align: justify;"]') as $paragraph)
 		{
-			$this->deleteAncestorIfContainsText($paragraph, 'Przeczytaj także: ');
+			$this->single_delete_element_containing_text($paragraph, 'Przeczytaj także: ');
 		}
 	
 		$this->items[] = array(
@@ -110,32 +110,32 @@ class ToTylkoTeoriaBridge extends BridgeAbstract {
 //		echo 'article:'; echo $article;
 	}
 
-	private function deleteDescendantIfExists($ancestor, $descendant_string)
+	private function single_delete_element_containing_subelement($ancestor, $descendant_string)
 	{
 		if (FALSE === is_null($descendant = $ancestor->find($descendant_string, 0)))
 			$descendant->outertext = '';
 	}
 
-	private function deleteAncestorIfDescendantExists($ancestor, $descendant_string)
+	private function single_delete_subelement($ancestor, $descendant_string)
 	{
 		if (FALSE === is_null($descendant = $ancestor->find($descendant_string, 0)))
 			$ancestor->outertext = '';
 	}
 
-	private function deleteAncestorIfContainsText($ancestor, $descendant_string)
+	private function single_delete_element_containing_text($ancestor, $descendant_string)
 	{
 		if (FALSE === is_null($ancestor))
 			if (FALSE !== strpos($ancestor->plaintext, $descendant_string))
 				$ancestor->outertext = '';
 	}
 
-	private function deleteAllDescendantsIfExist($ancestor, $descendant_string)
+	private function foreach_delete_element($ancestor, $descendant_string)
 	{
 		foreach($ancestor->find($descendant_string) as $descendant)
 			$descendant->outertext = '';
 	}
 
-	private function deleteAncestorIfChildMatches($element, $hierarchy)
+	private function foreach_delete_element_containing_elements_hierarchy($element, $hierarchy)
 	{
 		$last = count($hierarchy)-1;
 		$counter = 0;
@@ -155,7 +155,7 @@ class ToTylkoTeoriaBridge extends BridgeAbstract {
 		}
 	}
 
-	private function redirectUrl($social_url)
+	private function get_proxy_url($social_url)
 	{
 		$twitter_proxy = 'nitter.net';
 		$instagram_proxy = 'bibliogram.art';

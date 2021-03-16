@@ -124,11 +124,11 @@ class GazetaprawnaBridge extends BridgeAbstract {
 			{
 				if (FALSE === strpos($url_articles_list, '/autor/'))
 				{
-					$GLOBALS['author_name'] = getTextPlaintext($html_articles_list, 'DIV.titleBox H1', $GLOBALS['author_name']);
+					$GLOBALS['author_name'] = get_text_plaintext($html_articles_list, 'DIV.titleBox H1', $GLOBALS['author_name']);
 				}
 				else
 				{
-					$GLOBALS['author_name'] = getTextPlaintext($html_articles_list, 'SPAN.name', $GLOBALS['author_name']);
+					$GLOBALS['author_name'] = get_text_plaintext($html_articles_list, 'SPAN.name', $GLOBALS['author_name']);
 				}
 				foreach($found_leads as $lead)
 				{
@@ -178,7 +178,7 @@ class GazetaprawnaBridge extends BridgeAbstract {
 
 	private function addArticle($article_html, $url_article_link)
 	{
-		$tags = returnTagsArray($article_html, 'DIV#relatedTopics A[href]');
+		$tags = return_tags_array($article_html, 'DIV#relatedTopics A[href]');
 		$price_param = $this->getArticlePriceParam($article_html);
 		if ("premium" === $price_param)
 		{
@@ -192,15 +192,15 @@ class GazetaprawnaBridge extends BridgeAbstract {
 				$article_html = $returned_array['html'];
 			}
 		}
-//		element_print($article_html, 'article_html', '<br>');
+//		print_element($article_html, 'article_html', '<br>');
 		$article = $article_html->find('SECTION.detailSection', 0);
 		//title
-		$title = getTextPlaintext($article, 'H1.mainTitle', $url_article_link);
+		$title = get_text_plaintext($article, 'H1.mainTitle', $url_article_link);
 		$title = $this->getChangedTitle($title, $price_param);
 		//authors
-		$author = returnAuthorsAsString($article, 'DIV.authBox A[href*="/autor/"]');
+		$author = return_authors_as_string($article, 'DIV.authBox A[href*="/autor/"]');
 		//date
-		$date = getTextAttribute($article_html, 'META[property="article:published_time"][content]', 'content', "");
+		$date = get_text_from_attribute($article_html, 'META[property="article:published_time"][content]', 'content', "");
 
 		$str = $article->save();
 		$char_to_replace = chr(hexdec(20));
@@ -212,28 +212,28 @@ class GazetaprawnaBridge extends BridgeAbstract {
 		$article = str_get_html($str);
 		
 
-		deleteAllDescendantsIfExist($article, 'comment');
-		deleteAllDescendantsIfExist($article, 'SCRIPT');
-		deleteAllDescendantsIfExist($article, 'DIV.widget.video.videoScrollClass');
-		deleteAllDescendantsIfExist($article, 'NOSCRIPT');
-		deleteAllDescendantsIfExist($article, 'ASIDE#rightColumnBox');
-		deleteAllDescendantsIfExist($article, 'DIV#banner_art_video_out');
-		deleteAllDescendantsIfExist($article, 'DIV#relatedTopics');
-		deleteAllDescendantsIfExist($article, 'DIV#widgetStop');
-		deleteAllDescendantsIfExist($article, 'DIV.authorSourceProfile');
-		deleteAllDescendantsIfExist($article, 'DIV.streamNews');
-		deleteAllDescendantsIfExist($article, 'DIV.plistaDetailDesktop');
-		deleteAllDescendantsIfExist($article, 'DIV.commentsBox');
-		deleteAllDescendantsIfExist($article, 'DIV.detailAllBoxes');
-		deleteAllDescendantsIfExist($article, 'DIV.social-container');
-		deleteAllDescendantsIfExist($article, 'DIV.serviceLogoWrapper');
-		deleteAllDescendantsIfExist($article, 'DIV.infor-ad');
-		deleteAllDescendantsIfExist($article, 'DIV.bottomAdsBox');
-		deleteAllDescendantsIfExist($article, 'DIV.promoFrame.pulse2PromoFrame.withDescription.article');
+		foreach_delete_element($article, 'comment');
+		foreach_delete_element($article, 'SCRIPT');
+		foreach_delete_element($article, 'DIV.widget.video.videoScrollClass');
+		foreach_delete_element($article, 'NOSCRIPT');
+		foreach_delete_element($article, 'ASIDE#rightColumnBox');
+		foreach_delete_element($article, 'DIV#banner_art_video_out');
+		foreach_delete_element($article, 'DIV#relatedTopics');
+		foreach_delete_element($article, 'DIV#widgetStop');
+		foreach_delete_element($article, 'DIV.authorSourceProfile');
+		foreach_delete_element($article, 'DIV.streamNews');
+		foreach_delete_element($article, 'DIV.plistaDetailDesktop');
+		foreach_delete_element($article, 'DIV.commentsBox');
+		foreach_delete_element($article, 'DIV.detailAllBoxes');
+		foreach_delete_element($article, 'DIV.social-container');
+		foreach_delete_element($article, 'DIV.serviceLogoWrapper');
+		foreach_delete_element($article, 'DIV.infor-ad');
+		foreach_delete_element($article, 'DIV.bottomAdsBox');
+		foreach_delete_element($article, 'DIV.promoFrame.pulse2PromoFrame.withDescription.article');
 		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8118990,lowcy-przygod-w-dalekich-krainach-raimund-schulz-rok-1000-valerie-hansen.html
-		replaceAttribute($article, '[data-item-uuid]', 'data-item-uuid', NULL);
+		replace_attribute($article, '[data-item-uuid]', 'data-item-uuid', NULL);
 		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8118990,lowcy-przygod-w-dalekich-krainach-raimund-schulz-rok-1000-valerie-hansen.html
-		replaceAttribute($article, 'IMG[data-original^="http"][src^="data:image/"]', 'src', 'data-original');
+		replace_attribute($article, 'IMG[data-original^="http"][src^="data:image/"]', 'src', 'data-original');
 
 		$article = str_get_html($article->save());
 		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8094155,economicus-2020-oto-nominowani-w-kategorii-najlepszy-poradnik-biznesowy.html
@@ -258,7 +258,7 @@ class GazetaprawnaBridge extends BridgeAbstract {
 		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8094155,economicus-2020-oto-nominowani-w-kategorii-najlepszy-poradnik-biznesowy.html
 		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8094315,rzad-uslugi-publiczne-transfery-likwidacja-nierownosci-opinia.html
 		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8080209,paszport-covidowy-przywileje-podroze-szczepionka-covid.html
-		clearParagraphsFromTaglinks($article, 'P.hyphenate, DIV.frameArea', array(
+		clear_paragraphs_from_taglinks($article, 'P.hyphenate, DIV.frameArea', array(
 			'/gazetaprawna\.pl\/tagi\//',
 			'/gazetaprawna\.pl\/$/',
 			'/gazetaprawna\.pl$/',
@@ -273,11 +273,11 @@ class GazetaprawnaBridge extends BridgeAbstract {
 
 		//https://www.gazetaprawna.pl/firma-i-prawo/artykuly/8077582,konkurs-na-facebooku-polubienie-posta-kara-od-skarbowki.html
 		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8094785,sekularyzacja-przyspiesza-takze-w-polsce-wywiad.html
-		addStyle($article, 'DIV.frameArea.srodtytul, DIV.frameArea.pytanie, DIV#lead', array('font-weight: bold;'));
+		add_style($article, 'DIV.frameArea.srodtytul, DIV.frameArea.pytanie, DIV#lead', array('font-weight: bold;'));
 
 		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8079800,sztuczna-inteligencja-rezolucja-ue-azja-usa-slowik.html
 		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8094315,rzad-uslugi-publiczne-transfery-likwidacja-nierownosci-opinia.html
-		addStyle($article, 'DIV.frameWrap, DIV#lead', array('margin-bottom: 18px;'));
+		add_style($article, 'DIV.frameWrap, DIV#lead', array('margin-bottom: 18px;'));
 
 		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8094155,economicus-2020-oto-nominowani-w-kategorii-najlepszy-poradnik-biznesowy.html
 		$article = str_get_html($article->save());
@@ -285,14 +285,14 @@ class GazetaprawnaBridge extends BridgeAbstract {
 		//https://wiadomosci.gazeta.pl/wiadomosci/7,114884,26873712,sondazowe-eldorado-polski-2050-i-szymona-holowni-trwa-to-oni.html
 		fix_article_photos($article, 'DIV.image', FALSE, 'src', 'FIGCAPTION');
 		$article = str_get_html($article->save());
-		addStyle($article, 'FIGURE.photoWrapper', getStylePhotoParent());
-		addStyle($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
-		addStyle($article, 'FIGCAPTION', getStylePhotoCaption());
+		add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
+		add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
+		add_style($article, 'FIGCAPTION', getStylePhotoCaption());
 
 		//Splaszczenie struktury
-		replaceAllBiggerOutertextWithSmallerInnertext($article, 'DIV.detailContentWrapper', 'DIV.detailContent');
-		replaceAllBiggerOutertextWithSmallerInnertext($article, 'ARTICLE#leftColumnBox', 'DIV.whitelistPremium');
-		replaceAllOutertextWithInnertext($article, 'SECTION.detailSection');
+		foreach_replace_outertext_with_subelement_innertext($article, 'DIV.detailContentWrapper', 'DIV.detailContent');
+		foreach_replace_outertext_with_subelement_innertext($article, 'ARTICLE#leftColumnBox', 'DIV.whitelistPremium');
+		foreach_replace_outertext_with_innertext($article, 'SECTION.detailSection');
 
 
 		$this->items[] = array(

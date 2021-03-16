@@ -58,32 +58,32 @@ class WiezBridge extends FeedExpander {
 		}
 		$articlePage = getSimpleHTMLDOMCached($item['uri'], 86400 * 14);
 		$article = $articlePage->find('DIV.single__post', 0);
-		$tags = returnTagsArray($article, 'LI.post-categories__item A.post-categories__item__link');
+		$tags = return_tags_array($article, 'LI.post-categories__item A.post-categories__item__link');
 
 
-		deleteAllDescendantsIfExist($article, 'SCRIPT');
-		deleteAllDescendantsIfExist($article, 'NOSCRIPT');
-		deleteAllDescendantsIfExist($article, 'LINK');
-		deleteAllDescendantsIfExist($article, 'DIV.single-post-sidebar-wrapper');
-		deleteAllDescendantsIfExist($article, 'DIV.latest-articles-section');
-		deleteAllDescendantsIfExist($article, 'DIV.single__post__socials-top');
-		deleteAllDescendantsIfExist($article, 'DIV.single-post-sidebar-wrapper');
-		deleteAllDescendantsIfExist($article, 'DIV.post__socials-box');
-		deleteAllDescendantsIfExist($article, 'A.link-more');
-		deleteAllDescendantsIfExist($article, 'DIV[id^="advads-"]');
-		deleteAllDescendantsIfExist($article, 'ASIDE.book__box');
-		deleteAllDescendantsIfExist($article, 'DIV.quote-socials');
-		deleteAllDescendantsIfExist($article, 'SPAN[id^="more-"]');
-		deleteAllDescendantsIfExist($article, 'IMG.quote-image');
-		deleteAllDescendantsIfExist($article, 'IMG.post__author__image');
-		deleteAllDescendantsIfExist($article, 'DIV.single__post__category');
-		deleteAllDescendantsIfExist($article, 'DIV.post__tags');
+		foreach_delete_element($article, 'SCRIPT');
+		foreach_delete_element($article, 'NOSCRIPT');
+		foreach_delete_element($article, 'LINK');
+		foreach_delete_element($article, 'DIV.single-post-sidebar-wrapper');
+		foreach_delete_element($article, 'DIV.latest-articles-section');
+		foreach_delete_element($article, 'DIV.single__post__socials-top');
+		foreach_delete_element($article, 'DIV.single-post-sidebar-wrapper');
+		foreach_delete_element($article, 'DIV.post__socials-box');
+		foreach_delete_element($article, 'A.link-more');
+		foreach_delete_element($article, 'DIV[id^="advads-"]');
+		foreach_delete_element($article, 'ASIDE.book__box');
+		foreach_delete_element($article, 'DIV.quote-socials');
+		foreach_delete_element($article, 'SPAN[id^="more-"]');
+		foreach_delete_element($article, 'IMG.quote-image');
+		foreach_delete_element($article, 'IMG.post__author__image');
+		foreach_delete_element($article, 'DIV.single__post__category');
+		foreach_delete_element($article, 'DIV.post__tags');
 
 		//https://wiez.pl/2021/02/04/od-gomulki-do-jana-pawla-ii-warsztaty-kanonu-wolnych-polakow-w-krosnie/
-		addStyle($article, 'FIGURE', getStylePhotoParent());
-		addStyle($article, 'IMG.single__post__img-thumbnail, IMG[class^="wp-image-"]', getStylePhotoImg());
-		addStyle($article, 'FIGCAPTION', getStylePhotoCaption());
-		addStyle($article, 'BLOCKQUOTE', getStyleQuote());
+		add_style($article, 'FIGURE', getStylePhotoParent());
+		add_style($article, 'IMG.single__post__img-thumbnail, IMG[class^="wp-image-"]', getStylePhotoImg());
+		add_style($article, 'FIGCAPTION', getStylePhotoCaption());
+		add_style($article, 'BLOCKQUOTE', getStyleQuote());
 
 		$item['content'] = $article;
 		$item['categories'] = $tags;

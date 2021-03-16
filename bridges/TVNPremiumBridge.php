@@ -83,16 +83,16 @@ class TVNPremiumBridge extends FeedExpander {
 						}
 					}
 				}
-				$author = returnAuthorsAsString($article, 'DIV.main-asset-detail-info__author');
-				deleteAllDescendantsIfExist($article, 'SCRIPT');
-				deleteAllDescendantsIfExist($article, 'NOSCRIPT');
-				deleteAllDescendantsIfExist($article, 'LINK');
-				deleteAllDescendantsIfExist($article, 'ASIDE.article-share-socials');
-				deleteAllDescendantsIfExist($article, 'DIV.image-component--author');
-				deleteAllDescendantsIfExist($article, 'SPAN.main-asset-premium__label');
-				deleteAllDescendantsIfExist($article, 'IMG.premium-lock__picture');
-				deleteAllDescendantsIfExist($article, 'DIV.account-buttons--article');
-				deleteAllDescendantsIfExist($article, 'FIGURE.media-content');
+				$author = return_authors_as_string($article, 'DIV.main-asset-detail-info__author');
+				foreach_delete_element($article, 'SCRIPT');
+				foreach_delete_element($article, 'NOSCRIPT');
+				foreach_delete_element($article, 'LINK');
+				foreach_delete_element($article, 'ASIDE.article-share-socials');
+				foreach_delete_element($article, 'DIV.image-component--author');
+				foreach_delete_element($article, 'SPAN.main-asset-premium__label');
+				foreach_delete_element($article, 'IMG.premium-lock__picture');
+				foreach_delete_element($article, 'DIV.account-buttons--article');
+				foreach_delete_element($article, 'FIGURE.media-content');
 
 				$item['content'] = $article;
 				$item['author'] = $author;

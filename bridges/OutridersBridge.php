@@ -148,9 +148,9 @@ class OutridersBridge extends FeedExpander {
 		preg_match('/brief-[0-9]*/', $url, $output_array);
 		$brief_number = ucwords($output_array[0]);
 		//tagi
-		$tags = returnTagsArray($article, 'DIV.categories A[href]');
+		$tags = return_tags_array($article, 'DIV.categories A[href]');
 		$tags = array_merge(array($brief_number), $tags);
-		deleteAllDescendantsIfExist($article, 'DIV.categories');
+		foreach_delete_element($article, 'DIV.categories');
 		$this->items[] = array(
 			'uri' => $url,
 			'title' => $brief_number.': '.$title,
@@ -205,22 +205,22 @@ class OutridersBridge extends FeedExpander {
 		$article = $article_html->find('BODY.single-post ARTICLE', 0);
 		$this->fix_article_photos_sources($article);
 //		echo "numer: ".count($this->items).", url: ".$item['uri']."<br><br>";
-//		html_print($article);
-		deleteAllDescendantsIfExist($article, 'SCRIPT');
-		deleteAllDescendantsIfExist($article, 'NOSCRIPT');
-		deleteAllDescendantsIfExist($article, 'LINK');
-		deleteAllDescendantsIfExist($article, 'DIV.context-modal');
-		deleteAllDescendantsIfExist($article, 'AUDIO.or-player');
+//		print_html($article);
+		foreach_delete_element($article, 'SCRIPT');
+		foreach_delete_element($article, 'NOSCRIPT');
+		foreach_delete_element($article, 'LINK');
+		foreach_delete_element($article, 'DIV.context-modal');
+		foreach_delete_element($article, 'AUDIO.or-player');
 		//FIGCAPTION
 		fix_article_photos($article, 'DIV.article__thumbnail', TRUE);
 		fix_article_photos($article, 'FIGURE.wp-block-image', FALSE, 'src', 'FIGCAPTION');
 		//https://outride.rs/pl/konflikt-w-gorskim-karabachu/
 		fix_article_photos($article, 'DIV.gallery-photo', FALSE, 'src', 'DIV.gallery-photo__text.text-under');
 		$article = str_get_html($article->save());
-		addStyle($article, 'FIGURE.photoWrapper', getStylePhotoParent());
-		addStyle($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
-		addStyle($article, 'FIGCAPTION', getStylePhotoCaption());
-		addStyle($article, 'BLOCKQUOTE', getStyleQuote());
+		add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
+		add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
+		add_style($article, 'FIGCAPTION', getStylePhotoCaption());
+		add_style($article, 'BLOCKQUOTE', getStyleQuote());
 		$article = str_get_html($article->save());
 
 		$item['content'] = $article;
