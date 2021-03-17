@@ -136,10 +136,10 @@ class OpinieWPplBridge extends BridgeAbstract {
 		$this->removeVideoTitles($article);
 
 //		$article = str_get_html($article->save());
-		format_amp_article($article);
+		convert_amp_photos($article);
 		$article = str_get_html($article->save());
 
-		format_amp_links($article);
+		convert_amp_frames_to_links($article);
 
 		fix_article_photos($article, 'DIV.header-image-container', TRUE, 'src', 'DIV.header-author');
 		fix_article_photos($article, 'DIV.photo.from.amp', FALSE, 'src', 'FIGCAPTION');

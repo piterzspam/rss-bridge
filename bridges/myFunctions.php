@@ -1,5 +1,24 @@
 <?php
 
+	function get_photo_attributes_caption()
+	{
+		return array(
+			'data-author', 
+			'data-source', 
+			'attribution',
+		);
+	}
+	
+	function get_photo_attributes_img()
+	{
+		return array(
+			'class',
+			'src',
+			'alt',
+			'title',
+		);
+	}
+
 	function print_var_dump($variable, $name = "nazwa zmiennej", $prefix = "<br>")
 	{
 		echo $prefix;
@@ -74,19 +93,43 @@
 		);
 	}
 
-	function format_amp_article($main)
+	function convert_amp_photos($article)
 	{
-		foreach_delete_element($main, 'amp-analytics');
-		foreach_delete_element($main, 'amp-ad');
-		foreach_delete_element($main, 'i-amphtml-sizer');
-		foreach_delete_element($main, 'amp-image-lightbox');
-		foreach($main->find('amp-img, img') as $photo_element)
+		/*
+		echo "Przed<br>";
+		$article = str_get_html($article->save());
+		echo "Po<br>";
+		*/
+		/*
+		print_element($article, 'article przed');
+		foreach($article->find('AMP-IMG[src]') as $key=>$amp_photo_element)
+		{
+			echo "Element $key<br>";
+			if (FALSE === is_null($img_photo_element = $amp_photo_element->find('IMG[src]', 0)))
+			{
+				echo "img_photo_element: ".$img_photo_element->getAttribute('src')."<br>";
+				echo "amp_photo_element: ".$amp_photo_element->getAttribute('src')."<br>";
+				if($img_photo_element->getAttribute('src') === $amp_photo_element->getAttribute('src'))
+				{
+					echo "usunieto: ".$img_photo_element->getAttribute('src')."<br>";
+					$img_photo_element->outertext = '';
+				}
+			}
+		}
+		print_element($article, 'article po');*/
+		foreach_delete_element($article, 'amp-analytics');
+		foreach_delete_element($article, 'amp-ad');
+		foreach_delete_element($article, 'i-amphtml-sizer');
+		foreach_delete_element($article, 'amp-image-lightbox');
+		foreach($article->find('amp-img, img') as $photo_element)
 		{
 			if(isset($photo_element->width)) $photo_element->width = NULL;
 			if(isset($photo_element->height)) $photo_element->height = NULL;
 		}
+
+		
 		//https://opinie.wp.pl/wielka-zmiana-mezczyzn-wirus-ja-tylko-przyspieszyl-6604913984391297a?amp=1&_js_v=0.1
-		foreach($main->find('amp-img') as $ampimg)
+		foreach($article->find('amp-img') as $ampimg)
 		{
 			if ('p' === strtolower($ampimg->parent->tag))
 				$ampimg->parent->tag = "DIV";
@@ -102,8 +145,9 @@
 			$img_new_element = $img_new_element.'>';
 			
 			$new_amp_caption = "";
-			$photo_params = array('data-author', 'data-source');
-			foreach($photo_params as $param_name)
+			//https://wiadomosci-onet-pl.cdn.ampproject.org/v/s/wiadomosci.onet.pl/tylko-w-onecie/daniel-obajtek-skonczyl-studia-w-orlenie/8ge0e1e.amp?amp_js_v=0.1
+
+			foreach(get_photo_attributes_caption() as $param_name)
 			{
 				if($ampimg->hasAttribute($param_name))
 				{
@@ -121,9 +165,9 @@
 		}
 	}
 
-	function format_amp_links($main)
+	function convert_amp_frames_to_links($article)
 	{
-		foreach($main->find('amp-iframe') as $amp_iframe)
+		foreach($article->find('amp-iframe') as $amp_iframe)
 		{
 			if(FALSE === is_null($src = ($amp_iframe->getAttribute('src'))))
 			{
@@ -131,7 +175,7 @@
 				$amp_iframe->outertext = get_frame_outertext($src);
 			}
 		}
-		foreach($main->find('amp-twitter') as $amp_twitter)
+		foreach($article->find('amp-twitter') as $amp_twitter)
 		{
 			if(FALSE === is_null($data_tweetid = ($amp_twitter->getAttribute('data-tweetid'))))
 			{
@@ -139,7 +183,7 @@
 				$amp_twitter->outertext = get_frame_outertext($twitter_url);
 			}
 		}
-		foreach($main->find('amp-youtube') as $amp_youtube)
+		foreach($article->find('amp-youtube') as $amp_youtube)
 		{
 			if(FALSE === is_null($data_videoid = ($amp_youtube->getAttribute('data-videoid'))))
 			{
@@ -168,9 +212,9 @@
 			return $article_data;
 	}
 
-	function clear_paragraphs_from_taglinks($main, $paragrapgh_search_string, $regexArray)
+	function clear_paragraphs_from_taglinks($article, $paragrapgh_search_string, $regexArray)
 	{
-		foreach($main->find($paragrapgh_search_string) as $paragraph)
+		foreach($article->find($paragrapgh_search_string) as $paragraph)
 		{
 			foreach($paragraph->find('A') as $a_element)
 			{
@@ -196,9 +240,9 @@
 		}
 	}
 	
-	function foreach_delete_element_containing_text_from_array($main, $element_search_string, $subelement_search_textstring_array)
+	function foreach_delete_element_containing_text_from_array($article, $element_search_string, $subelement_search_textstring_array)
 	{
-		foreach($main->find($element_search_string) as $element)
+		foreach($article->find($element_search_string) as $element)
 		{
 			foreach($subelement_search_textstring_array as $subelement_search_textstring)
 			{
@@ -211,10 +255,10 @@
 		}
 	}
 
-	function foreach_delete_element_containing_elements_hierarchy($main, $subelements_hierarchy_array)
+	function foreach_delete_element_containing_elements_hierarchy($article, $subelements_hierarchy_array)
 	{
 		$last = count($subelements_hierarchy_array)-1;
-		foreach($main->find($subelements_hierarchy_array[$last]) as $subelement)
+		foreach($article->find($subelements_hierarchy_array[$last]) as $subelement)
 		{
 			$iterator = $last-1;
 			while ($iterator >= 0 && strtolower($subelement->parent->tag) === strtolower($subelements_hierarchy_array[$iterator]))
@@ -237,9 +281,9 @@
 		}
 	}
 	
-	function foreach_delete_element($main, $element_search_string)
+	function foreach_delete_element($article, $element_search_string)
 	{
-		foreach($main->find($element_search_string) as $element)
+		foreach($article->find($element_search_string) as $element)
 		{
 			$element->outertext = '';
 		}
@@ -253,9 +297,9 @@
 		}
 	}
 
-	function foreach_delete_element_containing_subelement($main, $element_search_string, $subelement_search_string)
+	function foreach_delete_element_containing_subelement($article, $element_search_string, $subelement_search_string)
 	{
-		foreach ($main->find($element_search_string) as $element)
+		foreach ($article->find($element_search_string) as $element)
 		{
 			if (FALSE === is_null($subelement = $element->find($subelement_search_string, 0)))
 			{
@@ -264,9 +308,9 @@
 		}
 	}
 
-	function foreach_replace_outertext_with_subelement_innertext($main, $element_search_string, $subelement_search_string)
+	function foreach_replace_outertext_with_subelement_innertext($article, $element_search_string, $subelement_search_string)
 	{
-		foreach($main->find($element_search_string) as $element)
+		foreach($article->find($element_search_string) as $element)
 		{
 			if (FALSE === is_null($subelement = $element->find($subelement_search_string, 0)))
 			{
@@ -275,9 +319,9 @@
 		}
 	}
 
-	function foreach_replace_outertext_with_subelement_outertext($main, $element_search_string, $subelement_search_string)
+	function foreach_replace_outertext_with_subelement_outertext($article, $element_search_string, $subelement_search_string)
 	{
-		foreach($main->find($element_search_string) as $element)
+		foreach($article->find($element_search_string) as $element)
 		{
 			if (FALSE === is_null($subelement = $element->find($subelement_search_string, 0)))
 			{
@@ -286,14 +330,13 @@
 		}
 	}
 
-	function foreach_replace_outertext_with_innertext($main, $element_search_string)
+	function foreach_replace_outertext_with_innertext($article, $element_search_string)
 	{
-		foreach($main->find($element_search_string) as $element)
+		foreach($article->find($element_search_string) as $element)
 		{
 			$element->outertext = $element->innertext;
 		}
 	}
-
 
 	function get_proxy_url($social_url)
 	{
@@ -308,10 +351,10 @@
 		return $social_url;
 	}
 
-	function return_tags_array($main, $tag_selector)
+	function return_tags_array($article, $tag_selector)
 	{
 		$tags = array();
-		foreach($main->find($tag_selector) as $tags_item)
+		foreach($article->find($tag_selector) as $tags_item)
 		{
 			$tag_text = $tags_item->plaintext;
 			$tag_text = str_replace("&nbsp;", '', $tag_text);
@@ -322,10 +365,10 @@
 		return array_unique($tags);
 	}
 
-	function return_authors_as_string($main, $author_selector)
+	function return_authors_as_string($article, $author_selector)
 	{
 		$authors = '';
-		foreach($main->find($author_selector) as $author_item)
+		foreach($article->find($author_selector) as $author_item)
 		{
 			$authors = $authors.', '.trim($author_item->plaintext);
 		}
@@ -430,17 +473,17 @@
 	}
 	
 
-	function get_text_plaintext($main, $element_search_string, $backup_value = "Tekst zapasowy")
+	function get_text_plaintext($article, $element_search_string, $backup_value = "Tekst zapasowy")
 	{
-		if (FALSE === is_null($text_element = $main->find($element_search_string, 0)))
+		if (FALSE === is_null($text_element = $article->find($element_search_string, 0)))
 			return trim($text_element->plaintext);
 		else
 			return $backup_value;
 	}
 
-	function get_text_from_attribute($main, $element_search_string, $attribute_name, $backup_value = "Tekst zapasowy")
+	function get_text_from_attribute($article, $element_search_string, $attribute_name, $backup_value = "Tekst zapasowy")
 	{
-		if (FALSE === is_null($element = $main->find($element_search_string, 0)))
+		if (FALSE === is_null($element = $article->find($element_search_string, 0)))
 		{
 			if($element->hasAttribute($attribute_name))
 			{
@@ -456,9 +499,9 @@
 			return $backup_value;
 	}
 
-	function replace_attribute($main, $element_search_string, $attribute_to_replace, $attribute_to_replace_with = NULL)
+	function replace_attribute($article, $element_search_string, $attribute_to_replace, $attribute_to_replace_with = NULL)
 	{
-		foreach($main->find($element_search_string) as $element)
+		foreach($article->find($element_search_string) as $element)
 		{
 			if($element->hasAttribute($attribute_to_replace) && is_null($attribute_to_replace_with))
 			{
@@ -472,20 +515,15 @@
 		}
 	}
 
-	function fix_all_photos($main)
+	function fix_all_photos($article)
 	{
-		$allowed_attributes = array(
-			'class',
-			'src',
-			'alt',
-			'title',
-		);
-		foreach($main->find('IMG') as $photo_element)
+		$array_allowed_attributes = array_merge(get_photo_attributes_caption(), get_photo_attributes_img());
+		foreach($article->find('IMG') as $photo_element)
 		{
 			$img_new_element = '<img ';
 			foreach($photo_element->getAllAttributes() as $key => $element)
 			{
-				if (FALSE === is_null($element) && TRUE === in_array($key, $allowed_attributes))
+				if (FALSE === is_null($element) && TRUE === in_array($key, $array_allowed_attributes))
 				{
 					$img_new_element = $img_new_element.' '.$key.'="'.$element.'"';
 				}
@@ -495,9 +533,11 @@
 		}
 	}
 
-	function fix_article_photos($main, $element_search_string, $is_main = FALSE, $str_photo_url_attribute = 'src', $str_selectror_photo_caption = '')
+	function fix_article_photos($article, $element_search_string, $is_main = FALSE, $str_photo_url_attribute = 'src', $str_selectror_photo_caption = '')
 	{
-		foreach($main->find($element_search_string) as $old_photo_wrapper)
+		$array_allowed_attributes = array_merge(get_photo_attributes_caption(), get_photo_attributes_img());
+
+		foreach($article->find($element_search_string) as $old_photo_wrapper)
 		{
 			if ('img' === strtolower($old_photo_wrapper->tag))
 			{
@@ -560,25 +600,11 @@
 				$new_element_img = $new_photo_wrapper->find('IMG', 0);
 
 				//dla atrybutu bez wartosci zwracane jest true
-				if($old_photo_element->hasAttribute('alt'))
+				foreach($old_photo_element->getAllAttributes() as $key => $element)
 				{
-					if (TRUE !== ($img_alt = $old_photo_element->getAttribute('alt')))
+					if (FALSE === is_null($element) && TRUE === in_array($key, $array_allowed_attributes))
 					{
-						if (0 !== strlen($img_alt))
-						{
-							$new_element_img->setAttribute('alt', $img_alt);
-						}
-					}
-				}
-
-				if($old_photo_element->hasAttribute('title'))
-				{
-					if (TRUE !== ($img_title = $old_photo_element->getAttribute('title')))
-					{
-						if (0 !== strlen($img_title))
-						{
-							$new_element_img->setAttribute('title', $img_title);
-						}
+						$new_element_img->setAttribute($key , $element);
 					}
 				}
 				$old_photo_wrapper->outertext = $new_photo_wrapper;
@@ -586,9 +612,9 @@
 		}
 	}
 
-	function fix_all_iframes($main)
+	function fix_all_iframes($article)
 	{
-		foreach($main->find('IFRAME[src^="http"]') as $frame_element)
+		foreach($article->find('IFRAME[src^="http"]') as $frame_element)
 		{
 			$url = $frame_element->getAttribute('src');
 			$frame_element->outertext = get_frame_outertext($url);
@@ -600,7 +626,7 @@
 		$twitter_proxy = 'nitter.snopyta.org';
 		$twitter_url = str_replace('twitter.com', $twitter_proxy, $twitter_url);
 		$html_twitter = getSimpleHTMLDOM($twitter_url);
-		$main_tweet = $html_twitter->find('DIV#m.main-tweet', 0);
+		$main_tweet = $html_twitter->find('DIV#m.article-tweet', 0);
 		foreach($main_tweet->find('a') as $element)
 		{
 			$element_url = $element->getAttribute('href');

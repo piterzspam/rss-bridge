@@ -136,8 +136,8 @@ class BezprawnikBridge extends BridgeAbstract {
 //		$title = $article_html->find('META[property="og:title"]', 0)->content;
 //		$date = $article_html->find('META[property="article:published_time]', 0)->content;
 		$tags = return_tags_array($article, 'DIV.amp-wp-tax-tag [rel="tag"]');
-		format_amp_article($article);
-		format_amp_links($article);
+		convert_amp_photos($article);
+		convert_amp_frames_to_links($article);
 //https://bezprawnik.pl/korwin-mikke-wyrzucony-z-facebooka/amp/
 //https://bezprawnik.pl/rzad-zmienil-ustroj-polski/amp/
 		foreach_delete_element_containing_elements_hierarchy($article, array('ul', 'li', 'h3', 'a'));
