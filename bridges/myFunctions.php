@@ -523,10 +523,11 @@
 			$img_new_element = '<img ';
 			foreach($photo_element->getAllAttributes() as $key => $element)
 			{
-				if (FALSE === is_null($element) && TRUE === in_array($key, $array_allowed_attributes))
+				if ("" !== $element && FALSE === is_null($element) && TRUE === in_array($key, $array_allowed_attributes))
 				{
 					$img_new_element = $img_new_element.' '.$key.'="'.$element.'"';
 				}
+				
 			}
 			$img_new_element = $img_new_element.'>';
 			$photo_element->outertext = $img_new_element;
@@ -602,7 +603,7 @@
 				//dla atrybutu bez wartosci zwracane jest true
 				foreach($old_photo_element->getAllAttributes() as $key => $element)
 				{
-					if (FALSE === is_null($element) && TRUE === in_array($key, $array_allowed_attributes))
+					if ("" !== $element && FALSE === is_null($element) && TRUE === in_array($key, $array_allowed_attributes))
 					{
 						$new_element_img->setAttribute($key , $element);
 					}
@@ -617,6 +618,11 @@
 		foreach($article->find('IFRAME[src^="http"]') as $frame_element)
 		{
 			$url = $frame_element->getAttribute('src');
+			$frame_element->outertext = get_frame_outertext($url);
+		}
+		foreach($article->find('IFRAME[data-src^="http"]') as $frame_element)
+		{
+			$url = $frame_element->getAttribute('data-src');
 			$frame_element->outertext = get_frame_outertext($url);
 		}
 	}
