@@ -15,13 +15,13 @@ class BezprawnikBridge extends BridgeAbstract {
 				'name' => 'URL',
 				'type' => 'text',
 				'required' => true,
-				'defaultValue' => 3,
 			),
 			'limit' => array
 			(
 				'name' => 'Liczba artykułów',
 				'type' => 'number',
-				'required' => true
+				'required' => true,
+				'defaultValue' => 3,
 			),
 		)
 	);
@@ -149,8 +149,13 @@ class BezprawnikBridge extends BridgeAbstract {
 		foreach_delete_element($article, 'DIV.amp-autor');
 		foreach_delete_element($article, 'FOOTER');
 		clear_paragraphs_from_taglinks($article, 'P', array('/bezprawnik.pl\/tag\//'));
+
 		//zdjęcie autora
-		$article->find('FIGURE[id^="attachment_"][class^="wp-caption alignright amp-wp-"]', 0)->outertext = '';
+		$author_photo = $article->find('FIGURE[id^="attachment_"][class^="wp-caption alignright amp-wp-"]', 0);
+		if (FALSE === is_null($author_photo))
+		{
+			$author_photo = $author_photo->outertext = '';
+		}
 		
 		fix_article_photos($article, 'FIGURE.amp-wp-article-featured-image.wp-caption', TRUE);
 		
