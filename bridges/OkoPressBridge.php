@@ -56,6 +56,7 @@ class OkoPressBridge extends FeedExpander {
 	protected function parseItem($newsItem)
 	{
 		$item = parent::parseItem($newsItem);
+//		print_var_dump($item, 'item');
 		if (count($this->items) >= $GLOBALS['limit'])
 		{
 			if (TRUE === $GLOBALS['include_not_downloaded'])
@@ -77,15 +78,39 @@ class OkoPressBridge extends FeedExpander {
 			return $item;
 		}
 		$author = return_authors_as_string($article_html, 'SPAN.meta-section__autor A[href*="/autor/"]');
-		$tags = return_tags_array($article_html, 'DIV.entry-content DIV.tags A[rel="tag"]');
-
-
-		$header_photo = $article_html->find('DIV#main-image PICTURE SOURCE[data-srcset]', 0);
+		$tags = array();
+		if (FALSE === is_null($script_element = $article_html->find('HEAD SCRIPT[type="application/ld+json"]', 1)))
+		{
+			$script_text = $script_element->innertext;
+			$article_data_parsed = parse_article_data(json_decode($script_text));
+			foreach($article_data_parsed["itemListElement"] as $element)
+			{
+				$item_element = $element["item"];
+				if (FALSE !== strpos($item_element["@id"], 'oko.press/kategoria/'))
+				{
+					$tags[] = $item_element["name"];
+				}
+			}
+		}
+		$tags[] = get_json_value($article_html, 'SCRIPT', 'pageCategory');
+		$tags_links = return_tags_array($article_html, 'DIV.entry-content DIV.tags A[rel="tag"]');
+		$tags = array_unique(array_merge($tags, $tags_links));
+		set_biggest_photo_size_from_attribute($article_html, 'IMG.lazy[data-srcset]', 'data-srcset');
+		$article_html = str_get_html($article_html->save());
+		set_biggest_photo_size_from_attribute($article_html, 'IMG.lazy[data-src]', 'data-src');
+		$article_html = str_get_html($article_html->save());
+		$header_photo = $article_html->find('DIV#main-image IMG.lazy[src]', 0);
 		if (FALSE === is_null($header_photo))
 		{
-			$src_header_image = $header_photo->getAttribute('data-srcset');
+			$src_header_image = $header_photo->getAttribute('src');
 		}
 		$article = $article_html->find('ARTICLE[id^="post-"] DIV.large-9', 0);
+		foreach_delete_element($article, 'DIV.cr-paragraph-additions[data-cookie="HasLogged"]');
+		foreach_delete_element($article, 'DIV.cr-login-block.oko-widget-frame');
+		foreach_delete_element($article, 'comment');
+		foreach_delete_element($article, 'SCRIPT');
+		foreach_replace_outertext_with_innertext($article, 'DIV.socialwall');
+		$article = str_get_html($article->save());
 		foreach_delete_element($article, 'DIV.related_image_open');
 		foreach_delete_element($article, 'DIV.row.js-display-random-element');
 		foreach_delete_element($article, 'DIV.tags');
@@ -96,18 +121,44 @@ class OkoPressBridge extends FeedExpander {
 		$article->find('hr',-1)->outertext = '';
 		if (isset($src_header_image))
 		{
-			$article->outertext = '<h1 class="title">'.$item['title'].'</h1>'.'<figure class="photoWrapper mainPhoto"><img src="'.$src_header_image.'"></figure>'.$article->outertext;
+			$article = str_get_html('<h1 class="title">'.$item['title'].'</h1>'.'<figure class="photoWrapper mainPhoto"><img src="'.$src_header_image.'"></figure>'.$article->save());
 		}
 		else
 		{
-			$article->outertext = '<h1 class="title">'.$item['title'].'</h1>'.$article->outertext;
+			$article = str_get_html('<h1 class="title">'.$item['title'].'</h1>'.$article->save());
 		}
 		$article = str_get_html($article->save());
+		
+		foreach($article->find('IMG.lazy[data-src]') as $photo_element)
+		{
+			$photo_sizes_data = array();
+			$img_srcset = $photo_element->getAttribute('data-srcset');
+			$last_url_array  = explode(' ', $img_srcset);
+			$img_src = $last_url_array[0];
+			$img_size_string = $last_url_array[1];
+			preg_match('/([0-9]+)w/', $img_size_string, $output_array);
+			$img_size_int = $output_array[1];
+			$photo_sizes_data[] = array(
+				'size' => $img_size_int,
+				'src' => $img_src
+			);
+			$biggest_size = 0;
+			$biggest_position = 0;
+			foreach($photo_sizes_data as $key => $element)
+			{
+				if ($element['size'] > $biggest_size)
+				{
+					$biggest_size = $element['size'];
+					$biggest_position = $key;
+				}
+			}
+			$photo_element->setAttribute('src', $photo_sizes_data[$biggest_position]['src']);
+		}
 		//https://oko.press/astra-zeneca-ema/
 		fix_all_iframes($article);
 		$article = str_get_html($article->save());
 		//https://oko.press/stalo-sie-przemyslaw-radzik-symbol-dobrej-zmiany-w-sadach-dostal-awans-od-prezydenta/
-		$this->fix_article_photos_sources($article);
+//		$this->fix_article_photos_sources($article);
 		$article = str_get_html($article->save());
 		add_style($article, 'DIV.excerpt', array('font-weight: bold;'));
 		$article = str_get_html($article->save());
@@ -132,6 +183,8 @@ class OkoPressBridge extends FeedExpander {
 		$article = str_get_html($article->save());
 		fix_article_photos($article, 'DIV.photo', FALSE, 'src', 'EM');
 		$article = str_get_html($article->save());
+		fix_article_photos($article, 'FIGURE[id^="attachment_"]', FALSE, 'src', 'FIGCAPTION');
+		$article = str_get_html($article->save());
 		//https://opinie.wp.pl/kataryna-zyjemy-w-okrutnym-swiecie-ale-aborcja-embriopatologiczna-musi-pozostac-opinia-6567085945505921a?amp=1&_js_v=0.1
 		add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
 		add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
@@ -140,7 +193,7 @@ class OkoPressBridge extends FeedExpander {
 		$article = str_get_html($article->save());
 		
 		
-
+//		$item['title'] = $title;
 		$item['content'] = $article;
 		$item['author'] = $author;
 		$item['categories'] = $tags;
@@ -151,7 +204,7 @@ class OkoPressBridge extends FeedExpander {
 
 	private function fix_article_photos_sources($article)
 	{
-		foreach($article->find('IMG.lazy[data-srcset]') as $photo_element)
+/*		foreach($article->find('IMG.lazy[data-srcset]') as $photo_element)
 		{
 			$img_src = $photo_element->getAttribute('src');
 			if($photo_element->hasAttribute('data-srcset'))
@@ -164,7 +217,7 @@ class OkoPressBridge extends FeedExpander {
 				$img_src = $last_url_array[0];
 			}
 			$photo_element->setAttribute('src', $img_src);
-		}
+		}*/
 	}
 	
 	private function my_get_html($url)

@@ -398,6 +398,7 @@
 		static $to = '';
 	
 		static $width = 16; # number of bytes per line
+//		static $width = 4; # number of bytes per line
 
 		static $pad = '.'; # padding for non-visible characters
 
@@ -679,5 +680,71 @@
 			}
 		}
 		return $outertext_to_return;
+	}
+
+	function get_json_value($article_element, $string_selector, $search_string)
+	{
+		$value = "";
+		foreach($article_element->find($string_selector) as $script_element)
+		{
+			$script_text = $script_element->innertext;
+			preg_match('/["\']'.$search_string.'["\'] *: *["\'](.*)["\']/', $script_text, $output_array);
+			if (isset($output_array[1]))
+			{
+				$value = $output_array[1];
+				break;
+			}
+		}
+		return $value;
+	}
+
+	
+	function set_biggest_photo_size_from_attribute($article_element, $string_selector, $attribute_name)
+	{
+		
+		foreach($article_element->find($string_selector) as $photo_element)
+		{
+			if($photo_element->hasAttribute($attribute_name))
+			{
+				$img_srcset = $photo_element->getAttribute($attribute_name);
+				$photo_sizes_data = array();
+				$sizes_array  = explode(', ', $img_srcset);
+				if (count($sizes_array) > 1)
+				{
+					foreach($sizes_array as $key => $size_string)
+					{
+						$size_array  = explode(' ', trim($size_string));
+						$img_size_src = $size_array[0];
+						$img_size_string = $sizes_array[1];
+						preg_match('/([0-9]+)/', $img_size_string, $output_array);
+						$img_size_int = intval($output_array[1]);
+						$photo_sizes_data[] = array(
+							'size' => $img_size_int,
+							'src' => $img_size_src
+						);
+					}
+/*
+					print_var_dump($img_srcset, 'img_srcset');
+					print_var_dump($sizes_array, 'sizes_array');
+					print_var_dump($photo_sizes_data, 'photo_sizes_data');
+*/
+					$biggest_size = 0;
+					$biggest_position = 0;
+					foreach($photo_sizes_data as $key => $element)
+					{
+						if ($element['size'] > $biggest_size)
+						{
+							$biggest_size = $element['size'];
+							$biggest_position = $key;
+						}
+					}
+					$photo_element->setAttribute('src', $photo_sizes_data[$biggest_position]['src']);
+				}
+				else
+				{
+					$photo_element->setAttribute('src', $img_srcset);
+				}
+			}
+		}
 	}
 
