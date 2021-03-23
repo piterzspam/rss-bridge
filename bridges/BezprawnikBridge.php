@@ -157,7 +157,7 @@ class BezprawnikBridge extends BridgeAbstract {
 			$author_photo = $author_photo->outertext = '';
 		}
 		
-		fix_article_photos($article, 'FIGURE.amp-wp-article-featured-image.wp-caption', TRUE);
+		format_article_photos($article, 'FIGURE.amp-wp-article-featured-image.wp-caption', TRUE);
 		
 /*
 		foreach($article->find('amp-img, img') as $photo_element)

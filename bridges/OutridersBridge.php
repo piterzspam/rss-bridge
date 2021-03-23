@@ -203,7 +203,7 @@ class OutridersBridge extends FeedExpander {
 			return $item;
 		}
 		$article = $article_html->find('BODY.single-post ARTICLE', 0);
-		$this->fix_article_photos_sources($article);
+		$this->format_article_photos_sources($article);
 //		echo "numer: ".count($this->items).", url: ".$item['uri']."<br><br>";
 //		print_html($article);
 		foreach_delete_element($article, 'SCRIPT');
@@ -212,10 +212,10 @@ class OutridersBridge extends FeedExpander {
 		foreach_delete_element($article, 'DIV.context-modal');
 		foreach_delete_element($article, 'AUDIO.or-player');
 		//FIGCAPTION
-		fix_article_photos($article, 'DIV.article__thumbnail', TRUE);
-		fix_article_photos($article, 'FIGURE.wp-block-image', FALSE, 'src', 'FIGCAPTION');
+		format_article_photos($article, 'DIV.article__thumbnail', TRUE);
+		format_article_photos($article, 'FIGURE.wp-block-image', FALSE, 'src', 'FIGCAPTION');
 		//https://outride.rs/pl/konflikt-w-gorskim-karabachu/
-		fix_article_photos($article, 'DIV.gallery-photo', FALSE, 'src', 'DIV.gallery-photo__text.text-under');
+		format_article_photos($article, 'DIV.gallery-photo', FALSE, 'src', 'DIV.gallery-photo__text.text-under');
 		$article = str_get_html($article->save());
 		add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
 		add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
@@ -229,7 +229,7 @@ class OutridersBridge extends FeedExpander {
 
 
 
-	private function fix_article_photos_sources($article)
+	private function format_article_photos_sources($article)
 	{
 		foreach($article->find('IMG[srcset]') as $photo_element)
 		{

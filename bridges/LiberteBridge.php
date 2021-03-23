@@ -246,9 +246,9 @@ class LiberteBridge extends BridgeAbstract {
 		$article = str_get_html($article->save());
 
 		$this->fix_main_photo($article);
-		$this->fix_article_photos_sources($article);
+		$this->format_article_photos_sources($article);
 
-		fix_article_photos($article, 'IMG.alignleft[src^="http"], IMG.alignright[src^="http"], IMG.alignnone[src^="http"]', FALSE);
+		format_article_photos($article, 'IMG.alignleft[src^="http"], IMG.alignright[src^="http"], IMG.alignnone[src^="http"]', FALSE);
 
 
 		
@@ -291,7 +291,7 @@ class LiberteBridge extends BridgeAbstract {
 		}
 	}
 
-	private function fix_article_photos_sources($article)
+	private function format_article_photos_sources($article)
 	{
 		foreach($article->find('IMG[src^="http"]') as $photo_element)
 		{

@@ -56,131 +56,100 @@ class KrytykaPolitycznaBridge extends FeedExpander {
 				return;
 			}
 		}
+//		$item['uri'] = 'https://krytykapolityczna.pl/swiat/ue/lewica-wybory-lokalne-w-niemczech-traczyk-komentarz/';
+//		$item['uri'] = 'https://krytykapolityczna.pl/kraj/egoizm-klimatyczny-polakow-czyli-jak-nas-zmienia-koronawirus/';
+//		$item['uri'] = 'https://krytykapolityczna.pl/swiat/jagpda-grondecka-afganistan-talibowie-chca-znow-rzadzic/';
+//		$item['uri'] = 'https://krytykapolityczna.pl/swiat/wielki-kapital-chcial-nas-zatruc-olowiem-nie-tylko-on/';
+		
 		$article_html = getSimpleHTMLDOMCached($item['uri'], 86400 * 14);
-		$article = $article_html->find('DIV#content', 0);
-		//tagi
-		$tags = return_tags_array($article, 'DIV.single-post-tags A[rel="tag"]');
-		foreach_delete_element($article, 'DIV.single-post-tags');
+		$article_html = str_get_html(prepare_article($article_html));
+		$article = $article_html->find('DIV#wrapper', 0);
 
-		foreach_delete_element($article, 'SCRIPT');
-		foreach_delete_element($article, 'NOSCRIPT');
-		foreach_delete_element($article, 'LINK');
-		foreach_delete_element($article, 'DIV.entry-meta-footer');
-		foreach_delete_element($article, 'DIV.read-also');
-		foreach_delete_element($article, 'ASIDE.book-item.site-commerc');
-		foreach_delete_element($article, 'DIV.addthis_tool');
-		foreach_delete_element($article, 'DIV.article-donate-bottom');
-		foreach_delete_element($article, 'DIV[id^="kppromo"]');
-		foreach_delete_element($article, 'DIV.hidden-meta');
-		//https://krytykapolityczna.pl/nauka/psychologia/witkowski-bujany-fotel-z-wachlarzem-skad-wiemy-czy-psychoterapia-w-ogole-dziala/
-		foreach_delete_element($article, 'DIV.article-top-advertisement');
+		//tagi
+		$tags1 = return_tags_array($article, 'HEADER.entry-header A[rel="category tag"]');
+		$tags2 = return_tags_array($article, 'DIV.single-post-tags A[rel="tag"]');
+		$tags = array_unique(array_merge($tags1, $tags2));
+
+		$selectors_array = array();
+		$selectors_array[] = 'HEADER.entry-header ASIDE#post-header-sidebar';
+		$selectors_array[] = 'HEADER.entry-header H5';
+		$selectors_array[] = 'HEADER.entry-header DIV.entry-meta';
+		$selectors_array[] = 'ASIDE#after-post-sidebar';
+		$selectors_array[] = 'DIV.comments-full';
+		$selectors_array[] = 'FOOTER#site-footer';
+		$selectors_array[] = 'DIV#mobile-menu-bg';
+		$selectors_array[] = 'HEADER#mobile-site-header';
+		$selectors_array[] = 'HEADER#site-header';
+		$selectors_array[] = 'DIV.entry-details-holder.inner H5';
+		$selectors_array[] = 'DIV.entry-details-holder.inner DIV.entry-meta';
+		$selectors_array[] = 'NOSCRIPT';
+		$selectors_array[] = 'LINK';
+		$selectors_array[] = 'DIV.entry-meta-footer';
+		$selectors_array[] = 'DIV.read-also';
+		$selectors_array[] = 'ASIDE.book-item.site-commerc';
+		$selectors_array[] = 'DIV.addthis_tool';
+		$selectors_array[] = 'DIV.article-donate-bottom';
+		$selectors_array[] = 'DIV[id^="kppromo"]';
+		$selectors_array[] = 'DIV.hidden-meta';
+		$selectors_array[] = 'DIV.article-top-advertisement';
+		$selectors_array[] = 'DIV.single-post-tags';
+		$selectors_array[] = 'BLOCKQUOTE.wp-embedded-content[data-secret]';
+		//https://krytykapolityczna.pl/nauka/jas-kapela-karolina-holda-dieta-weganska-wegetarianska-dla-psow-i-kot/
+		$selectors_array[] = 'IMG.avatar[alt][!src]';
+		foreach_delete_element_array($article, $selectors_array);
+
+		combine_two_elements($article, 'IMG.pre-content.pre-content-image', 'DIV.mnky-featured-image-caption', 'DIV', 'super_photo');
+		combine_two_elements($article, 'DIV.post-preview IMG', 'DIV.mnky-featured-image-caption', 'DIV', 'super_photo');
+		move_element($article, 'DIV#container HEADER.entry-header.clearfix', 'DIV#content', 'innertext', 'before');
 		foreach_delete_element_containing_elements_hierarchy($article, array('BLOCKQUOTE', 'P', 'A[href^="https://krytykapolityczna.pl/"]'));
 		foreach_delete_element_containing_elements_hierarchy($article, array('DIV', 'A[href][rel="author"]'));
 		
-		if (FALSE === is_null($date_created_element = $article->find('TIME.published', 0)))
-		{
-			$date_created_element->innertext = 'Publikacja: '.$date_created_element->innertext;
-		}
-		if (FALSE === is_null($date_updated_element = $article->find('TIME.updated', 0)))
-		{
-			$date_updated_element->innertext = 'Aktualizacja: '.$date_updated_element->innertext;
-			$date_updated_element->outertext = '<br>'.$date_updated_element->outertext.'<br><br>';
-		}
-
-		$content = $article->find('DIV.entry-content', 0);
-		$content->outertext = $content->innertext;
 		$article = str_get_html($article->save());
-		$this->fix_main_photo($article);
-		//https://krytykapolityczna.pl/swiat/jagpda-grondecka-afganistan-talibowie-chca-znow-rzadzic/
-		$this->fix_article_photos($article);
+		insert_html($article, 'TIME.published', '', '', 'Publikacja: ', '');
+		$article = str_get_html($article->save());
+		insert_html($article, 'TIME.updated', '<br>', '<br><br>', '', '');
+		$article = str_get_html($article->save());
+		insert_html($article, 'TIME.updated', '', '', 'Aktualizacja: ', '');
+		$article = str_get_html($article->save());
+		insert_html($article, 'DIV.author-vcard-holder', '<hr>', '', '', '');
+		$article = str_get_html($article->save());
+		foreach_replace_outertext_with_innertext($article, 'HEADER.entry-header');
+		$article = str_get_html($article->save());
+		foreach_replace_outertext_with_innertext($article, 'ARTICLE[id^="post-"]');
+		$article = str_get_html($article->save());
+		foreach_replace_outertext_with_innertext($article, 'DIV.post-preview');
+		$article = str_get_html($article->save());
+		foreach_replace_outertext_with_innertext($article, 'DIV.entry-content');
+		$article = str_get_html($article->save());
+		foreach_replace_outertext_with_innertext($article, 'ARTICLE[id^="post-"]');
+		$article = str_get_html($article->save());
+		//START - https://krytykapolityczna.pl/swiat/jagpda-grondecka-afganistan-talibowie-chca-znow-rzadzic/
+		fix_article_photos($article, 'DIV.content-image', FALSE, 'src', 'FIGCAPTION');
+		$article = str_get_html($article->save());
+		//STOP - https://krytykapolityczna.pl/swiat/jagpda-grondecka-afganistan-talibowie-chca-znow-rzadzic/
+		//START - https://krytykapolityczna.pl/swiat/wielki-kapital-chcial-nas-zatruc-olowiem-nie-tylko-on/
+		fix_article_photos($article, 'FIGURE[id^="attachment_"]', FALSE, 'src', 'FIGCAPTION');
+		$article = str_get_html($article->save());
+		//STOP - https://krytykapolityczna.pl/swiat/wielki-kapital-chcial-nas-zatruc-olowiem-nie-tylko-on/
+		//START - https://krytykapolityczna.pl/nauka/jas-kapela-karolina-holda-dieta-weganska-wegetarianska-dla-psow-i-kot/
+		fix_article_photos($article, 'DIV.super_photo', TRUE, 'src', 'DIV.mnky-featured-image-caption');
+		$article = str_get_html($article->save());
+		//STOP - https://krytykapolityczna.pl/nauka/jas-kapela-karolina-holda-dieta-weganska-wegetarianska-dla-psow-i-kot/
+
 		foreach_replace_outertext_with_subelement_outertext($article, 'ASIDE.single-post-sidebar', 'SPAN.meta-date');
 		foreach_replace_outertext_with_subelement_outertext($article, 'DIV.single-post-content-holder', 'DIV.single-post-content');
 		$article = str_get_html($article->save());
-		
-		//Fix zdjęcia autora
-		foreach($article->find('IMG.avatar[data-cfsrc^="http"]') as $avatar_element)
-		{
-			if(isset($avatar_element->style)) $avatar_element->style = NULL;
-			$src = $avatar_element->getAttribute('data-cfsrc');
-			$avatar_element->setAttribute('src', $src);
-			$avatar_element->setAttribute('data-cfsrc', NULL);
-		}
-
-		//Fix reszty zdjęć
-		//https://krytykapolityczna.pl/kraj/dawid-krawczyk-cyrk-polski-reportaz/
-		foreach($article->find('IMG[data-cfsrc][!src]') as $photo_element)
-		{
-			$src = $photo_element->getAttribute('data-cfsrc');
-			$photo_element->setAttribute('src', $src);
-			$photo_element->setAttribute('data-cfsrc', NULL);
-			$photo_element->setAttribute('style', NULL);
-		}
-		//lead - https://krytykapolityczna.pl/kraj/galopujacy-major-aborcja-opozycjo-musisz-dac-kobietom-nadzieje/
 
 		add_style($article, 'P.post-lead', array('font-weight: bold;'));
 		add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
 		add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
 		add_style($article, 'FIGCAPTION', getStylePhotoCaption());
+		add_style($article, 'BLOCKQUOTE', getStyleQuote());
+		$article = str_get_html($article->save());
+
 		$item['content'] = $article;
 		$item['categories'] = $tags;
 		return $item;
 	}
-
-	private function fix_main_photo($article)
-	{
-		if (FALSE === is_null($main_image = $article->find('ARTICLE[id^="post-"] DIV.post-preview IMG.attachment-full[data-cfsrc^="http"]', 0)))
-		{
-			if (FALSE === is_null($image_caption = $article->find('DIV.mnky-featured-image-caption', 0)))
-			{
-				$caption_text = trim($image_caption->plaintext);
-				$image_caption->outertext = '';
-			}
-			$img_src = "";
-			$img_src = $main_image->getAttribute('data-cfsrc');
-
-			$img_alt = "";
-			if($main_image->hasAttribute('alt'))
-				$img_alt = trim($main_image->getAttribute('alt'));
-
-			if (0 === strlen($img_alt) && 0 === strlen($caption_text))
-				$new_outertext = '<figure class="photoWrapper mainPhoto"><img src="'.$img_src.'"></figure>';
-			else if (0 === strlen($img_alt) && 0 !== strlen($caption_text))
-				$new_outertext = '<figure class="photoWrapper mainPhoto"><img src="'.$img_src.'"><figcaption>'.$caption_text.'</figcaption></figure>';
-			else if (0 !== strlen($img_alt) && 0 === strlen($caption_text))
-				$new_outertext = '<figure class="photoWrapper mainPhoto"><img src="'.$img_src.'" alt="'.$img_alt.'"></figure>';
-			else if (0 !== strlen($img_alt) && 0 !== strlen($caption_text))
-				$new_outertext = '<figure class="photoWrapper mainPhoto"><img src="'.$img_src.'" alt="'.$img_alt.'"><figcaption>'.$caption_text.'</figcaption></figure>';
-			$main_image->parent->outertext = $new_outertext;
-		}
-	}
-
-	private function fix_article_photos($article)
-	{
-		foreach($article->find('DIV.content-image FIGURE[id^="attachment_"] IMG[data-cfsrc^="http"]') as $article_element)
-		{
-			if (FALSE === is_null($image_caption = $article_element->parent->find('FIGCAPTION', 0)))
-			{
-				$caption_text = trim($image_caption->plaintext);
-				$image_caption->outertext = '';
-			}
-			$img_src = "";
-			$img_src = $article_element->getAttribute('data-cfsrc');
-
-			$img_alt = "";
-			if($article_element->hasAttribute('alt'))
-				$img_alt = trim($article_element->getAttribute('alt'));
-
-			if (0 === strlen($img_alt) && 0 === strlen($caption_text))
-				$new_outertext = '<figure class="photoWrapper photo"><img src="'.$img_src.'"></figure>';
-			else if (0 === strlen($img_alt) && 0 !== strlen($caption_text))
-				$new_outertext = '<figure class="photoWrapper photo"><img src="'.$img_src.'"><figcaption>'.$caption_text.'</figcaption></figure>';
-			else if (0 !== strlen($img_alt) && 0 === strlen($caption_text))
-				$new_outertext = '<figure class="photoWrapper photo"><img src="'.$img_src.'" alt="'.$img_alt.'"></figure>';
-			else if (0 !== strlen($img_alt) && 0 !== strlen($caption_text))
-				$new_outertext = '<figure class="photoWrapper photo"><img src="'.$img_src.'" alt="'.$img_alt.'"><figcaption>'.$caption_text.'</figcaption></figure>';
-			$article_element->parent->parent->outertext = $new_outertext;
-		}
-	}
-
 }
 // Imaginary empty line!

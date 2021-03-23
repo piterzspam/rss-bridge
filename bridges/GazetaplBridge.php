@@ -181,9 +181,9 @@ class GazetaplBridge extends BridgeAbstract {
 			}
 		}
 		$article = str_get_html($article->save());
-		fix_article_photos($article, 'DIV.related_images', TRUE, 'src', 'P.desc');
+		format_article_photos($article, 'DIV.related_images', TRUE, 'src', 'P.desc');
 		//https://wiadomosci.gazeta.pl/wiadomosci/7,114884,26873712,sondazowe-eldorado-polski-2050-i-szymona-holowni-trwa-to-oni.html
-		fix_article_photos($article, 'DIV.art_embed', FALSE, 'src', 'P.desc');
+		format_article_photos($article, 'DIV.art_embed', FALSE, 'src', 'P.desc');
 
 		$article = str_get_html($article->save());
 		add_style($article, 'H4.art_interview_question, DIV#gazeta_article_lead', array('font-weight: bold;'));

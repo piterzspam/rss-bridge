@@ -63,7 +63,7 @@ class TygodnikPowszechnyBridge extends FeedExpander {
 		$article_post = str_get_html($article_post->save());
 
 		$this->fix_main_photo($article_post);
-		$this->fix_article_photos($article_post);
+		$this->format_article_photos($article_post);
 
 		$lead_style = array(
 			'font-weight: bold;'
@@ -115,7 +115,7 @@ class TygodnikPowszechnyBridge extends FeedExpander {
 		}
 	}
 
-	private function fix_article_photos($article_post)
+	private function format_article_photos($article_post)
 	{
 		foreach($article_post->find('DIV[id^="attachment_"]') as $article_element)
 		{

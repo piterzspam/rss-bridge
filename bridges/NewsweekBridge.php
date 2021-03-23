@@ -164,7 +164,7 @@ class NewsweekBridge extends BridgeAbstract {
 		foreach_delete_element($article, 'DIV.tags');
 //		$article = str_get_html($article->save());
 
-		fix_article_photos($article, 'DIV.artPhoto', FALSE, 'src', 'SPAN');
+		format_article_photos($article, 'DIV.artPhoto', FALSE, 'src', 'SPAN');
 		$article = str_get_html($article->save());
 
 		add_style($article, 'P.lead', array('font-weight: bold;'));

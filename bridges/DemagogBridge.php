@@ -195,8 +195,8 @@ class DemagogBridge extends BridgeAbstract {
 		}
 		$article_html = $returned_array['html'];
 		replace_attribute($article_html, 'IMG[src^="data:image/"][data-src^="http"]', 'src', 'data-src');
-		fix_all_photos($article_html);
-		fix_all_iframes($article_html);
+		fix_all_photos_attributes($article_html);
+		convert_iframes_to_links($article_html);
 
 		$article_html->outertext = str_replace("&nbsp;", '', $article_html->outertext);
 		$article = $article_html->find('MAIN[role="main"] DIV.container', 0);
@@ -244,8 +244,8 @@ class DemagogBridge extends BridgeAbstract {
 		}
 		$article = str_get_html($article->save());
 		//https://demagog.org.pl/wypowiedzi/ilu-wnioskow-o-skargi-nadzwyczajne-wciaz-nie-rozpatrzono/
-		fix_article_photos($article, 'DIV[id^="attachment_"], IMG.alignnone', FALSE, 'src', 'P.wp-caption-text');
-		fix_article_photos($article, 'DIV.col-12.mb-4.px-0.w-img-100', TRUE);
+		format_article_photos($article, 'DIV[id^="attachment_"], IMG.alignnone', FALSE, 'src', 'P.wp-caption-text');
+		format_article_photos($article, 'DIV.col-12.mb-4.px-0.w-img-100', TRUE);
 		$article = str_get_html($article->save());
 		add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
 		add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());

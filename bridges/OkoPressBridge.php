@@ -129,40 +129,15 @@ class OkoPressBridge extends FeedExpander {
 		}
 		$article = str_get_html($article->save());
 		
-		foreach($article->find('IMG.lazy[data-src]') as $photo_element)
-		{
-			$photo_sizes_data = array();
-			$img_srcset = $photo_element->getAttribute('data-srcset');
-			$last_url_array  = explode(' ', $img_srcset);
-			$img_src = $last_url_array[0];
-			$img_size_string = $last_url_array[1];
-			preg_match('/([0-9]+)w/', $img_size_string, $output_array);
-			$img_size_int = $output_array[1];
-			$photo_sizes_data[] = array(
-				'size' => $img_size_int,
-				'src' => $img_src
-			);
-			$biggest_size = 0;
-			$biggest_position = 0;
-			foreach($photo_sizes_data as $key => $element)
-			{
-				if ($element['size'] > $biggest_size)
-				{
-					$biggest_size = $element['size'];
-					$biggest_position = $key;
-				}
-			}
-			$photo_element->setAttribute('src', $photo_sizes_data[$biggest_position]['src']);
-		}
 		//https://oko.press/astra-zeneca-ema/
-		fix_all_iframes($article);
+		convert_iframes_to_links($article);
 		$article = str_get_html($article->save());
 		//https://oko.press/stalo-sie-przemyslaw-radzik-symbol-dobrej-zmiany-w-sadach-dostal-awans-od-prezydenta/
-//		$this->fix_article_photos_sources($article);
+//		$this->format_article_photos_sources($article);
 		$article = str_get_html($article->save());
 		add_style($article, 'DIV.excerpt', array('font-weight: bold;'));
 		$article = str_get_html($article->save());
-		fix_all_photos($article);
+		fix_all_photos_attributes($article);
 		$article = str_get_html($article->save());
 		foreach($article->find('P') as $paragraph)
 		{
@@ -179,11 +154,11 @@ class OkoPressBridge extends FeedExpander {
 			}
 		}
 		$article = str_get_html($article->save());
-		fix_article_photos($article, 'FIGURE.photoWrapper.mainPhoto', TRUE, 'src');
+		format_article_photos($article, 'FIGURE.photoWrapper.mainPhoto', TRUE, 'src');
 		$article = str_get_html($article->save());
-		fix_article_photos($article, 'DIV.photo', FALSE, 'src', 'EM');
+		format_article_photos($article, 'DIV.photo', FALSE, 'src', 'EM');
 		$article = str_get_html($article->save());
-		fix_article_photos($article, 'FIGURE[id^="attachment_"]', FALSE, 'src', 'FIGCAPTION');
+		format_article_photos($article, 'FIGURE[id^="attachment_"]', FALSE, 'src', 'FIGCAPTION');
 		$article = str_get_html($article->save());
 		//https://opinie.wp.pl/kataryna-zyjemy-w-okrutnym-swiecie-ale-aborcja-embriopatologiczna-musi-pozostac-opinia-6567085945505921a?amp=1&_js_v=0.1
 		add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
@@ -202,7 +177,7 @@ class OkoPressBridge extends FeedExpander {
 	}
 	
 
-	private function fix_article_photos_sources($article)
+	private function format_article_photos_sources($article)
 	{
 /*		foreach($article->find('IMG.lazy[data-srcset]') as $photo_element)
 		{

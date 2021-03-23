@@ -141,8 +141,8 @@ class OpinieWPplBridge extends BridgeAbstract {
 
 		convert_amp_frames_to_links($article);
 
-		fix_article_photos($article, 'DIV.header-image-container', TRUE, 'src', 'DIV.header-author');
-		fix_article_photos($article, 'DIV.photo.from.amp', FALSE, 'src', 'FIGCAPTION');
+		format_article_photos($article, 'DIV.header-image-container', TRUE, 'src', 'DIV.header-author');
+		format_article_photos($article, 'DIV.photo.from.amp', FALSE, 'src', 'FIGCAPTION');
 
 		$article = str_get_html($article->save());
 		//https://opinie.wp.pl/kataryna-zyjemy-w-okrutnym-swiecie-ale-aborcja-embriopatologiczna-musi-pozostac-opinia-6567085945505921a?amp=1&_js_v=0.1

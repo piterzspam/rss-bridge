@@ -281,9 +281,9 @@ class GazetaprawnaBridge extends BridgeAbstract {
 
 		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8094155,economicus-2020-oto-nominowani-w-kategorii-najlepszy-poradnik-biznesowy.html
 		$article = str_get_html($article->save());
-		fix_article_photos($article, 'FIGURE.mainPhoto', TRUE, 'src', 'SPAN.imageDescription');
+		format_article_photos($article, 'FIGURE.mainPhoto', TRUE, 'src', 'SPAN.imageDescription');
 		//https://wiadomosci.gazeta.pl/wiadomosci/7,114884,26873712,sondazowe-eldorado-polski-2050-i-szymona-holowni-trwa-to-oni.html
-		fix_article_photos($article, 'DIV.image', FALSE, 'src', 'FIGCAPTION');
+		format_article_photos($article, 'DIV.image', FALSE, 'src', 'FIGCAPTION');
 		$article = str_get_html($article->save());
 		add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
 		add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());

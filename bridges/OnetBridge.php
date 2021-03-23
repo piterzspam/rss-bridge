@@ -161,11 +161,11 @@ class OnetBridge extends BridgeAbstract {
 
 		$article = $article_html->find('article', 0);
 //		foreach_delete_element($article, 'AMP-IMG[src] IMG');
-		fix_all_iframes($article);
+		convert_iframes_to_links($article);
 		$article = str_get_html($article->save());
 		convert_amp_photos($article);
 		$article = str_get_html($article->save());
-		fix_all_photos($article);
+		fix_all_photos_attributes($article);
 		$article = str_get_html($article->save());
 
 //		print_element($article, 'article');
@@ -219,9 +219,9 @@ class OnetBridge extends BridgeAbstract {
 		$article = str_get_html($article->save());
 		convert_amp_frames_to_links($article);
 		$article = str_get_html($article->save());
-		fix_article_photos($article, 'FIGURE.lead', TRUE, 'src', 'SPAN.source');
+		format_article_photos($article, 'FIGURE.lead', TRUE, 'src', 'SPAN.source');
 		$article = str_get_html($article->save());
-		fix_article_photos($article, 'FIGURE[!class]', FALSE, 'src', 'SPAN.source');
+		format_article_photos($article, 'FIGURE[!class]', FALSE, 'src', 'SPAN.source');
 		$article = str_get_html($article->save());
 		//https://opinie.wp.pl/kataryna-zyjemy-w-okrutnym-swiecie-ale-aborcja-embriopatologiczna-musi-pozostac-opinia-6567085945505921a?amp=1&_js_v=0.1
 		add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());

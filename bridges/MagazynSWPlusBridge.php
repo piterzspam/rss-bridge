@@ -69,9 +69,9 @@ class MagazynSWPlusBridge extends FeedExpander {
 		$item['author'] = $output_array[1];
 		$article_string = $item['content'];
 		$article = str_get_html($article_string);
-		fix_all_iframes($article);
+		convert_iframes_to_links($article);
 		$article = str_get_html($article->save());
-		fix_all_photos($article);
+		fix_all_photos_attributes($article);
 		$article = str_get_html($article->save());
 		$primary_photo = $article->find('P IMG[class$="primaryImage"]', 0);
 		if (FALSE === is_null($primary_photo))
@@ -79,9 +79,9 @@ class MagazynSWPlusBridge extends FeedExpander {
 			$primary_photo->parent->outertext = $primary_photo->outertext;
 		}
 		$article = str_get_html($article->save());
-		fix_article_photos($article, 'IMG[class$="primaryImage"]', TRUE);
+		format_article_photos($article, 'IMG[class$="primaryImage"]', TRUE);
 		$article = str_get_html($article->save());
-		fix_article_photos($article, 'FIGURE.wp-block-image', FALSE, 'src', 'FIGCAPTION');
+		format_article_photos($article, 'FIGURE.wp-block-image', FALSE, 'src', 'FIGCAPTION');
 		$article = str_get_html($article->save());
 		if (FALSE === is_null($last_link = $article->find('A[href*="spidersweb.pl/plus/"]', -1)))
 			$last_link->outertext = '';

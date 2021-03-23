@@ -93,35 +93,13 @@
 		);
 	}
 
-	function convert_amp_photos($article)
+	function convert_amp_photos($main_element)
 	{
-		/*
-		echo "Przed<br>";
-		$article = str_get_html($article->save());
-		echo "Po<br>";
-		*/
-		/*
-		print_element($article, 'article przed');
-		foreach($article->find('AMP-IMG[src]') as $key=>$amp_photo_element)
-		{
-			echo "Element $key<br>";
-			if (FALSE === is_null($img_photo_element = $amp_photo_element->find('IMG[src]', 0)))
-			{
-				echo "img_photo_element: ".$img_photo_element->getAttribute('src')."<br>";
-				echo "amp_photo_element: ".$amp_photo_element->getAttribute('src')."<br>";
-				if($img_photo_element->getAttribute('src') === $amp_photo_element->getAttribute('src'))
-				{
-					echo "usunieto: ".$img_photo_element->getAttribute('src')."<br>";
-					$img_photo_element->outertext = '';
-				}
-			}
-		}
-		print_element($article, 'article po');*/
-		foreach_delete_element($article, 'amp-analytics');
-		foreach_delete_element($article, 'amp-ad');
-		foreach_delete_element($article, 'i-amphtml-sizer');
-		foreach_delete_element($article, 'amp-image-lightbox');
-		foreach($article->find('amp-img, img') as $photo_element)
+		foreach_delete_element($main_element, 'amp-analytics');
+		foreach_delete_element($main_element, 'amp-ad');
+		foreach_delete_element($main_element, 'i-amphtml-sizer');
+		foreach_delete_element($main_element, 'amp-image-lightbox');
+		foreach($main_element->find('amp-img, img') as $photo_element)
 		{
 			if(isset($photo_element->width)) $photo_element->width = NULL;
 			if(isset($photo_element->height)) $photo_element->height = NULL;
@@ -129,7 +107,7 @@
 
 		
 		//https://opinie.wp.pl/wielka-zmiana-mezczyzn-wirus-ja-tylko-przyspieszyl-6604913984391297a?amp=1&_js_v=0.1
-		foreach($article->find('amp-img') as $ampimg)
+		foreach($main_element->find('amp-img') as $ampimg)
 		{
 			if ('p' === strtolower($ampimg->parent->tag))
 				$ampimg->parent->tag = "DIV";
@@ -165,9 +143,9 @@
 		}
 	}
 
-	function convert_amp_frames_to_links($article)
+	function convert_amp_frames_to_links($main_element)
 	{
-		foreach($article->find('amp-iframe') as $amp_iframe)
+		foreach($main_element->find('amp-iframe') as $amp_iframe)
 		{
 			if(FALSE === is_null($src = ($amp_iframe->getAttribute('src'))))
 			{
@@ -175,7 +153,7 @@
 				$amp_iframe->outertext = get_frame_outertext($src);
 			}
 		}
-		foreach($article->find('amp-twitter') as $amp_twitter)
+		foreach($main_element->find('amp-twitter') as $amp_twitter)
 		{
 			if(FALSE === is_null($data_tweetid = ($amp_twitter->getAttribute('data-tweetid'))))
 			{
@@ -183,7 +161,7 @@
 				$amp_twitter->outertext = get_frame_outertext($twitter_url);
 			}
 		}
-		foreach($article->find('amp-youtube') as $amp_youtube)
+		foreach($main_element->find('amp-youtube') as $amp_youtube)
 		{
 			if(FALSE === is_null($data_videoid = ($amp_youtube->getAttribute('data-videoid'))))
 			{
@@ -212,9 +190,9 @@
 			return $article_data;
 	}
 
-	function clear_paragraphs_from_taglinks($article, $paragrapgh_search_string, $regexArray)
+	function clear_paragraphs_from_taglinks($main_element, $paragrapgh_search_string, $regexArray)
 	{
-		foreach($article->find($paragrapgh_search_string) as $paragraph)
+		foreach($main_element->find($paragrapgh_search_string) as $paragraph)
 		{
 			foreach($paragraph->find('A') as $a_element)
 			{
@@ -240,9 +218,9 @@
 		}
 	}
 	
-	function foreach_delete_element_containing_text_from_array($article, $element_search_string, $subelement_search_textstring_array)
+	function foreach_delete_element_containing_text_from_array($main_element, $element_search_string, $subelement_search_textstring_array)
 	{
-		foreach($article->find($element_search_string) as $element)
+		foreach($main_element->find($element_search_string) as $element)
 		{
 			foreach($subelement_search_textstring_array as $subelement_search_textstring)
 			{
@@ -255,10 +233,10 @@
 		}
 	}
 
-	function foreach_delete_element_containing_elements_hierarchy($article, $subelements_hierarchy_array)
+	function foreach_delete_element_containing_elements_hierarchy($main_element, $subelements_hierarchy_array)
 	{
 		$last = count($subelements_hierarchy_array)-1;
-		foreach($article->find($subelements_hierarchy_array[$last]) as $subelement)
+		foreach($main_element->find($subelements_hierarchy_array[$last]) as $subelement)
 		{
 			$iterator = $last-1;
 			while ($iterator >= 0 && strtolower($subelement->parent->tag) === strtolower($subelements_hierarchy_array[$iterator]))
@@ -281,9 +259,9 @@
 		}
 	}
 	
-	function foreach_delete_element($article, $element_search_string)
+	function foreach_delete_element($main_element, $element_search_string)
 	{
-		foreach($article->find($element_search_string) as $element)
+		foreach($main_element->find($element_search_string) as $element)
 		{
 			$element->outertext = '';
 		}
@@ -297,9 +275,9 @@
 		}
 	}
 
-	function foreach_delete_element_containing_subelement($article, $element_search_string, $subelement_search_string)
+	function foreach_delete_element_containing_subelement($main_element, $element_search_string, $subelement_search_string)
 	{
-		foreach ($article->find($element_search_string) as $element)
+		foreach ($main_element->find($element_search_string) as $element)
 		{
 			if (FALSE === is_null($subelement = $element->find($subelement_search_string, 0)))
 			{
@@ -308,9 +286,9 @@
 		}
 	}
 
-	function foreach_replace_outertext_with_subelement_innertext($article, $element_search_string, $subelement_search_string)
+	function foreach_replace_outertext_with_subelement_innertext($main_element, $element_search_string, $subelement_search_string)
 	{
-		foreach($article->find($element_search_string) as $element)
+		foreach($main_element->find($element_search_string) as $element)
 		{
 			if (FALSE === is_null($subelement = $element->find($subelement_search_string, 0)))
 			{
@@ -319,9 +297,9 @@
 		}
 	}
 
-	function foreach_replace_outertext_with_subelement_outertext($article, $element_search_string, $subelement_search_string)
+	function foreach_replace_outertext_with_subelement_outertext($main_element, $element_search_string, $subelement_search_string)
 	{
-		foreach($article->find($element_search_string) as $element)
+		foreach($main_element->find($element_search_string) as $element)
 		{
 			if (FALSE === is_null($subelement = $element->find($subelement_search_string, 0)))
 			{
@@ -330,9 +308,9 @@
 		}
 	}
 
-	function foreach_replace_outertext_with_innertext($article, $element_search_string)
+	function foreach_replace_outertext_with_innertext($main_element, $element_search_string)
 	{
-		foreach($article->find($element_search_string) as $element)
+		foreach($main_element->find($element_search_string) as $element)
 		{
 			$element->outertext = $element->innertext;
 		}
@@ -351,10 +329,10 @@
 		return $social_url;
 	}
 
-	function return_tags_array($article, $tag_selector)
+	function return_tags_array($main_element, $tag_selector)
 	{
 		$tags = array();
-		foreach($article->find($tag_selector) as $tags_item)
+		foreach($main_element->find($tag_selector) as $tags_item)
 		{
 			$tag_text = $tags_item->plaintext;
 			$tag_text = str_replace("&nbsp;", '', $tag_text);
@@ -365,10 +343,10 @@
 		return array_unique($tags);
 	}
 
-	function return_authors_as_string($article, $author_selector)
+	function return_authors_as_string($main_element, $author_selector)
 	{
 		$authors = '';
-		foreach($article->find($author_selector) as $author_item)
+		foreach($main_element->find($author_selector) as $author_item)
 		{
 			$authors = $authors.', '.trim($author_item->plaintext);
 		}
@@ -376,14 +354,14 @@
 		return $authors;
 	}
 
-	function add_style($article_element, $search_string, $stylesArray)
+	function add_style($main_element, $search_string, $stylesArray)
 	{
 		$styleString = "";
 		foreach ($stylesArray as $style)
 		{
 			$styleString = $styleString.$style;
 		}
-		foreach ($article_element->find($search_string) as $element)
+		foreach ($main_element->find($search_string) as $element)
 		{
 			if(FALSE === $element->hasAttribute('style'))
 				$element->setAttribute('style', $styleString);
@@ -474,17 +452,17 @@
 	}
 	
 
-	function get_text_plaintext($article, $element_search_string, $backup_value = "Tekst zapasowy")
+	function get_text_plaintext($main_element, $element_search_string, $backup_value = "Tekst zapasowy")
 	{
-		if (FALSE === is_null($text_element = $article->find($element_search_string, 0)))
+		if (FALSE === is_null($text_element = $main_element->find($element_search_string, 0)))
 			return trim($text_element->plaintext);
 		else
 			return $backup_value;
 	}
 
-	function get_text_from_attribute($article, $element_search_string, $attribute_name, $backup_value = "Tekst zapasowy")
+	function get_text_from_attribute($main_element, $element_search_string, $attribute_name, $backup_value = "Tekst zapasowy")
 	{
-		if (FALSE === is_null($element = $article->find($element_search_string, 0)))
+		if (FALSE === is_null($element = $main_element->find($element_search_string, 0)))
 		{
 			if($element->hasAttribute($attribute_name))
 			{
@@ -500,9 +478,9 @@
 			return $backup_value;
 	}
 
-	function replace_attribute($article, $element_search_string, $attribute_to_replace, $attribute_to_replace_with = NULL)
+	function replace_attribute($main_element, $element_search_string, $attribute_to_replace, $attribute_to_replace_with = NULL)
 	{
-		foreach($article->find($element_search_string) as $element)
+		foreach($main_element->find($element_search_string) as $element)
 		{
 			if($element->hasAttribute($attribute_to_replace) && is_null($attribute_to_replace_with))
 			{
@@ -516,10 +494,10 @@
 		}
 	}
 
-	function fix_all_photos($article)
+	function fix_all_photos_attributes($main_element)
 	{
 		$array_allowed_attributes = array_merge(get_photo_attributes_caption(), get_photo_attributes_img());
-		foreach($article->find('IMG') as $photo_element)
+		foreach($main_element->find('IMG') as $photo_element)
 		{
 			$img_new_element = '<img ';
 			foreach($photo_element->getAllAttributes() as $key => $element)
@@ -535,11 +513,11 @@
 		}
 	}
 
-	function fix_article_photos($article, $element_search_string, $is_main = FALSE, $str_photo_url_attribute = 'src', $str_selectror_photo_caption = '')
+	function fix_article_photos($main_element, $element_search_string, $is_main = FALSE, $str_photo_url_attribute = 'src', $str_selectror_photo_caption = '')
 	{
 		$array_allowed_attributes = array_merge(get_photo_attributes_caption(), get_photo_attributes_img());
 
-		foreach($article->find($element_search_string) as $old_photo_wrapper)
+		foreach($main_element->find($element_search_string) as $old_photo_wrapper)
 		{
 			if ('img' === strtolower($old_photo_wrapper->tag))
 			{
@@ -614,14 +592,14 @@
 		}
 	}
 
-	function fix_all_iframes($article)
+	function convert_iframes_to_links($main_element)
 	{
-		foreach($article->find('IFRAME[src^="http"]') as $frame_element)
+		foreach($main_element->find('IFRAME[src^="http"]') as $frame_element)
 		{
 			$url = $frame_element->getAttribute('src');
 			$frame_element->outertext = get_frame_outertext($url);
 		}
-		foreach($article->find('IFRAME[data-src^="http"]') as $frame_element)
+		foreach($main_element->find('IFRAME[data-src^="http"]') as $frame_element)
 		{
 			$url = $frame_element->getAttribute('data-src');
 			$frame_element->outertext = get_frame_outertext($url);
@@ -682,10 +660,10 @@
 		return $outertext_to_return;
 	}
 
-	function get_json_value($article_element, $string_selector, $search_string)
+	function get_json_value($main_element, $string_selector, $search_string)
 	{
 		$value = "";
-		foreach($article_element->find($string_selector) as $script_element)
+		foreach($main_element->find($string_selector) as $script_element)
 		{
 			$script_text = $script_element->innertext;
 			preg_match('/["\']'.$search_string.'["\'] *: *["\'](.*)["\']/', $script_text, $output_array);
@@ -699,16 +677,16 @@
 	}
 
 	
-	function set_biggest_photo_size_from_attribute($article_element, $string_selector, $attribute_name)
+	function set_biggest_photo_size_from_attribute($main_element, $string_selector, $attribute_name)
 	{
-		
-		foreach($article_element->find($string_selector) as $photo_element)
+		foreach($main_element->find($string_selector) as $photo_element)
 		{
 			if($photo_element->hasAttribute($attribute_name))
 			{
+//				print_element($photo_element, 'photo_element przed');
 				$img_srcset = $photo_element->getAttribute($attribute_name);
 				$photo_sizes_data = array();
-				$sizes_array  = explode(', ', $img_srcset);
+				$sizes_array  = explode(',', $img_srcset);
 				if (count($sizes_array) > 1)
 				{
 					foreach($sizes_array as $key => $size_string)
@@ -723,11 +701,6 @@
 							'src' => $img_size_src
 						);
 					}
-/*
-					print_var_dump($img_srcset, 'img_srcset');
-					print_var_dump($sizes_array, 'sizes_array');
-					print_var_dump($photo_sizes_data, 'photo_sizes_data');
-*/
 					$biggest_size = 0;
 					$biggest_position = 0;
 					foreach($photo_sizes_data as $key => $element)
@@ -744,7 +717,147 @@
 				{
 					$photo_element->setAttribute('src', $img_srcset);
 				}
+				$photo_element->setAttribute($attribute_name, NULL);
+//				print_element($photo_element, 'photo_element po');
 			}
 		}
+	}
+
+	function combine_two_elements($main_element, $first_element_selector, $second_element_selector, $parent_tag = NULL, $parent_class = NULL)
+	{
+		$first_element = $main_element->find($first_element_selector, 0);
+		$second_element = $main_element->find($second_element_selector, 0);
+		if (FALSE === is_null($first_element) && FALSE === is_null($second_element))
+		{
+			if (is_null($parent_tag) || is_null($parent_class))
+			{
+				$first_element->outertext = $first_element->outertext.$second_element->outertext;
+				$second_element->outertext = '';
+			}
+			else
+			{
+				$first_element->outertext = '<'.$parent_tag.' class="'.$parent_class.'">'.$first_element->outertext.$second_element->outertext.'</'.$parent_tag.'>';
+				$second_element->outertext = '';
+			}
+		}
+	}
+
+	function fix_background_image($main_element, $where_to_move_children = 1)
+	{
+//		print_element($main_element, 'main_element przed');
+		foreach ($main_element->find('[style^="background-image:"]') as $background_element)
+		{
+			$children_outertext = '';
+//			print_html($background_element->innertext, 'background_element->innertext');
+//			print_html($background_element->outertext, 'background_element->outertext');
+			foreach ($background_element->children() as $child)
+			{
+				$children_outertext = $children_outertext.$child->outertext;
+			}
+			$background_element->innertext = '';
+			$string_style = $background_element->getAttribute('style');
+			preg_match('/background-image: *url\(([^\)]*)/', $string_style, $output_array);
+			$img_src = $output_array[1];
+			$background_element->setAttribute('style', NULL);
+			$background_element->setAttribute('src', $img_src);
+			$background_element->tag = 'IMG';
+//			print_html($children_outertext, 'children_outertext');
+			if(strlen($children_outertext) > 0 && 1 == $where_to_move_children)
+			{
+				$background_element->outertext = $background_element->outertext.$children_outertext;
+			}
+			else if (strlen($children_outertext) > 0)
+			{
+				$background_element->outertext = $children_outertext.$background_element->outertext;
+			}
+		}
+//		print_element($main_element, 'main_element po');
+//		print_html($main_element, 'main_element po children_outertext');
+	}
+
+	
+	function move_element($main_element, $element_to_move_selector, $element_to_stay_selector, $where_to_put = 'outertext', $position = 'before')
+	{
+		$element_to_move = $main_element->find($element_to_move_selector, 0);
+		$element_to_stay = $main_element->find($element_to_stay_selector, 0);
+		if (FALSE === is_null($element_to_move) && FALSE === is_null($element_to_stay))
+		{
+			$element_to_move_outertext = $element_to_move->outertext;
+			$element_to_move->outertext = '';
+			if ('outertext' === $where_to_put && 'before' === $position)
+			{
+				$element_to_stay->outertext = $element_to_move_outertext.$element_to_stay->outertext;
+			}
+			else if ('outertext' === $where_to_put && 'after' === $position)
+			{
+				$element_to_stay->outertext = $element_to_stay->outertext.$element_to_move_outertext;
+			}
+			else if ('innertext' === $where_to_put && 'before' === $position)
+			{
+				$element_to_stay->innertext = $element_to_move_outertext.$element_to_stay->innertext;
+			}
+			else if ('innertext' === $where_to_put && 'after' === $position)
+			{
+				$element_to_stay->innertext = $element_to_stay->innertext.$element_to_move_outertext;
+			}
+		}
+	}
+
+	function foreach_delete_element_array($main_element, $selectors_array)
+	{
+		$selectors_array = array_unique($selectors_array);
+		$slectors_string = implode(', ', $selectors_array);
+		foreach($main_element->find($slectors_string) as $element)
+		{
+			$element->outertext = '';
+		}
+	}
+
+	function insert_html($main_element, $element_selector, $outertext_before = '', $outertext_after = '', $innertext_before = '', $innertext_after = '')
+	{
+		$element = $main_element->find($element_selector, 0);
+		if (FALSE === is_null($element))
+		{
+			if(strlen($outertext_before) > 0)
+			{
+				$element->outertext = $outertext_before.$element->outertext;
+			}
+			if(strlen($outertext_after) > 0) 
+			{
+				$element->outertext = $element->outertext.$outertext_after;
+			}
+			if(strlen($innertext_before) > 0) 
+			{
+				$element->innertext = $innertext_before.$element->innertext;
+			}
+			if(strlen($innertext_after) > 0)
+			{
+				$element->innertext = $element->outertext.$innertext_after;
+			}
+		}
+	}
+
+
+	function prepare_article($main_element)
+	{
+//		print_element($main_element, 'main_element przed');
+		fix_background_image($main_element, -1);
+		$main_element = str_get_html($main_element->save());
+		set_biggest_photo_size_from_attribute($main_element, 'IMG[data-srcset]', 'data-srcset');
+		$main_element = str_get_html($main_element->save());
+		set_biggest_photo_size_from_attribute($main_element, 'IMG[data-src]', 'data-src');
+		$main_element = str_get_html($main_element->save());
+		set_biggest_photo_size_from_attribute($main_element, 'IMG[srcset]', 'srcset');
+		$main_element = str_get_html($main_element->save());
+		convert_amp_photos($main_element);
+		$main_element = str_get_html($main_element->save());
+		fix_all_photos_attributes($main_element);
+		$main_element = str_get_html($main_element->save());
+		convert_amp_frames_to_links($main_element);
+		$main_element = str_get_html($main_element->save());
+		convert_iframes_to_links($main_element);
+		$main_element = str_get_html($main_element->save());
+//		print_element($main_element, 'main_element po');
+		return $main_element->save();
 	}
 

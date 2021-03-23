@@ -152,9 +152,9 @@ class GazetaWeekendBridge extends BridgeAbstract {
 		foreach_replace_outertext_with_subelement_outertext($article, 'P.art_paragraph', 'SPAN.imageUOM');
 
 		$article = str_get_html($article->save());
-		fix_article_photos($article, 'DIV.mainPhoto', TRUE, 'src', 'FIGCAPTION');
-		fix_article_photos($article, 'DIV.art_embed', FALSE, 'src', 'DIV.article__galleryDescription');
-		fix_article_photos($article, 'SPAN.imageUOM', FALSE, 'src', 'SPAN.photoAuthor');
+		format_article_photos($article, 'DIV.mainPhoto', TRUE, 'src', 'FIGCAPTION');
+		format_article_photos($article, 'DIV.art_embed', FALSE, 'src', 'DIV.article__galleryDescription');
+		format_article_photos($article, 'SPAN.imageUOM', FALSE, 'src', 'SPAN.photoAuthor');
 
 		$article = str_get_html($article->save());
 		foreach ($article->find('DIV.art_embed') as $embed)
@@ -285,7 +285,7 @@ class GazetaWeekendBridge extends BridgeAbstract {
 			$h6->outertext = '<BLOCKQUOTE>'.$h6->innertext.'</BLOCKQUOTE>';
 		}
 		$article = str_get_html($article->save());
-		fix_article_photos($article, 'DIV#gazeta_article_image', TRUE, 'src', 'P.desc');
+		format_article_photos($article, 'DIV#gazeta_article_image', TRUE, 'src', 'P.desc');
 		$article = str_get_html($article->save());
 		add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
 		add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());

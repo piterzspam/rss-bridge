@@ -122,9 +122,9 @@ class SprawdzamAFPBridge extends BridgeAbstract {
 			}
 		}
 		$article = str_get_html($article->save());
-		$this->fix_article_photos_sources($article);
-		fix_article_photos($article, 'DIV.ww-item.image', FALSE, 'src', 'SPAN.legend');
-		fix_article_photos($article, 'DIV.mainPhoto', TRUE);
+		$this->format_article_photos_sources($article);
+		format_article_photos($article, 'DIV.ww-item.image', FALSE, 'src', 'SPAN.legend');
+		format_article_photos($article, 'DIV.mainPhoto', TRUE);
 		foreach_delete_element($article, 'comment');
 		foreach_delete_element($article, 'script');
 		foreach_delete_element($article, 'SPAN.meta-share.addtoany');
@@ -149,7 +149,7 @@ class SprawdzamAFPBridge extends BridgeAbstract {
 		);
 	}
 	
-	private function fix_article_photos_sources($article)
+	private function format_article_photos_sources($article)
 	{
 		foreach($article->find('IMG[srcset]') as $photo_element)
 		{
