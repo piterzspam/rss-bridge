@@ -94,7 +94,6 @@ class KrytykaPolitycznaBridge extends FeedExpander {
 		$selectors_array[] = 'DIV.article-top-advertisement';
 		$selectors_array[] = 'DIV.single-post-tags';
 		$selectors_array[] = 'BLOCKQUOTE.wp-embedded-content[data-secret]';
-		//https://krytykapolityczna.pl/nauka/jas-kapela-karolina-holda-dieta-weganska-wegetarianska-dla-psow-i-kot/
 		$selectors_array[] = 'IMG.avatar[alt][!src]';
 		foreach_delete_element_array($article, $selectors_array);
 
@@ -124,15 +123,15 @@ class KrytykaPolitycznaBridge extends FeedExpander {
 		foreach_replace_outertext_with_innertext($article, 'ARTICLE[id^="post-"]');
 		$article = str_get_html($article->save());
 		//START - https://krytykapolityczna.pl/swiat/jagpda-grondecka-afganistan-talibowie-chca-znow-rzadzic/
-		fix_article_photos($article, 'DIV.content-image', FALSE, 'src', 'FIGCAPTION');
+		format_article_photos($article, 'DIV.content-image', FALSE, 'src', 'FIGCAPTION');
 		$article = str_get_html($article->save());
 		//STOP - https://krytykapolityczna.pl/swiat/jagpda-grondecka-afganistan-talibowie-chca-znow-rzadzic/
 		//START - https://krytykapolityczna.pl/swiat/wielki-kapital-chcial-nas-zatruc-olowiem-nie-tylko-on/
-		fix_article_photos($article, 'FIGURE[id^="attachment_"]', FALSE, 'src', 'FIGCAPTION');
+		format_article_photos($article, 'FIGURE[id^="attachment_"]', FALSE, 'src', 'FIGCAPTION');
 		$article = str_get_html($article->save());
 		//STOP - https://krytykapolityczna.pl/swiat/wielki-kapital-chcial-nas-zatruc-olowiem-nie-tylko-on/
 		//START - https://krytykapolityczna.pl/nauka/jas-kapela-karolina-holda-dieta-weganska-wegetarianska-dla-psow-i-kot/
-		fix_article_photos($article, 'DIV.super_photo', TRUE, 'src', 'DIV.mnky-featured-image-caption');
+		format_article_photos($article, 'DIV.super_photo', TRUE, 'src', 'DIV.mnky-featured-image-caption');
 		$article = str_get_html($article->save());
 		//STOP - https://krytykapolityczna.pl/nauka/jas-kapela-karolina-holda-dieta-weganska-wegetarianska-dla-psow-i-kot/
 

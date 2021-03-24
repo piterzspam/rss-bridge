@@ -513,7 +513,7 @@
 		}
 	}
 
-	function fix_article_photos($main_element, $element_search_string, $is_main = FALSE, $str_photo_url_attribute = 'src', $str_selectror_photo_caption = '')
+	function format_article_photos($main_element, $element_search_string, $is_main = FALSE, $str_photo_url_attribute = 'src', $str_selectror_photo_caption = '')
 	{
 		$array_allowed_attributes = array_merge(get_photo_attributes_caption(), get_photo_attributes_img());
 
@@ -723,6 +723,69 @@
 		}
 	}
 
+	function foreach_combine_two_elements($main_element, $element_to_stay_selector, $up_counter, $forward_counter, $element_to_move_tag, $element_to_move_class, $element_to_move_child_selector, $element_to_stay_code = 'outertext', $element_to_move_code = 'outertext', $parent_tag = NULL, $parent_class = NULL)
+	{
+		foreach ($main_element->find($element_to_stay_selector) as $element_to_stay)
+		{
+			for ($i = 0; $i < $up_counter; $i++)
+			{
+				$element_to_stay = $element_to_stay->parent;
+			}
+			$next_element = $element_to_stay->next_sibling();
+			if (!is_null($next_element))
+			{
+				for ($i = 0; $i < $forward_counter-1; $i++)
+				{
+					$next_element = $next_element->next_sibling();
+					if (is_null($next_element))
+						break;
+				}
+				if (!is_null($next_element))
+				{
+					$element_to_move_tag = strtolower($element_to_move_tag);
+					$element_to_move_class = strtolower($element_to_move_class);
+					$next_element_tag = strtolower($next_element->tag);
+					$next_element_class = strtolower($next_element->class);
+					if (FALSE !== strpos($element_to_move_tag, $next_element_tag) && FALSE !== strpos($element_to_move_class, $next_element_class))
+					{
+						$element_to_move_child = $next_element->find($element_to_move_child_selector, 0);
+						if (FALSE === is_null($element_to_move_child))
+						{
+							if ('outertext' === $element_to_stay_code)
+							{
+								$element_to_stay_html = $element_to_stay->outertext;
+							}
+							else
+							{
+								$element_to_stay_html = $element_to_stay->innertext;
+							}
+
+							if ('outertext' === $element_to_move_code)
+							{
+								$element_to_move_html = $next_element->outertext;
+							}
+							else
+							{
+								$element_to_move_html = $next_element->innertext;
+							}
+
+							if (is_null($parent_tag) || is_null($parent_class))
+							{
+								$element_to_stay->outertext = $element_to_stay_html.$element_to_move_html;
+								$next_element->outertext = '';
+							}
+							else
+							{
+								$element_to_stay->outertext = '<'.$parent_tag.' class="'.$parent_class.'">'.$element_to_stay_html.$element_to_move_html.'</'.$parent_tag.'>';
+								$next_element->outertext = '';
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
 	function combine_two_elements($main_element, $first_element_selector, $second_element_selector, $parent_tag = NULL, $parent_class = NULL)
 	{
 		$first_element = $main_element->find($first_element_selector, 0);
@@ -815,8 +878,7 @@
 
 	function insert_html($main_element, $element_selector, $outertext_before = '', $outertext_after = '', $innertext_before = '', $innertext_after = '')
 	{
-		$element = $main_element->find($element_selector, 0);
-		if (FALSE === is_null($element))
+		foreach($main_element->find($element_selector) as $element)
 		{
 			if(strlen($outertext_before) > 0)
 			{
