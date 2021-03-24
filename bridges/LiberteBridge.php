@@ -25,6 +25,7 @@ class LiberteBridge extends BridgeAbstract {
 					'Społeczeństwo otwarte' => 'https://liberte.pl/category/spoleczenstwo-otwarte/',
 					'Kultura' => 'https://liberte.pl/category/kultura/',
 					'Wolny rynek' => 'https://liberte.pl/category/wolny-rynek/',
+					'Siła w nas' => 'https://liberte.pl/category/sila-w-nas/',
 				 ),
 				'title' => 'Kategoria',
 				'defaultValue' => 'https://liberte.pl/category/polityka-2/',
@@ -198,67 +199,80 @@ class LiberteBridge extends BridgeAbstract {
 			return;
 		}
 		$article_html = $returned_array['html'];
+		$article_html = str_get_html(prepare_article($article_html));
 
 
 		$article = $article_html->find('DIV#wrapper', 0);
-
 		//tytuł
-		$title = "";
-		if (FALSE === is_null($title_element = $article->find('SECTION.single-top DIV.row.align-center DIV.large-8.medium-12.small-12.columns.text-center H1', 0)))
-		{
-			$title = trim($title_element->plaintext);
-		}
+		$title = get_text_plaintext($article, 'SECTION.single-top DIV.row.align-center DIV.large-8.medium-12.small-12.columns.text-center H1', $url);
 		//autor
 		$author = return_authors_as_string($article, 'DIV.entry-autor H5 A.big.black.bold[href*="/author/"]');
 		//tagi
-		$tags = return_tags_array($article, 'DIV.entry-autor A.light[href*="/tag/"]');	
-		if (FALSE === is_null($category_element = $article_html->find('META[property="article:section"][content]', 0)))
-		{
-			$tags[] = $category_element->getAttribute('content');
-		}
+		$tags1 = array();;
+		$single_tag = get_text_from_attribute($article_html, 'META[property="article:section"][content]', 'content', NULL);
+		$tags1[] = $single_tag;
+		$tags2 = return_tags_array($article, 'DIV.entry-autor A.light[href*="/tag/"]');
+		$tags = array_unique(array_merge($tags1, $tags2));
+
 		//data
-		$date = "";
-		if (FALSE === is_null($date_element = $article_html->find('META[property="article:published_time"][content]', 0)))
-		{
-//			print_element($date_element, "date_element", "<br>");
-			$date = $date_element->getAttribute('content');
-		}
-//		print_element($date, "date_element", "<br>");
-//		print_var_dump($date);
+		$date = get_text_from_attribute($article_html, 'META[property="article:published_time"][content]', 'content', '');
 
-		if (FALSE === is_null($header = $article->find('SECTION.single-top', 0)) && FALSE === is_null($article_text = $article->find('DIV.margin-bottom30 DIV.row', 0)))
-		{
-			$article->outertext = $header->innertext.$article_text->innertext;
-		}
-
+		move_element($article, 'DIV.row.entry-autor', 'DIV#anchor-link', 'outertext', 'before');
 		$article = str_get_html($article->save());
-		foreach_delete_element($article, 'DIV[data-sticky-container]');
-		foreach_delete_element($article, 'DIV.single-bottom.border-top.padding-top30');
-		foreach_delete_element($article, 'DIV.show-for-large');
-		foreach_delete_element_containing_subelement($article, 'DIV.row', 'DIV#disqus_thread');
+		foreach_replace_outertext_with_innertext($article, 'P[class^="s"] SPAN[class^="s"]');
 		$article = str_get_html($article->save());
-		foreach_replace_outertext_with_subelement_innertext($article, 'DIV#anchor-link', 'DIV.flexible');
-		foreach_replace_outertext_with_subelement_outertext($article, 'DIV.large-8.medium-12.small-12.columns.text-center', 'H1');
-		foreach_replace_outertext_with_subelement_innertext($article, 'DIV.large-8.medium-12.small-12.columns', 'DIV.row.collapse.align-middle.entry-autor');
-		foreach_replace_outertext_with_subelement_innertext($article, 'qqqqqqqqqqqqqqqq', 'qqqqqqqqqqqqqqqq');
-
-
+		replace_tag_and_class($article, 'P', 'single', 'P', 'lead');
+		$article = str_get_html($article->save());
+		//https://liberte.pl/labedzi-spiew-alfy/
+		replace_tag_and_class($article, 'H4', 'multiple', 'H3');
+		$article = str_get_html($article->save());
+		foreach_delete_element_containing_subelement($article, 'SECTION.single-top DIV.large-8.medium-12.small-12.columns', 'A.share-icon');
+		$article = str_get_html($article->save());
+		replace_part_of_class($article, 'SECTION.single-top DIV.row, DIV.margin-bottom30 DIV.row', 'multiple', 'row', 'row_v2');
 		$article = str_get_html($article->save());
 
-		$this->fix_main_photo($article);
-		$this->format_article_photos_sources($article);
-
-		format_article_photos($article, 'IMG.alignleft[src^="http"], IMG.alignright[src^="http"], IMG.alignnone[src^="http"]', FALSE);
-
-
+		$selectors_array = array();
+		$selectors_array[] = 'DIV.single-bottom.border-top.padding-top30';
+		$selectors_array[] = 'DIV[data-sticky-container]';
+		$selectors_array[] = 'FOOTER#footer';
+		$selectors_array[] = 'DIV.row';
+		$selectors_array[] = 'comment';
+		foreach_delete_element_array($article, $selectors_array);
+		$article = str_get_html($article->save());
+		foreach_replace_outertext_with_subelement_outertext($article, 'SECTION.single-top', 'H1');
+		foreach_delete_element_containing_subelement($article, 'DIV#anchor-link DIV.row_v2', 'DIV#disqus_thread');
+		$article = str_get_html($article->save());
+		format_article_photos($article, 'DIV.large-12.medium-12.small-12.columns', TRUE);
+		//format_article_photos($main_element, $element_search_string, $is_main = FALSE, $str_photo_url_attribute = 'src', $str_selectror_photo_caption = '');
+		format_article_photos($article, 'FIGURE[id^="attachment_"]', FALSE, 'src', 'FIGCAPTION');
+		//https://liberte.pl/co-w-ttrawie-piszczy-13/
+		format_article_photos($article, 'P', FALSE);
+		replace_part_of_class($article, 'DIV.row_v2.entry-autor', 'single', 'row_v2', '');
+		$article = str_get_html($article->save());
+		foreach_replace_outertext_with_innertext($article, 'DIV.row_v2');
+		$article = str_get_html($article->save());
+		foreach_replace_outertext_with_innertext($article, 'DIV.flexible');
+		foreach_replace_outertext_with_innertext($article, 'DIV.text-content');
+		foreach_replace_outertext_with_innertext($article, 'DIV#anchor-link');
+		foreach_replace_outertext_with_innertext($article, 'DIV.margin-bottom30');
+		foreach_replace_outertext_with_innertext($article, 'ARTICLE.blog-single.margin-bottom30');
+		$article = str_get_html($article->save());
 		
+		
+
+
+
+/*		
 		foreach($article->find('DIV.important-text') as $quote_element)
 		{
 			$new_outertext = '<blockquote>'.$quote_element->innertext.'</blockquote>';
 			$quote_element->outertext = $new_outertext;
 		}
+*/
 
 		$article = str_get_html($article->save());
+		//https://liberte.pl/rozmowy-z-bogami-z-katarzyna-gorewicz-rozmawia-alicja-mysliwiec/
+		add_style($article, 'P.lead', array('font-weight: bold;'));
 		add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
 		add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
 		add_style($article, 'FIGCAPTION', getStylePhotoCaption());
@@ -273,41 +287,6 @@ class LiberteBridge extends BridgeAbstract {
 			'categories' => $tags,
 			'content' => $article
 		);
-	}
-
-	private function fix_main_photo($article)
-	{
-		foreach($article->find('DIV.large-12 DIV.photobg.margin-bottom30[style^="background-image: url("]') as $article_element)
-		{
-			$style_string = $article_element->getAttribute('style');
-			$style_string = str_replace('background-image:', '', $style_string);
-			$style_string = trim($style_string);
-			$style_string = remove_substring_if_exists_first($style_string, 'url(');
-			$style_string = remove_substring_if_exists_last($style_string, ');');
-			$style_string = trim($style_string);
-			$img_src = $style_string;
-			$new_outertext = '<figure class="photoWrapper mainPhoto"><img src="'.$img_src.'"></figure>';
-			$article_element->parent->outertext = $new_outertext;
-		}
-	}
-
-	private function format_article_photos_sources($article)
-	{
-		foreach($article->find('IMG[src^="http"]') as $photo_element)
-		{
-			$img_src = $photo_element->getAttribute('src');
-			$img_src = str_replace('-300x200', '', $img_src);
-			if($photo_element->hasAttribute('srcset'))
-			{
-				$img_srcset = $photo_element->getAttribute('srcset');
-				$srcset_array  = explode(',', $img_srcset);
-				$last = count($srcset_array) - 1;
-				$last_url_string = trim($srcset_array[$last]);
-				$last_url_array  = explode(' ', $last_url_string);
-				$img_src = $last_url_array[0];
-			}
-			$photo_element->setAttribute('src', $img_src);
-		}
 	}
 
 	private function my_get_html($url)

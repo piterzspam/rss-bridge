@@ -309,6 +309,7 @@ class GazetaprawnaBridge extends BridgeAbstract {
 		$article = str_get_html($article->save());
 
 /*
+		TODO To DO
 		//https://serwisy.gazetaprawna.pl/orzeczenia/artykuly/8078983,antonik-burmistrz-prezes-spoldzielnia-mieszkaniowa-brodno-porozumienie-etyka.html
 		foreach($article->find('H2') as $element)
 		{

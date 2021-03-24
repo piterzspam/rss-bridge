@@ -82,6 +82,13 @@ class GazetaWeekendBridge extends BridgeAbstract {
 		if (200 === $returned_array['code'])
 		{
 			$article_html = $returned_array['html'];
+//			print_element($article_html, 'article_html przed');
+			replace_attribute($article_html, 'IMG[data-src][!src], IMG[src*="image_placeholder_small"]', 'src', 'data-src');
+//			replace_attribute($article_html, 'IMG[data-src][!src]', 'src', 'data-src');
+			
+//			print_element($article_html, 'article_html po');
+//			$article_html = str_get_html($article_html->save());
+			$article_html = str_get_html(prepare_article($article_html));
 			if (FALSE === is_null($article = $article_html->find('DIV#premiumArticle__mainArticle', 0)))
 			{
 				$this->addArticle1($url, $article_html);
@@ -107,7 +114,7 @@ class GazetaWeekendBridge extends BridgeAbstract {
 		{
 			$tags[$key] = ucwords(strtolower($tag));
 		}
-
+/*
 		$date = "";
 		if (FALSE === is_null($article_data = $article_html->find('DIV#gazeta_article_body SCRIPT[type="application/ld+json"]', 0)))
 		{
@@ -116,12 +123,16 @@ class GazetaWeekendBridge extends BridgeAbstract {
 			$article_data_parsed = parse_article_data(json_decode($json));
 			$date = $article_data_parsed["datePublished"];
 		}
-
+*/
+		$date = get_json_value($article_html, 'SCRIPT[type="application/ld+json"]', 'datePublished');
+//		print_var_dump($temp_date, 'temp_date');
+		insert_html($article, 'SPAN.article_data', '<br>', '', '', '');
+/*
 		if (FALSE === is_null($article_data_element = $article->find('SPAN.article_data', 0)))
 		{
 			$article_data_element->outertext = '<br>'.$article_data_element->outertext;
 		}
-		
+*/
 		foreach_delete_element($article, 'comment');
 		foreach_delete_element($article, 'DIV.article__bottomTextFrame');
 //		foreach_delete_element($article, 'SCRIPT');
@@ -134,25 +145,16 @@ class GazetaWeekendBridge extends BridgeAbstract {
 		foreach_delete_element($article, 'DIV.article__slot');
 		foreach_delete_element($article, 'DIV.article__sidebar_extraContent');
 		foreach_delete_element($article, 'DIV.article__type-wrapper');
-		replace_attribute($article, 'IMG[data-src][!src]', 'src', 'data-src');
+//		replace_attribute($article, 'IMG[data-src][!src]', 'src', 'data-src');
 		replace_attribute($article, 'BLOCKQUOTE[class="art_blockquote"]', 'class', NULL);
-		
-		//podpis głównego zdjęcia
-		$main_photo_image = $article->find('IMG#article__image', 0);
-		$main_photo_caption = $article->find('DIV.article__image_signature SPAN', 0);
-		if (FALSE === is_null($main_photo_image) && FALSE === is_null($main_photo_caption))
-		{
-			$figcaption_text = $main_photo_caption->innertext;
-			$main_photo_caption->parent->outertext = '';
-			$main_photo_image->outertext = '<div class="mainPhoto">'.$main_photo_image->outertext.'<figcaption>'.$figcaption_text.'</figcaption></div>';
-		}
+		combine_two_elements($article, 'IMG.article__image', 'DIV.article__image_signature', 'DIV', 'super_photo');
+
 		foreach_replace_outertext_with_innertext($article, 'SECTION.art_content');
-//		$article = str_get_html($article->save());
 		//https://weekend.gazeta.pl/weekend/7,177333,26878416,mam-33-lata-i-troje-dzieci-to-nie-pora-by-umierac-malgorzata.html
 		foreach_replace_outertext_with_subelement_outertext($article, 'P.art_paragraph', 'SPAN.imageUOM');
 
 		$article = str_get_html($article->save());
-		format_article_photos($article, 'DIV.mainPhoto', TRUE, 'src', 'FIGCAPTION');
+		format_article_photos($article, 'DIV.super_photo', TRUE, 'src', 'DIV.article__image_signature');
 		format_article_photos($article, 'DIV.art_embed', FALSE, 'src', 'DIV.article__galleryDescription');
 		format_article_photos($article, 'SPAN.imageUOM', FALSE, 'src', 'SPAN.photoAuthor');
 
@@ -200,7 +202,10 @@ class GazetaWeekendBridge extends BridgeAbstract {
 		foreach_delete_element($article, 'SCRIPT');
 		$article = str_get_html($article->save());
 		//https://weekend.gazeta.pl/weekend/7,177333,26878416,mam-33-lata-i-troje-dzieci-to-nie-pora-by-umierac-malgorzata.html
-		add_style($article, 'H4.art_interview_question, DIV.article__lead', array('font-weight: bold;'));
+		
+		replace_tag_and_class($article, 'H4', 'multiple', 'H3');
+//		add_style($article, 'H4.art_interview_question, DIV.article__lead', array('font-weight: bold;'));
+		add_style($article, 'DIV.article__lead', array('font-weight: bold;'));
 		add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
 		add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
 		add_style($article, 'FIGCAPTION', getStylePhotoCaption());
@@ -219,6 +224,7 @@ class GazetaWeekendBridge extends BridgeAbstract {
 
 	private function addArticle2($url_article, $article_html)
 	{
+//		echo "addArticle2, url: $url_article<br>";
 		$article = $article_html->find('DIV#gazeta_article', 0);
 		//tytul
 		$title = get_text_plaintext($article, 'DIV.gazeta_article_header H1', $url_article);

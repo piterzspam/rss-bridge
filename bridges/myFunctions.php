@@ -490,6 +490,7 @@
 			{
 				$new_attribute_value = $element->getAttribute($attribute_to_replace_with);
 				$element->setAttribute($attribute_to_replace, $new_attribute_value);
+				$element->removeAttribute($attribute_to_replace_with);
 			}
 		}
 	}
@@ -666,14 +667,17 @@
 		foreach($main_element->find($string_selector) as $script_element)
 		{
 			$script_text = $script_element->innertext;
-			preg_match('/["\']'.$search_string.'["\'] *: *["\'](.*)["\']/', $script_text, $output_array);
+//			preg_match('/["\']'.$search_string.'["\'] *: *["\'](.*)["\']/', $script_text, $output_array);
+			preg_match('/["\']'.$search_string.'["\'] *: *["\'](.*?)["\']/', $script_text, $output_array);
+			
 			if (isset($output_array[1]))
 			{
+//				print_var_dump($output_array, 'output_array');
+//				print_var_dump($script_text, 'script_text');
 				$value = $output_array[1];
-				break;
+				return $value;
 			}
 		}
-		return $value;
 	}
 
 	
@@ -684,23 +688,31 @@
 			if($photo_element->hasAttribute($attribute_name))
 			{
 //				print_element($photo_element, 'photo_element przed');
+//				print_html($photo_element, 'photo_element przed');
 				$img_srcset = $photo_element->getAttribute($attribute_name);
 				$photo_sizes_data = array();
-				$sizes_array  = explode(',', $img_srcset);
-				if (count($sizes_array) > 1)
+				$multiple_sizes_array  = explode(',', $img_srcset);
+//				print_var_dump($img_srcset, 'img_srcset');
+//				print_var_dump($multiple_sizes_array, 'multiple_sizes_array');
+				if (count($multiple_sizes_array) > 1)
 				{
-					foreach($sizes_array as $key => $size_string)
+					foreach($multiple_sizes_array as $key => $single_size_string)
 					{
-						$size_array  = explode(' ', trim($size_string));
-						$img_size_src = $size_array[0];
-						$img_size_string = $sizes_array[1];
+						$single_size_array  = explode(' ', trim($single_size_string));
+//						print_var_dump($single_size_array, 'single_size_array');
+						$img_size_src = $single_size_array[0];
+						$img_size_string = $single_size_array[1];
+//						print_var_dump($img_size_string, 'img_size_string');
 						preg_match('/([0-9]+)/', $img_size_string, $output_array);
+//						print_var_dump($output_array, 'output_array');
 						$img_size_int = intval($output_array[1]);
+//						print_var_dump($img_size_int, 'img_size_int');
 						$photo_sizes_data[] = array(
 							'size' => $img_size_int,
 							'src' => $img_size_src
 						);
 					}
+//					print_var_dump($photo_sizes_data, 'photo_sizes_data');
 					$biggest_size = 0;
 					$biggest_position = 0;
 					foreach($photo_sizes_data as $key => $element)
@@ -786,6 +798,66 @@
 		}
 	}
 
+	function replace_tag_and_class($main_element, $element_selector, $count = 'single', $new_tag = NULL, $new_class = NULL)
+	{
+		if ('single' === $count)
+		{
+			$element = $main_element->find($element_selector, 0);
+			if (FALSE === is_null($element))
+			{
+				if (isset($new_tag))
+				{
+					$element->tag = $new_tag;
+				}
+				if (isset($new_class))
+				{
+					$element->class = $new_class;
+				}
+			}
+		}
+		else if ('multiple' === $count)
+		{
+			foreach ($main_element->find($element_selector) as $element)
+			{
+				if (isset($new_tag))
+				{
+					$element->tag = $new_tag;
+				}
+				if (isset($new_class))
+				{
+					$element->class = $new_class;
+				}
+			}
+		}
+	}
+
+	function replace_part_of_class($main_element, $element_selector, $count = 'single', $part_to_replace, $part_to_insert)
+	{
+		if ('single' === $count)
+		{
+			$element = $main_element->find($element_selector, 0);
+			if (FALSE === is_null($element))
+			{
+				if (isset($part_to_insert))
+				{
+//					print_html($element, 'element_to_stay przed');
+					$element->class = str_replace($part_to_replace, $part_to_insert, $element->class);
+//					print_html($element, 'element_to_stay po');
+				}
+			}
+		}
+		else if ('multiple' === $count)
+		{
+			foreach ($main_element->find($element_selector) as $element)
+			{
+				if (isset($part_to_insert))
+				{
+					$element->class = str_replace($part_to_replace, $part_to_insert, $element->class);
+				}
+			}
+		}
+	}
+
 	function combine_two_elements($main_element, $first_element_selector, $second_element_selector, $parent_tag = NULL, $parent_class = NULL)
 	{
 		$first_element = $main_element->find($first_element_selector, 0);
@@ -820,7 +892,7 @@
 			$background_element->innertext = '';
 			$string_style = $background_element->getAttribute('style');
 			preg_match('/background-image: *url\(([^\)]*)/', $string_style, $output_array);
-			$img_src = $output_array[1];
+			$img_src = trim($output_array[1]);
 			$background_element->setAttribute('style', NULL);
 			$background_element->setAttribute('src', $img_src);
 			$background_element->tag = 'IMG';
@@ -843,13 +915,17 @@
 	{
 		$element_to_move = $main_element->find($element_to_move_selector, 0);
 		$element_to_stay = $main_element->find($element_to_stay_selector, 0);
+//		print_element($element_to_stay, 'element_to_stay przed');
+//		print_html($element_to_stay, 'element_to_stay przed');
 		if (FALSE === is_null($element_to_move) && FALSE === is_null($element_to_stay))
 		{
 			$element_to_move_outertext = $element_to_move->outertext;
 			$element_to_move->outertext = '';
 			if ('outertext' === $where_to_put && 'before' === $position)
 			{
+//				print_html($element_to_stay, 'Wszedłem element_to_stay przed');
 				$element_to_stay->outertext = $element_to_move_outertext.$element_to_stay->outertext;
+//				print_html($element_to_stay, 'Wszedłem element_to_stay po');
 			}
 			else if ('outertext' === $where_to_put && 'after' === $position)
 			{
@@ -864,6 +940,9 @@
 				$element_to_stay->innertext = $element_to_stay->innertext.$element_to_move_outertext;
 			}
 		}
+//		print_element($element_to_stay, 'element_to_stay po');
+//		print_html($element_to_stay, 'element_to_stay po');
+		
 	}
 
 	function foreach_delete_element_array($main_element, $selectors_array)
@@ -898,7 +977,6 @@
 			}
 		}
 	}
-
 
 	function prepare_article($main_element)
 	{
