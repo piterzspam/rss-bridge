@@ -893,6 +893,8 @@
 			$string_style = $background_element->getAttribute('style');
 			preg_match('/background-image: *url\(([^\)]*)/', $string_style, $output_array);
 			$img_src = trim($output_array[1]);
+			//https://www.tygodnikpowszechny.pl/z-drugiej-strony-internetu-166922
+			$img_src = str_replace("'", "", $img_src);
 			$background_element->setAttribute('style', NULL);
 			$background_element->setAttribute('src', $img_src);
 			$background_element->tag = 'IMG';

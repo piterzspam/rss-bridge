@@ -31,7 +31,7 @@ class TygodnikPowszechnyBridge extends FeedExpander {
     public function collectData(){
 		include 'myFunctions.php';
 		$this->setGlobalArticlesParams();
-        $this->collectExpandableDatas('https://www.tygodnikpowszechny.pl/rss.xml');
+		$this->collectExpandableDatas('https://www.tygodnikpowszechny.pl/rss.xml');
     }
 	
 	private function setGlobalArticlesParams()
@@ -56,107 +56,65 @@ class TygodnikPowszechnyBridge extends FeedExpander {
 				return;
 			}
 		}
-		$article_page = getSimpleHTMLDOMCached($item['uri'], 86400 * 14);
-		$article_post = $article_page->find('DIV.view-full-article', 0);
-		foreach_delete_element($article_post, 'DIV.views-field.views-field-body-1');
+		$article_html = getSimpleHTMLDOMCached($item['uri'], 86400 * 14);
+		$article_html = str_get_html(prepare_article($article_html));
+		//https://www.tygodnikpowszechny.pl/muzeum-roznych-rzeczy-166924
+		foreach ($article_html->find('IMG[src^="/"]') as $image_with_bad_source)
+		{
+			$img_src = $image_with_bad_source->getAttribute('src');
+			$image_with_bad_source->setAttribute('src', 'https://www.tygodnikpowszechny.pl'.$img_src);
+		}
+		foreach ($article_html->find('A[href^="/"]') as $link_with_bad_href)
+		{
+			$href = $link_with_bad_href->getAttribute('href');
+			$link_with_bad_href->setAttribute('href', 'https://www.tygodnikpowszechny.pl'.$href);
+		}
+		$tags = return_tags_array($article_html, 'DIV#breadcrumb SPAN[typeof="v:Breadcrumb"]');
+		$tags = array_diff($tags, array('Strona główna', $item['title']));
 
-		$article_post = str_get_html($article_post->save());
+		if (!is_null($premium_element = $article_html->find('DIV.view-id-ltd_warn', 0)))
+		{
+			$item['title'] = '[PREMIUM] '.$item['title'];
+		}
+		else if (!is_null($free_element = $article_html->find('DIV#fanipay-widget', 0)))
+		{
+			$item['title'] = '[FREE] '.$item['title'];
+		}
 
-		$this->fix_main_photo($article_post);
-		$this->format_article_photos($article_post);
+		$article = $article_html->find('DIV.view-full-article', 0);
+		replace_part_of_class($article, 'DIV.views-field', 'multiple', 'views-field ', '');
+		$article = str_get_html($article->save());
+		foreach_replace_outertext_with_innertext($article, 'DIV.views-field-title');
+		foreach_replace_outertext_with_innertext($article, 'DIV.media-element-container');
+		$article = str_get_html($article->save());
+		replace_tag_and_class($article, 'DIV.views-field-field-summary DIV.field-content', 'single', 'STRONG', NULL);
+		$article = str_get_html($article->save());
 
-		$lead_style = array(
-			'font-weight: bold;'
-		);
-		add_style($article_post, 'DIV.views-field-field-summary', $lead_style);
+		$selectors_array = array();
+		$selectors_array[] = 'DIV.views-field-body-1';
+		$selectors_array[] = 'comment';
+		foreach_delete_element_array($article, $selectors_array);
+		combine_two_elements($article, 'DIV.views-field-field-zdjecia', 'DIV.views-field-field-zdjecia-2', 'DIV', 'super_photo');
+		$article = str_get_html($article->save());
+
+		foreach_replace_outertext_with_innertext($article, 'qqqqqqqqqqqqqqqqq');
+		format_article_photos($article, 'DIV.super_photo', TRUE, 'src', 'DIV.views-field-field-zdjecia-2 DIV.field-content');
+		format_article_photos($article, 'DIV.file-image', FALSE, 'src', 'DIV.field-item');
+		$article = str_get_html($article->save());
+		add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
+		add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
+		add_style($article, 'FIGCAPTION', getStylePhotoCaption());
+		add_style($article, 'BLOCKQUOTE', getStyleQuote());
+		$article = str_get_html($article->save());
+		replace_part_of_class($article, 'DIV[class*="views-field-field-"]', 'multiple', 'views-field-field-', '');
+		$article = str_get_html($article->save());
+		replace_part_of_class($article, 'DIV[class*="views-field-"]', 'multiple', 'views-field-', '');
+		$article = str_get_html($article->save());
+
+		$item['content'] = $article;
+		$item['categories'] = $tags;
 		
-		$item['content'] = $article_post;
 		return $item;
 	}
-
-
-
-	private function fix_main_photo($article)
-	{
-		if (FALSE === is_null($main_image = $article->find('DIV.views-field.views-field-field-zdjecia DIV.field-content IMG[src^="http"]', 0)))
-		{
-			if (FALSE === is_null($image_caption = $article->find('DIV.views-field.views-field-field-zdjecia-2 DIV.field-content', 0)))
-			{
-				$caption_text = trim($image_caption->plaintext);
-				$image_caption->parent->outertext = '';
-			}
-			$img_src = "";
-			if($main_image->hasAttribute('src'))
-				$img_src = $main_image->getAttribute('src');
-
-			if (0 === strlen($caption_text))
-				$new_element = str_get_html('<figure class="photoWrapper mainPhoto"><img src="'.$img_src.'"></figure>');
-			else
-				$new_element = str_get_html('<figure class="photoWrapper mainPhoto"><img src="'.$img_src.'"><figcaption>'.$caption_text.'</figcaption></figure>');
-
-			$new_element_img = $new_element->find('IMG', 0);
-			$img_alt = "";
-			if($main_image->hasAttribute('alt'))
-				$img_alt = trim($main_image->getAttribute('alt'));
-			$img_title = "";
-			if($main_image->hasAttribute('title'))
-				$img_title = trim($main_image->getAttribute('title'));
-			if (0 === strlen($img_alt))
-				$new_element_img->setAttribute('alt', $img_alt);
-			if (0 === strlen($img_title))
-				$new_element_img->setAttribute('title', $img_title);
-			
-			$main_image->parent->parent->outertext = $new_element;
-			
-//			print_element($main_image, "main_image", "<br>");
-//			print_element($new_element, "new_element", "<br>");
-//			print_element($date, "date_element", "<br>");
-//			print_var_dump($date);
-		}
-	}
-
-	private function format_article_photos($article_post)
-	{
-		foreach($article_post->find('DIV[id^="attachment_"]') as $article_element)
-		{
-			if (FALSE === is_null($photo_element = $article_element->find('IMG[src^="http"]', 0)))
-			{
-				if (FALSE === is_null($caption_element = $article_element->find('P.wp-caption-text', 0)))
-				{
-					$caption_text = trim($caption_element->plaintext);
-				}
-				$img_src = "";
-				$img_src = $photo_element->getAttribute('src');
-
-				$img_alt = "";
-				if($photo_element->hasAttribute('alt'))
-					$img_alt = trim($photo_element->getAttribute('alt'));
-
-				if (0 === strlen($img_alt) && 0 === strlen($caption_text))
-					$new_outertext = '<figure class="photoWrapper photo"><img src="'.$img_src.'"></figure>';
-				else if (0 === strlen($img_alt) && 0 !== strlen($caption_text))
-					$new_outertext = '<figure class="photoWrapper photo"><img src="'.$img_src.'"><figcaption>'.$caption_text.'</figcaption></figure>';
-				else if (0 !== strlen($img_alt) && 0 === strlen($caption_text))
-					$new_outertext = '<figure class="photoWrapper photo"><img src="'.$img_src.'" alt="'.$img_alt.'"></figure>';
-				else if (0 !== strlen($img_alt) && 0 !== strlen($caption_text))
-					$new_outertext = '<figure class="photoWrapper photo"><img src="'.$img_src.'" alt="'.$img_alt.'"><figcaption>'.$caption_text.'</figcaption></figure>';
-				$article_element->outertext = $new_outertext;
-			}
-			if (FALSE === is_null($href_element = $article_element->find('A[href]', 0)))
-			{
-				$href = $href_element->getAttribute('href');
-				if (0 === strlen($img_alt) && 0 === strlen($caption_text))
-					$new_outertext = '<figure class="photoWrapper photo"><a href="'.$href.'"><img src="'.$img_src.'"></a></figure>';
-				else if (0 === strlen($img_alt) && 0 !== strlen($caption_text))
-					$new_outertext = '<figure class="photoWrapper photo"><a href="'.$href.'"><img src="'.$img_src.'"></a><figcaption>'.$caption_text.'</figcaption></figure>';
-				else if (0 !== strlen($img_alt) && 0 === strlen($caption_text))
-					$new_outertext = '<figure class="photoWrapper photo"><a href="'.$href.'"><img src="'.$img_src.'" alt="'.$img_alt.'"></a></figure>';
-				else if (0 !== strlen($img_alt) && 0 !== strlen($caption_text))
-					$new_outertext = '<figure class="photoWrapper photo"><a href="'.$href.'"><img src="'.$img_src.'" alt="'.$img_alt.'"></a><figcaption>'.$caption_text.'</figcaption></figure>';
-				$article_element->outertext = $new_outertext;
-			}
-		}
-	}
-
 }
 // Imaginary empty line!
