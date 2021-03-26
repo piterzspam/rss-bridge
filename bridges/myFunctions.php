@@ -680,6 +680,262 @@
 		}
 	}
 
+	function get_json_variable_as_array($article_html, $variable_name, $selector = 'SCRIPT')
+	{
+		$json_string = get_json_variable($article_html, $variable_name, $selector = 'SCRIPT');
+		$article_data_parsed = parse_article_data(json_decode($json_string));
+//		$article_data_parsed = parse_article_data(json_decode('zie{{mniak'));
+		return $article_data_parsed;
+	}
+	
+	function getArray2($current_variable, $wanted_index, $key = NULL)
+	{
+		if (isset($key))
+		{
+			echo "Wywołanie getArray2 dla klucza $key<br>";
+		}
+		else
+		{
+			echo "Wywołanie getArray2 bez klucza, początkowe<br>";
+		}
+//		print_var_dump($current_variable, 'Wywołanie - zmienna current_variable');
+		$array_to_return = array();
+		if (!is_array($current_variable))
+		{
+			echo "Nie jest tablicą, zwracam null<br>";
+			return null;
+//			return $array_to_return;
+		}
+		else if (isset($current_variable[$wanted_index]))
+		{
+			echo "isset(array[index])<br>";
+			print_var_dump($current_variable[$wanted_index], 'array[$wanted_index]');
+//			return $current_variable[$wanted_index];
+			print_var_dump($array_to_return, 'array_to_return przed isset(array[index]) count='.count($array_to_return));
+//			$array_to_return = array_merge($array_to_return, $current_variable[$wanted_index]);
+//			$array_to_return = array_merge_recursive($array_to_return, $current_variable[$wanted_index]);
+			$array_to_return[] = array($wanted_index => $current_variable[$wanted_index]);
+			
+			print_var_dump($array_to_return, 'array_to_return po isset(array[index]) count='.count($array_to_return));
+//			return $array_to_return;
+//			$array_to_return = array_merge($array_to_return, $current_variable[$wanted_index]);
+			unset($current_variable[$wanted_index]);
+		}
+		if (is_array($current_variable))
+		{
+			echo "Jest tablicą bez szukanego indeksu, wchodzę w foreach<br>";
+			foreach ($current_variable as $key => $item)
+			{
+				if (is_array($item))
+				{
+					echo "Wywołanie dla klucza $key<br>";
+					$returned_array = getArray2($item, $wanted_index, $key);
+					if (!is_null($returned_array) && count($returned_array) > 0)
+					{
+						echo "Zwrócono wartościową tablicę is_null(return)<br>";
+						print_var_dump($returned_array, 'Zwrócona tablica returned_array');
+//						print_var_dump($array_to_return, 'array_to_return przed is_null (return = getArray2) count='.count($array_to_return));
+// 						$array_to_return = array_merge($array_to_return, $returned_array);
+						$array_to_return[] = $returned_array;
+						/*
+						if (isset($returned_array[$wanted_index]))
+						{
+							$array_to_return[] = $returned_array;
+						}
+						else
+						{
+							foreach ($returned_array as $returned_subarray_key => $returned_subarray_item)
+							{
+								$array_to_return[] = $returned_subarray_item;
+							}
+						}*/
+//						$array_to_return = array_merge_recursive($array_to_return, $returned_array);
+//						$array_to_return[] = $returned_array;
+//						print_var_dump($array_to_return, 'array_to_return po is_null(return = getArray2) count='.count($array_to_return));
+//						print_var_dump($array_to_return, 'array_to_return !is_null');
+					}
+				}
+			}
+		}
+		if (isset($key))
+		{
+			echo "Wychodzę z funkcji dla klucza $key, zwracam array_to_return<br>";
+		}
+		else
+		{
+			echo "Wychodzę z funkcji bez klucza, zwracam array_to_return<br>";
+		}
+		print_var_dump($array_to_return, 'array_to_return returned');
+		return $array_to_return;
+	}
+
+	
+	function flatten_array($current_variable, $wanted_index)
+	{
+		$array_to_return = array();
+		if (!is_array($current_variable))
+		{
+			return null;
+		}
+		else if (isset($current_variable[$wanted_index]))
+		{
+			return $current_variable;
+		}
+		else if (is_array($current_variable))
+		{
+			foreach ($current_variable as $key => $item)
+			{
+				if (is_array($item))
+				{
+					$returned_array = flatten_array($item, $wanted_index);
+					if (!is_null($returned_array) && count($returned_array) > 0)
+					{
+						if (isset($returned_array[$wanted_index]))
+						{
+							$array_to_return[] = $returned_array;
+						}
+						else
+						{
+							foreach ($returned_array as $returned_subarray_key => $returned_subarray_item)
+							{
+								$array_to_return[] = $returned_subarray_item;
+							}
+						}
+					}
+				}
+			}
+		}
+		return $array_to_return;
+	}
+	
+	function getArray($array, $index)
+	{
+	    if (!is_array($array))
+		{
+			return null;
+		}
+	    if (isset($array[$index]))
+		{
+			return $array[$index];
+		}
+	    foreach ($array as $item)
+		{
+	        $return = getArray($item, $index);
+	        if (!is_null($return))
+			{
+	            return $return;
+	        }
+	    }
+	    return null;
+	}
+/*
+function getArray($array, $index) {
+    $arrayIt = new RecursiveArrayIterator($array);
+    $it = new RecursiveIteratorIterator(
+        $arrayIt, 
+        RecursiveIteratorIterator::SELF_FIRST
+    );
+    foreach ($it as $key => $value) {
+        if ($key == $index) {
+            return $value;
+        }
+    }
+    return null;
+}
+*/
+	function get_json_variable($article_html, $variable_name, $selector = 'SCRIPT')
+	{
+		foreach($article_html->find($selector) as $script_element)
+		{
+			$script_text = $script_element->innertext;
+			$position = strpos($script_text, $variable_name);
+//			print_var_dump($script_text, 'script_text');
+//			print_var_dump($position, 'position');
+			if (FALSE !== $position)
+			{
+				$rest = substr($script_text, $position);
+				$rest = trim($rest);
+//				print_var_dump($rest, 'rest');
+				$opening_bracket_counter = 0;
+				$closing_bracket_counter = 0;
+				$end_position = 0;
+				$start_position = 0;
+				for ($i = 0; $i < strlen($rest); $i++)
+				{
+//					print_var_dump($rest[$i], 'rest[i]');
+					if ('{' === $rest[$i])
+					{
+						$opening_bracket_counter++;
+						if ($opening_bracket_counter == 1)
+						{
+							$start_position = $i;
+						}
+					}
+					else if ('}' === $rest[$i])
+					{
+						$closing_bracket_counter++;
+					}
+					if ($opening_bracket_counter >= 1 && $opening_bracket_counter === $closing_bracket_counter)
+					{
+						$end_position = $i;
+						break;
+					}
+				}
+				/*
+				print_var_dump($opening_bracket_counter, 'opening_bracket_counter');
+				print_var_dump($closing_bracket_counter, 'closing_bracket_counter');
+				print_var_dump($start_position, 'start_position');
+				print_var_dump($end_position, 'end_position');
+				*/
+				if ($end_position > 0)
+				{
+					return substr($rest, $start_position, $end_position - $start_position + 1);
+				}
+			}
+		}
+		return "";
+	}
+
+	function set_biggest_photo_size_from_sources($main_element)
+	{
+		foreach($main_element->find('PICTURE') as $picture_element)
+		{
+			if (!is_null($image_element = $picture_element->find('IMG', 0)))
+			{
+				$photo_sizes_data = array();
+				foreach($picture_element->find('SOURCE[media][srcset]') as $source_element)
+				{
+					$source_srcset = $source_element->getAttribute('srcset');
+					$source_media = $source_element->getAttribute('media');
+					preg_match('/([0-9]+)/', $source_media, $output_array);
+					$img_size_int = intval($output_array[1]);
+//					print_var_dump($output_array, 'output_array');
+					$photo_sizes_data[] = array(
+						'size' => $img_size_int,
+						'src' => $source_srcset
+					);
+				}
+				if (isset($photo_sizes_data[0]))
+				{
+					$biggest_size = 0;
+					$biggest_position = 0;
+					foreach($photo_sizes_data as $key => $element)
+					{
+						if ($element['size'] > $biggest_size)
+						{
+							$biggest_size = $element['size'];
+							$biggest_position = $key;
+						}
+					}
+					$image_element->setAttribute('src', $photo_sizes_data[$biggest_position]['src']);
+					foreach($picture_element->find('SOURCE[media][srcset]') as $source_element)
+					{
+						$source_element->outertext = '';
+					}
+				}
+			}
+		}
+	}
 	
 	function set_biggest_photo_size_from_attribute($main_element, $string_selector, $attribute_name)
 	{
@@ -984,6 +1240,8 @@
 	{
 //		print_element($main_element, 'main_element przed');
 		fix_background_image($main_element, -1);
+		$main_element = str_get_html($main_element->save());
+		set_biggest_photo_size_from_sources($main_element);
 		$main_element = str_get_html($main_element->save());
 		set_biggest_photo_size_from_attribute($main_element, 'IMG[data-srcset]', 'data-srcset');
 		$main_element = str_get_html($main_element->save());
