@@ -44,6 +44,7 @@ class KonkretTVN24Bridge extends BridgeAbstract {
 		$GLOBALS['chosen_category_url'] = $this->getInput('category');
 		
 		$found_urls = $this->getArticlesUrls();
+//		$found_urls[] = 'https://konkret24.tvn24.pl/polska,108/mieszkancy-orzysza-pobili-sie-z-zolnierzami-nato-policja-i-zandarmeria-to-fake-news,1054169.html';
 //		print_var_dump($found_urls);
 		
 		foreach($found_urls as $url)
@@ -89,53 +90,67 @@ class KonkretTVN24Bridge extends BridgeAbstract {
 	private function addArticle($url)
 	{
 		$article_html = getSimpleHTMLDOMCached($url, 86400 * 14);
-		$article = $article_html->find('DIV.page-article DIV.article-content', 0);
-		foreach($article_html->find('SCRIPT') as $script_element)
-		{
-			if (FALSE !== strpos($script_element, 'props'))
-			{
-				preg_match_all('/"date":"([^"]+)/', $script_element, $output_array);
-				$date = $output_array[0][0];
-				$date = str_replace('"date":"', '', $date);
-			}
-		}
+		$article_html = str_get_html(prepare_article($article_html));
+		$article_html_str = str_replace("\xc2\xa0", '', $article_html->save());
+		$article_html = str_get_html($article_html_str);
 
-		if (FALSE === is_null($title_element = $article_html->find('H2.article-content__title', 0)))
-			$title = $title_element->plaintext;
-		else
-			$title = "";
-
-		if (FALSE === is_null($title_element = $article_html->find('DIV.article-content__sources__type--author', 0)))
-		{
-			$author = $title_element->plaintext;
-			$author = str_replace('Autor:', '', $author);
-			$author = trim($author);
-		}
-		else
-			$author = "";
-
-		$tags = array();
-		$tag = str_replace('https://konkret24.tvn24.pl/', '', $url);
-		preg_match('/[a-z]*/', $tag, $output_array);
-		$tag = $output_array[0];
-		$tag = ucwords($tag);
-		$tags[] = $tag;
-
-		add_style($article, 'DIV.article-content__inner-texts--quote', getStyleQuote());
-
-		add_style($article, 'DIV.article-content__inner-texts--video', getStylePhotoParent());
-		add_style($article, 'DIV.article-content__inner-texts--video__wrapper', getStylePhotoImg());
-		add_style($article, 'DIV.article-content__inner-texts--video__metadata', getStylePhotoCaption());
-
-		add_style($article, 'FIGURE.photo-figure', getStylePhotoParent());
-		add_style($article, 'IMG.photo-figure__image', getStylePhotoImg());
-		add_style($article, 'FIGCAPTION.photo-figure__caption', getStylePhotoCaption());
-
-		foreach_delete_element($article, 'SCRIPT');
-		foreach_delete_element($article, 'comment');
-		foreach_delete_element($article, 'DIV.adoSlot');
-		foreach_delete_element($article, 'DIV.share-container__position');
+		$date = get_json_value($article_html, 'SCRIPT', 'date');
 		
+		move_element($article_html, 'HEADER.article-main-photo', 'DIV.article-content__metadata', 'outertext', 'after');
+
+		$article = $article_html->find('DIV.page-article DIV.article-content', 0);
+		$title = get_text_plaintext($article, 'H2.article-content__title', $url);
+		$author = get_text_plaintext($article, 'DIV.article-content__sources__type--author', '');
+		$author = trim(str_replace('Autor:', '', $author));
+		$tags = array();
+		//https://konkret24.tvn24.pl/mity,114/orzel-w-trumnie-na-dwustuzlotowym-banknocie-uwaga-na-powracajacy-fejk,1049136.html
+		if (FALSE !== strpos($url, 'tvn24.pl/mity')) $tags[] = 'Mity';
+		else if (FALSE !== strpos($url, 'tvn24.pl/najnowsze')) $tags[] = 'Najnowsze';
+		else if (FALSE !== strpos($url, 'tvn24.pl/nauka')) $tags[] = 'Nauka';
+		else if (FALSE !== strpos($url, 'tvn24.pl/polityka')) $tags[] = 'Polityka';
+		else if (FALSE !== strpos($url, 'tvn24.pl/polska')) $tags[] = 'Polska';
+		else if (FALSE !== strpos($url, 'tvn24.pl/rozrywka')) $tags[] = 'Rozrywka';
+		else if (FALSE !== strpos($url, 'tvn24.pl/swiat')) $tags[] = 'Świat';
+		else if (FALSE !== strpos($url, 'tvn24.pl/tech')) $tags[] = 'Tech';
+		else if (FALSE !== strpos($url, 'tvn24.pl/zdrowie')) $tags[] = 'Zdrowie';
+
+		format_article_photos($article, 'HEADER.article-main-photo', TRUE);
+		//https://konkret24.tvn24.pl/polska,108/dlaczego-prezes-orlenu-nie-sklada-oswiadczenia-majatkowego-a-prezes-uzdrowiska-w-rabce-musi-wyjasniamy,1053560.html
+		//konkret24.tvn24.pl##DIV.article-content__inner-texts.article-content__inner-texts--photo
+		//konkret24.tvn24.pl##DIV.article-content__inner-texts.article-content__inner-texts--video.article-content__inner-texts--video--false
+		format_article_photos($article, 'DIV.article-content__inner-texts--video', FALSE, 'src', 'DIV.article-content__inner-texts--video__metadata');
+		format_article_photos($article, 'DIV.article-content__inner-texts--photo', FALSE, 'src', 'FIGCAPTION.photo-figure__caption');
+		replace_tag_and_class($article, 'DIV.article-content__lead', 'single', 'STRONG', NULL);
+		//konkret24.tvn24.pl##DIV.article-content__inner-texts.article-content__inner-texts--text
+		foreach_replace_outertext_with_innertext($article, 'DIV.article-content__inner-texts');
+
+		$selectors_array = array();
+		$selectors_array[] = 'SCRIPT';
+		$selectors_array[] = 'comment';
+		$selectors_array[] = 'DIV.adoSlot';
+		$selectors_array[] = 'DIV.share-container__position';
+		$selectors_array[] = 'comment';
+		foreach_delete_element_array($article, $selectors_array);
+		$article = str_get_html($article->save());
+		foreach_replace_outertext_with_innertext($article, 'DIV.article-content__inner-texts');
+		$article = str_get_html($article->save());
+
+		$next_data_array = get_json_variable_as_array($article_html, '__NEXT_DATA__', 'SCRIPT');
+		$next_data_subarrays = get_subarrays_by_key($next_data_array, "detail", NULL);
+		$detail_data_flattened = flatten_array($next_data_subarrays, "detail");
+		if (isset($detail_data_flattened[0]["detail"]["isTruth"]))
+		{
+			if ("no" === $detail_data_flattened[0]["detail"]["isTruth"])
+				$title = '[FAŁSZ] '.$title;
+			if ("yes" === $detail_data_flattened[0]["detail"]["isTruth"])
+				$title = '[PRAWDA] '.$title;
+		}
+
+		add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
+		add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
+		add_style($article, 'FIGCAPTION', getStylePhotoCaption());
+		add_style($article, 'BLOCKQUOTE', getStyleQuote());
+		$article = str_get_html($article->save());
 	
 		$this->items[] = array(
 			'uri' => $url,
@@ -143,8 +158,14 @@ class KonkretTVN24Bridge extends BridgeAbstract {
 			'timestamp' => $date,
 			'author' => $author,
 			'categories' => $tags,
-			'content' => $article
+			'content' => $article,
+//			'content' => $article_html,
 		);
+	}
 
+	function isValidJSON($string) 
+	{
+    	json_decode($string);
+    	return (json_last_error() == JSON_ERROR_NONE);
 	}
 }

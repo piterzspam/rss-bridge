@@ -598,12 +598,20 @@
 		foreach($main_element->find('IFRAME[src^="http"]') as $frame_element)
 		{
 			$url = $frame_element->getAttribute('src');
-			$frame_element->outertext = get_frame_outertext($url);
+			if($frame_element->hasAttribute('title'))
+			{
+				$title = $frame_element->getAttribute('title');
+			}
+			$frame_element->outertext = get_frame_outertext($url, $title);
 		}
 		foreach($main_element->find('IFRAME[data-src^="http"]') as $frame_element)
 		{
 			$url = $frame_element->getAttribute('data-src');
-			$frame_element->outertext = get_frame_outertext($url);
+			if($frame_element->hasAttribute('title'))
+			{
+				$title = $frame_element->getAttribute('title');
+			}
+			$frame_element->outertext = get_frame_outertext($url, $title);
 		}
 	}
 	
@@ -630,33 +638,35 @@
 		return $main_tweet;
 	}
 
-	function get_frame_outertext($url)
+	function get_frame_outertext($url, $title = NULL)
 	{
 		$outertext_to_return = "";
 		$proxy_url = get_proxy_url($url);
-		if ("" !== $url)
+		
+		$title_outertext = "";
+		$url_outertext = "";
+		$url_proxy_outertext = "";
+		if (isset($title) && strlen($title) > 0)
 		{
-			if ($proxy_url !== $url)
-			{
-				$outertext_to_return = 
-					'<strong><br>'
-					.'<a href='.$url.'>'
-					."Ramka - ".$url.'<br>'
-					.'</a>'
-					.'<a href='.$proxy_url.'>'
-					."Ramka - ".$proxy_url.'<br>'
-					.'</a>'
-					.'<br></strong>';
-			}
-			else
-			{
-				$outertext_to_return = 
-					'<strong><br>'
-					.'<a href='.$url.'>'
-					."Ramka - ".$url.'<br>'
-					.'</a>'
-					.'<br></strong>';
-			}
+			$title_outertext = "Ramka - ".$title.'<br>';
+		}
+		if (isset($url) && strlen($url) > 0)
+		{
+			$url_outertext = 
+			'<a href='.$url.'>'
+			."Ramka - ".$url.'<br>'
+			.'</a>';
+		}
+		if (isset($proxy_url) && strlen($proxy_url) > 0 && $proxy_url !== $url)
+		{
+			$url_proxy_outertext = 
+			'<a href='.$proxy_url.'>'
+			."Ramka - ".$proxy_url.'<br>'
+			.'</a>';
+		}
+		if (strlen($title_outertext) > 0 || strlen($url_outertext) > 0 || strlen($url_proxy_outertext) > 0)
+		{
+			$outertext_to_return = '<strong><br>'.$title_outertext.$url_outertext.$url_proxy_outertext.'<br></strong>';
 		}
 		return $outertext_to_return;
 	}
@@ -688,96 +698,44 @@
 		return $article_data_parsed;
 	}
 	
-	function getArray2($current_variable, $wanted_index, $key = NULL)
+	function get_subarrays_by_key($current_variable, $include_index, $key = NULL)
 	{
-		if (isset($key))
-		{
-			echo "Wywołanie getArray2 dla klucza $key<br>";
-		}
-		else
-		{
-			echo "Wywołanie getArray2 bez klucza, początkowe<br>";
-		}
-//		print_var_dump($current_variable, 'Wywołanie - zmienna current_variable');
 		$array_to_return = array();
 		if (!is_array($current_variable))
 		{
-			echo "Nie jest tablicą, zwracam null<br>";
 			return null;
-//			return $array_to_return;
 		}
-		else if (isset($current_variable[$wanted_index]))
+		else if (isset($current_variable[$include_index]))
 		{
-			echo "isset(array[index])<br>";
-			print_var_dump($current_variable[$wanted_index], 'array[$wanted_index]');
-//			return $current_variable[$wanted_index];
-			print_var_dump($array_to_return, 'array_to_return przed isset(array[index]) count='.count($array_to_return));
-//			$array_to_return = array_merge($array_to_return, $current_variable[$wanted_index]);
-//			$array_to_return = array_merge_recursive($array_to_return, $current_variable[$wanted_index]);
-			$array_to_return[] = array($wanted_index => $current_variable[$wanted_index]);
-			
-			print_var_dump($array_to_return, 'array_to_return po isset(array[index]) count='.count($array_to_return));
-//			return $array_to_return;
-//			$array_to_return = array_merge($array_to_return, $current_variable[$wanted_index]);
-			unset($current_variable[$wanted_index]);
+			$array_to_return[] = array($include_index => $current_variable[$include_index]);
+			unset($current_variable[$include_index]);
 		}
 		if (is_array($current_variable))
 		{
-			echo "Jest tablicą bez szukanego indeksu, wchodzę w foreach<br>";
 			foreach ($current_variable as $key => $item)
 			{
 				if (is_array($item))
 				{
-					echo "Wywołanie dla klucza $key<br>";
-					$returned_array = getArray2($item, $wanted_index, $key);
+					$returned_array = get_subarrays_by_key($item, $include_index, $key);
 					if (!is_null($returned_array) && count($returned_array) > 0)
 					{
-						echo "Zwrócono wartościową tablicę is_null(return)<br>";
-						print_var_dump($returned_array, 'Zwrócona tablica returned_array');
-//						print_var_dump($array_to_return, 'array_to_return przed is_null (return = getArray2) count='.count($array_to_return));
-// 						$array_to_return = array_merge($array_to_return, $returned_array);
 						$array_to_return[] = $returned_array;
-						/*
-						if (isset($returned_array[$wanted_index]))
-						{
-							$array_to_return[] = $returned_array;
-						}
-						else
-						{
-							foreach ($returned_array as $returned_subarray_key => $returned_subarray_item)
-							{
-								$array_to_return[] = $returned_subarray_item;
-							}
-						}*/
-//						$array_to_return = array_merge_recursive($array_to_return, $returned_array);
-//						$array_to_return[] = $returned_array;
-//						print_var_dump($array_to_return, 'array_to_return po is_null(return = getArray2) count='.count($array_to_return));
-//						print_var_dump($array_to_return, 'array_to_return !is_null');
 					}
 				}
 			}
 		}
-		if (isset($key))
-		{
-			echo "Wychodzę z funkcji dla klucza $key, zwracam array_to_return<br>";
-		}
-		else
-		{
-			echo "Wychodzę z funkcji bez klucza, zwracam array_to_return<br>";
-		}
-		print_var_dump($array_to_return, 'array_to_return returned');
 		return $array_to_return;
 	}
 
 	
-	function flatten_array($current_variable, $wanted_index)
+	function flatten_array($current_variable, $include_index)
 	{
 		$array_to_return = array();
 		if (!is_array($current_variable))
 		{
 			return null;
 		}
-		else if (isset($current_variable[$wanted_index]))
+		else if (isset($current_variable[$include_index]))
 		{
 			return $current_variable;
 		}
@@ -787,10 +745,10 @@
 			{
 				if (is_array($item))
 				{
-					$returned_array = flatten_array($item, $wanted_index);
+					$returned_array = flatten_array($item, $include_index);
 					if (!is_null($returned_array) && count($returned_array) > 0)
 					{
-						if (isset($returned_array[$wanted_index]))
+						if (isset($returned_array[$include_index]))
 						{
 							$array_to_return[] = $returned_array;
 						}

@@ -149,6 +149,7 @@ class DemagogBridge extends BridgeAbstract {
 	{
 		$GLOBALS['limit'] = $this->getInput('limit');
 		$found_urls = $this->getArticlesUrlsNewest();
+//		print_var_dump($found_urls, 'found_urls');
 		foreach($found_urls as $url)
 			$this->addArticle($url);
 		
@@ -163,7 +164,7 @@ class DemagogBridge extends BridgeAbstract {
 		$returned_array = $this->my_get_html('https://demagog.org.pl/');
 		$html_articles_list = $returned_array['html'];
 //		if (200 === $returned_array['code'] || 0 !== count($found_hrefs = $html_articles_list->find('DIV.slider-news-home.mt-5.mt-md-0 H2.title-archive A[href]')))
-		if (200 === $returned_array['code'] && 0 !== count($found_hrefs = $html_articles_list->find('DIV.slider-news-home.mt-5.mt-md-0 H2.title-archive A[href]')))
+		if (200 === $returned_array['code'] && 0 !== count($found_hrefs = $html_articles_list->find('DIV.container.pb-2.mt-4 H2.title-archive A[href]')))
 		{
 			foreach($found_hrefs as $href_element)
 			{
@@ -194,11 +195,13 @@ class DemagogBridge extends BridgeAbstract {
 			return;
 		}
 		$article_html = $returned_array['html'];
-		replace_attribute($article_html, 'IMG[src^="data:image/"][data-src^="http"]', 'src', 'data-src');
+		$article_html = str_get_html(prepare_article($article_html));
+/*		replace_attribute($article_html, 'IMG[src^="data:image/"][data-src^="http"]', 'src', 'data-src');
 		fix_all_photos_attributes($article_html);
 		convert_iframes_to_links($article_html);
 
 		$article_html->outertext = str_replace("&nbsp;", '', $article_html->outertext);
+*/
 		$article = $article_html->find('MAIN[role="main"] DIV.container', 0);
 
 		//tytuł
@@ -208,18 +211,18 @@ class DemagogBridge extends BridgeAbstract {
 		//tagi
 		$tags = return_tags_array($article, 'DIV.tags A[href]');
 		//data
-		$date = "";
-		if (FALSE === is_null($article_data = $article_html->find('SCRIPT.yoast-schema-graph', 0)))
-		{
-			$article_data_parsed = parse_article_data(json_decode($article_data->innertext));
-			if(isset($article_data_parsed["@graph"][3]["datePublished"]))
-			{
-				$date = $article_data_parsed["@graph"][3]["datePublished"];
-			}
-		}
+		$date = get_json_value($article_html, 'SCRIPT.yoast-schema-graph', 'datePublished');
 		if ("" === $date || is_null($date))
 		{
 			$date = get_text_from_attribute($article_html, 'META[property="article:modified_time"][content]', 'content', "");
+		}
+
+		$rating = get_text_plaintext($article, 'DIV.ocena-content P.ocena', NULL);
+		if (isset($rating))
+		{
+			$prefix = '['.strtoupper($rating).'] ';
+			$prefix = str_replace('ł', 'Ł', $prefix);
+			$title = $prefix.$title;
 		}
 
 		foreach_delete_element($article, 'DIV#share-fact');
@@ -227,21 +230,13 @@ class DemagogBridge extends BridgeAbstract {
 		foreach_delete_element($article, 'DIV.breadcrumbs');
 		foreach_delete_element($article, 'DIV.mb-5.d-none.d-md-flex');
 		foreach_delete_element($article, 'NOSCRIPT');
+		foreach_delete_element($article, 'DIV.newsletter-post');
+		
 		foreach_replace_outertext_with_innertext($article, 'DIV.row-custom.blue.mb-3.pb-2');
 		foreach_replace_outertext_with_innertext($article, 'DIV.mb-5.pb-3.count-text');
 		$article = str_get_html($article->save());
-		foreach($article->find('DIV.important-text') as $quote_element)
-		{
-			$new_outertext = '<blockquote>'.$quote_element->innertext.'</blockquote>';
-			$quote_element->outertext = $new_outertext;
-		}
-		$article = str_get_html($article->save());
-		//https://demagog.org.pl/fake_news/nie-ten-mezczyzna-nie-rozdaje-chleba-za-darmo-dla-potrzebujacych/
-		foreach($article->find('DIV.summary-text') as $quote_element)
-		{
-			$new_outertext = '<blockquote>'.$quote_element->innertext.'</blockquote>';
-			$quote_element->outertext = $new_outertext;
-		}
+		replace_tag_and_class($article, 'DIV.important-text, DIV.summary-text', 'multiple', 'BLOCKQUOTE', NULL);
+
 		$article = str_get_html($article->save());
 		//https://demagog.org.pl/wypowiedzi/ilu-wnioskow-o-skargi-nadzwyczajne-wciaz-nie-rozpatrzono/
 		format_article_photos($article, 'DIV[id^="attachment_"], IMG.alignnone', FALSE, 'src', 'P.wp-caption-text');

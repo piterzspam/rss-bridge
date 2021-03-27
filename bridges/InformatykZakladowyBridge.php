@@ -56,28 +56,24 @@ class InformatykZakladowyBridge extends FeedExpander {
 				return;
 			}
 		}
-		$articlePage = getSimpleHTMLDOMCached($item['uri'], 86400 * 14);
-		$article = $articlePage->find('MAIN#site-content', 0);
+		$article_html = getSimpleHTMLDOMCached($item['uri'], 86400 * 14);
+		
+		$article_html = str_get_html(prepare_article($article_html));
+		$article = $article_html->find('MAIN#site-content', 0);
 		foreach_delete_element($article, 'DIV.comments-wrapper');
 		foreach_delete_element($article, 'comment');
 		foreach_delete_element($article, 'script');
 
-		foreach($article->find('img') as $photo_element)
-		{
-			if(isset($photo_element->width)) $photo_element->width = NULL;
-			if(isset($photo_element->height)) $photo_element->height = NULL;
-		}
-
-		$tags = array();
-		foreach($article->find('LI.post-tags A[href*="informatykzakladowy.pl/tag/"][rel="tag"]') as $tag)
-		{
-			$tags[] = trim($tag->plaintext);
-		}
+		$tags = return_tags_array($article, 'LI.post-tags A[href*="informatykzakladowy.pl/tag/"][rel="tag"]');
 
 		$item['content'] = $article;
 		$item['categories'] = $tags;
 		
 //		if (FALSE === in_array("szkolenie", $item['categories'])) return $item;
+		add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
+		add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
+		add_style($article, 'FIGCAPTION', getStylePhotoCaption());
+		add_style($article, 'BLOCKQUOTE', getStyleQuote());
 				
 		return $item;
 	}
