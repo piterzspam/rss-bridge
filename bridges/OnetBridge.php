@@ -181,9 +181,9 @@ class OnetBridge extends BridgeAbstract {
 //https://wiadomosci-onet-pl.cdn.ampproject.org/v/s/wiadomosci.onet.pl/tylko-w-onecie/wybory-w-usa-2020-andrzej-stankiewicz-dzis-jest-czas-wielkiej-smuty-w-pis/fcktclw.amp?amp_js_v=0.1
 //https://wiadomosci-onet-pl.cdn.ampproject.org/v/s/wiadomosci.onet.pl/kraj/koronawirus-piotr-glinski-komentuje-milionowe-dofinansowania-dla-artystow/bv013rl.amp?amp_js_v=0.1
 //Glińskłumaczy się kryteriami obiektywnymi.
-		clear_paragraphs_from_taglinks($article, 'P.hyphenate', array('/onet\.pl\/[^\/]*$/'));
+//		clear_paragraphs_from_taglinks($article, 'P.hyphenate', array('/onet\.pl\/[^\/]*$/'));
 		$article = str_get_html($article->save());
-		foreach_delete_element_containing_elements_hierarchy($article, array('ul', 'li', 'A[href*="onet.pl"][target="_top"]'));
+//		foreach_delete_element_containing_elements_hierarchy($article, array('ul', 'li', 'A[href*="onet.pl"][target="_top"]'));
 		foreach_delete_element_containing_text_from_array($article, 'LI', array('Więcej informacji i podcastów znajdziesz na stronie głównej Onet.pl'));
 		foreach_delete_element_containing_text_from_array($article, 'P.hyphenate', 
 			array(

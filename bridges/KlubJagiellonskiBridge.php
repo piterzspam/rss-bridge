@@ -57,6 +57,7 @@ class KlubJagiellonskiBridge extends FeedExpander {
 			}
 		}
 		$article_html = getSimpleHTMLDOMCached($item['uri'], 86400 * 14);
+
 		foreach($article_html->find('DIV.pix') as $photo_element)
 		{
 			$background_element = $photo_element->find('[style^="background-image:"]', 0);
@@ -77,63 +78,61 @@ class KlubJagiellonskiBridge extends FeedExpander {
 		$selectors_array[] = 'DIV[data-source="ramka-polecane"]';
 		$selectors_array[] = 'DIV.meta_mobile.desktop-hide';
 		$selectors_array[] = 'DIV.block-wyimki DIV.col.c1';
-
-		$selectors_array[] = 'qqqqqqqqqqqqqqqqqqqq';
-		$selectors_array[] = 'qqqqqqqqqqqqqqqqqqqq';
-		$selectors_array[] = 'qqqqqqqqqqqqqqqqqqqq';
-		$selectors_array[] = 'qqqqqqqqqqqqqqqqqqqq';
-		$selectors_array[] = 'qqqqqqqqqqqqqqqqqqqq';
+		$selectors_array[] = 'DIV.inject_placeholder.shortcode[data-source="ramka-publikacje"]';
 		foreach_delete_element_array($article, $selectors_array);
 		foreach_delete_element_containing_subelement($article, 'DIV.block-content_breaker.block-content_breaker_ramka', 'A[href*="/temat/"]');
 		//https://klubjagiellonski.pl/2021/03/12/egzotyczny-sojusz-przeciwko-500-najbardziej-krytyczni-zwolennicy-konfederacji-lewica-i-najbogatsi/
 		foreach_delete_element_containing_subelement($article, 'DIV.block-content_breaker.block-content_breaker_ramka', 'IMG[src*="1-procent"]');
+		foreach_delete_element_containing_subelement($article, 'SPAN.colored', 'I.fa.fa-clock-o');
+		$article = str_get_html($article->save());
+ 
 
 		$tags = return_tags_array($article, 'A.block-catbox SPAN.catboxfg');
 		$author = return_authors_as_string($article, 'A.block-author_bio P.imienazwisko');
 
+		//Wyimki - streszczenie
 		foreach_replace_outertext_with_innertext($article, 'DIV.col.c2');
-		foreach_replace_outertext_with_innertext($article, 'qqqqqqqqqqqqqq');
 		$article = str_get_html($article->save());
-
-
 		foreach($article->find('DIV.block-wyimki DIV.row') as $row)
 		{
 			$row->outertext = '<strong>'.'- '.$row->plaintext.'</strong><br><br>';
 		}
-
 		$article = str_get_html($article->save());
-/*
-		foreach($article->find('A.block-author_bio') as $block_author)
+
+		format_article_photos($article, 'DIV.pix', TRUE, 'src', 'SPAN.pix_source');
+		//Zdjęcia w treści
+		//https://klubjagiellonski.pl/2021/03/19/polacy-nie-chca-wegla-a-co-trzeci-jest-gotow-placic-wiecej-za-transformacje-energetyczna/
+
+		if (!is_null($meta_element = $article->find('DIV.meta2', 0)))
 		{
-			if (FALSE === is_null($bio = $block_author->find('DIV.bio', 0)))
+			$date_string = get_text_plaintext($article, 'SPAN.data', '');
+			$reading_time_string = get_text_plaintext($article, 'SPAN.colored.time', '');
+			$lead_string = get_text_plaintext($article, 'SPAN.block-jag_meta', '');
+			$lead_string = trim(str_replace($date_string, '', $lead_string));
+			$lead_string = trim($lead_string);
+			$new_metadata_outertext = '<DIV class="meta_data">';
+			if (strlen($date_string) > 0)
 			{
-				$bio_text = $bio->plaintext;
-				$bio->outertext = '';
-				$block_author->outertext = $block_author->outertext.'<div class="bio">'.$bio_text.'</div>';
+				$new_metadata_outertext = $new_metadata_outertext.'<DIV class="publication_date">'.$date_string.'</DIV>';
 			}
+			if (strlen($lead_string) > 0)
+			{
+				$new_metadata_outertext = $new_metadata_outertext.'<STRONG class="lead">'.$lead_string.'</STRONG>';
+			}
+			if (strlen($reading_time_string) > 0)
+			{
+				$new_metadata_outertext = $new_metadata_outertext.'<DIV class="reading_time">'.'Przeczytanie zajmie: '.$reading_time_string.'</DIV>';
+			}
+			$new_metadata_outertext = $new_metadata_outertext.'</DIV>';
+			$meta_element->outertext = $new_metadata_outertext;
 		}
 
-		foreach($article->find('DIV.block-wyimki DIV.row') as $row)
-		{
-			$row->outertext = '<strong>'.'- '.$row->plaintext.'</strong><br><br>';
-		}
-		foreach($article->find('DIV.pix') as $pix)
-		{
-			if (FALSE === is_null($cat = $pix->find('DIV.cat', 0)))
-				$cat->outertext = '';
-			if (FALSE === is_null($pixbox_desktop = $pix->find('DIV.pixbox_desktop.mobile-hide[style^="background-image: "]', 0)))
-				$pixbox_desktop->outertext = '';
-		}
-		foreach($article->find('A.block-author_bio') as $author_bio)
-		{
-			$author_bio->outertext = '<br>'.$author_bio->outertext;
-		}
-		*/
-		add_style($article, 'DIV.pix', getStylePhotoParent());
-		add_style($article, 'IMG.desktop-hide', getStylePhotoImg());
-		$caption_style = getStylePhotoCaption();
-		$caption_style[] = 'position: absolute';
-		add_style($article, 'SPAN.pix_source', $caption_style);
+		$article = str_get_html($article->save());
+		add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
+		add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
+		add_style($article, 'FIGCAPTION', getStylePhotoCaption());
+		add_style($article, 'BLOCKQUOTE', getStyleQuote());
+		$article = str_get_html($article->save());
 		
 		$item['categories'] = $tags;
 		$item['author'] = $author;

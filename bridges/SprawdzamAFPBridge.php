@@ -82,18 +82,19 @@ class SprawdzamAFPBridge extends BridgeAbstract {
 			return;
 		}
 		$article_html = $returned_array['html'];
-		$article = $article_html->find('ARTICLE[role="article"]', 0);
-//		$article = str_get_html($article->save());
+		$next_data_array = get_json_variable_as_array($article_html, 'afp_blog_theme', 'SCRIPT');
+		$next_data_subarrays = get_subarrays_by_key($next_data_array, "output", NULL);
+		$detail_data_flattened = flatten_array($next_data_subarrays, "output");
+		$main_image_code = str_replace('<img', '<img class="photoWrapper mainPhoto" ', $detail_data_flattened[0]["output"]);
+		insert_html($article_html, 'H1.content-title', '', $main_image_code, '', '');
 
+		$article_html = str_get_html(prepare_article($article_html, 'https://sprawdzam.afp.com'));
+		$article = $article_html->find('ARTICLE[role="article"]', 0);
 
 		//title
-		$title = $url;
-		if (FALSE === is_null($title_element = $article_html->find('META[property="og:title"][content]', 0)))
-			$title = $title_element->getAttribute('content');
+		$title = get_text_from_attribute($article_html, 'META[property="og:title"][content]', 'content', $url);
 		//date
-		$date = "";
-		if (FALSE === is_null($date_element = $article_html->find('META[property="article:published_time"][content]', 0)))
-			$date = $date_element->getAttribute('content');
+		$date = get_text_from_attribute($article_html, 'META[property="article:published_time"][content]', 'content', "");
 		//authors
 		$author = return_authors_as_string($article, 'SPAN.meta-author A[href][target="_blank"]');
 		$author = str_replace(', AFP Polska', '', $author);
@@ -103,32 +104,16 @@ class SprawdzamAFPBridge extends BridgeAbstract {
 		{
 			$tags[$key] = ucwords(strtolower($tag));
 		}
-		
-		foreach($article_html->find('SCRIPT') as $script_element)
-		{
-			if (FALSE !== strpos($script_element, 'jQuery.extend(Drupal.settings'))
-			{
-				$script_element_text = str_replace('jQuery.extend(Drupal.settings, ', '', $script_element->innertext);
-				$script_element_text = str_replace(');', '', $script_element_text);
-				$article_data_parsed = parse_article_data(json_decode($script_element_text));
-				$main_photo_code = $article_data_parsed["afp_blog_theme"]["image"]["output"];
-				if (FALSE === is_null($header_element = $article_html->find('H1.content-title', 0)))
-				{
-					$new_code = $header_element->outertext.'<div class="mainPhoto">'.$main_photo_code.'</div>';
-					//tutaj nie dało się zmienić elementu przez $header_element->outertext = i $article->outertext = str_replace
-					$article->find('H1.content-title', 0)->outertext = $new_code;
-				}
-				break;
-			}
-		}
+
 		$article = str_get_html($article->save());
-		$this->format_article_photos_sources($article);
+		$selectors_array[] = 'comment';
+		$selectors_array[] = 'script';
+		$selectors_array[] = 'SPAN.meta-share.addtoany';
+		$selectors_array[] = 'SPAN.meta-separator';
+		foreach_delete_element_array($article, $selectors_array);
+//		move_element($article, 'DIV#container HEADER.entry-header.clearfix', 'DIV#content', 'innertext', 'before');
+		format_article_photos($article, 'IMG.photoWrapper.mainPhoto', TRUE);
 		format_article_photos($article, 'DIV.ww-item.image', FALSE, 'src', 'SPAN.legend');
-		format_article_photos($article, 'DIV.mainPhoto', TRUE);
-		foreach_delete_element($article, 'comment');
-		foreach_delete_element($article, 'script');
-		foreach_delete_element($article, 'SPAN.meta-share.addtoany');
-		foreach_delete_element($article, 'SPAN.meta-separator');
 		$article = str_get_html($article->save());
 		foreach($article->find('DIV.content-meta SPAN[class^="meta-"]') as $separator)
 		{
@@ -147,25 +132,6 @@ class SprawdzamAFPBridge extends BridgeAbstract {
 			'categories' => $tags,
 			'content' => $article
 		);
-	}
-	
-	private function format_article_photos_sources($article)
-	{
-		foreach($article->find('IMG[srcset]') as $photo_element)
-		{
-			$img_src = $photo_element->getAttribute('src');
-			if($photo_element->hasAttribute('srcset'))
-			{
-				$img_srcset = $photo_element->getAttribute('srcset');
-				$srcset_array  = explode(',', $img_srcset);
-				$last = count($srcset_array) - 1;
-				$last_url_string = trim($srcset_array[$last]);
-				$last_url_array  = explode(' ', $last_url_string);
-				$img_src = 'https://sprawdzam.afp.com'.$last_url_array[0];
-			}
-			$photo_element->setAttribute('srcset', '');
-			$photo_element->setAttribute('src', $img_src);
-		}
 	}
 
 	private function my_get_html($url)

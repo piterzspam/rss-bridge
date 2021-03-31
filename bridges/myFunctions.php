@@ -316,6 +316,22 @@
 		}
 	}
 
+	function foreach_replace_outertext_with_plaintext($main_element, $element_search_string)
+	{
+		foreach($main_element->find($element_search_string) as $element)
+		{
+			$element->outertext = $element->plaintext;
+		}
+	}
+
+	function foreach_replace_innertext_with_plaintext($main_element, $element_search_string)
+	{
+		foreach($main_element->find($element_search_string) as $element)
+		{
+			$element->innertext = $element->plaintext;
+		}
+	}
+
 	function get_proxy_url($social_url)
 	{
 		$twitter_proxy = 'nitter.snopyta.org';
@@ -601,8 +617,12 @@
 			if($frame_element->hasAttribute('title'))
 			{
 				$title = $frame_element->getAttribute('title');
+				$frame_element->outertext = get_frame_outertext($url, $title);
 			}
-			$frame_element->outertext = get_frame_outertext($url, $title);
+			else
+			{
+				$frame_element->outertext = get_frame_outertext($url);
+			}
 		}
 		foreach($main_element->find('IFRAME[data-src^="http"]') as $frame_element)
 		{
@@ -610,8 +630,12 @@
 			if($frame_element->hasAttribute('title'))
 			{
 				$title = $frame_element->getAttribute('title');
+				$frame_element->outertext = get_frame_outertext($url, $title);
 			}
-			$frame_element->outertext = get_frame_outertext($url, $title);
+			else
+			{
+				$frame_element->outertext = get_frame_outertext($url);
+			}
 		}
 	}
 	
@@ -1072,6 +1096,39 @@ function getArray($array, $index) {
 		}
 	}
 
+	function insert_text($main_element, $element_selector, $count = 'single', $where_to_put = 'after', $text_to_insert)
+	{
+		if ('single' === $count)
+		{
+			$element = $main_element->find($element_selector, 0);
+			if (FALSE === is_null($element))
+			{
+				if ('before' === $where_to_put)
+				{
+					$element->plaintext = $text_to_insert.$element->plaintext;
+				}
+				else if ('after' === $where_to_put)
+				{
+					$element->plaintext = $element->plaintext.$text_to_insert;
+				}
+			}
+		}
+		else if ('multiple' === $count)
+		{
+			foreach ($main_element->find($element_selector) as $element)
+			{
+				if ('before' === $where_to_put)
+				{
+					$element->plaintext = $text_to_insert.$element->plaintext;
+				}
+				else if ('after' === $where_to_put)
+				{
+					$element->plaintext = $element->plaintext.$text_to_insert;
+				}
+			}
+		}
+	}
+
 	function combine_two_elements($main_element, $first_element_selector, $second_element_selector, $parent_tag = NULL, $parent_class = NULL)
 	{
 		$first_element = $main_element->find($first_element_selector, 0);
@@ -1194,11 +1251,19 @@ function getArray($array, $index) {
 		}
 	}
 
-	function prepare_article($main_element)
+	function prepare_article($main_element, $page_url = NULL)
 	{
 //		print_element($main_element, 'main_element przed');
 		fix_background_image($main_element, -1);
 		$main_element = str_get_html($main_element->save());
+		$main_element_str = $main_element->save();
+		$main_element_str = str_replace('&nbsp;', ' ', $main_element_str);
+//		$main_element_str = preg_replace('/> *</', '><', $main_element_str);
+		while (FALSE !== strpos($main_element_str, '  '))
+		{
+			$main_element_str = str_replace('  ', ' ', $main_element_str);
+		}
+		$main_element = str_get_html($main_element_str);
 		set_biggest_photo_size_from_sources($main_element);
 		$main_element = str_get_html($main_element->save());
 		set_biggest_photo_size_from_attribute($main_element, 'IMG[data-srcset]', 'data-srcset');
@@ -1214,6 +1279,20 @@ function getArray($array, $index) {
 		convert_amp_frames_to_links($main_element);
 		$main_element = str_get_html($main_element->save());
 		convert_iframes_to_links($main_element);
+		$main_element = str_get_html($main_element->save());
+		if (isset($page_url))
+		{
+			foreach ($main_element->find('IMG[src^="/"]') as $image_with_bad_source)
+			{
+				$img_src = $image_with_bad_source->getAttribute('src');
+				$image_with_bad_source->setAttribute('src', $page_url.$img_src);
+			}
+			foreach ($main_element->find('A[href^="/"]') as $link_with_bad_href)
+			{
+				$href = $link_with_bad_href->getAttribute('href');
+				$link_with_bad_href->setAttribute('href', $page_url.$href);
+			}
+		}
 		$main_element = str_get_html($main_element->save());
 //		print_element($main_element, 'main_element po');
 		return $main_element->save();
