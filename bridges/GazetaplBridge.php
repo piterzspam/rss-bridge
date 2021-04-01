@@ -15,13 +15,13 @@ class GazetaplBridge extends BridgeAbstract {
 				'name' => 'URL',
 				'type' => 'text',
 				'required' => true,
-				'defaultValue' => 3,
 			),
 			'limit' => array
 			(
 				'name' => 'Liczba artykułów',
 				'type' => 'number',
-				'required' => true
+				'required' => true,
+				'defaultValue' => 3,
 			),
 		)
 	);
