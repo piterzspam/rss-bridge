@@ -122,6 +122,13 @@ class GazetaplBridge extends BridgeAbstract {
 			return;
 		}
 		$article_html = $returned_array['html'];
+		replace_attribute($article_html, 'IMG[src$="/image_placeholder_small.svg"][data-src]', 'src', 'data-src');
+		$article_html = str_get_html(prepare_article($article_html));
+/*
+		$article_html_str = $article_html->save();
+		$article_html_str = mb_convert_encoding($article_html_str, "UTF-8", "ISO-8859-2");
+		$article_html = str_get_html($article_html_str);
+*/
 		
 		$article = $article_html->find('SECTION#article_wrapper', 0);
 		$article->tag = 'DIV';
@@ -134,50 +141,71 @@ class GazetaplBridge extends BridgeAbstract {
 		$author = return_authors_as_string($article, 'A[rel="author"]');
 //		$author = trim($article->find('A[rel="author"]', 0)->plaintext);
 		$tags = return_tags_array($article, 'LI.tags_item');
+		$tags = mb_convert_encoding($tags, "ISO-8859-2", "UTF-8");
 
-		foreach_delete_element($article, 'comment');
-		foreach_delete_element($article, 'SCRIPT');
-		foreach_delete_element($article, 'DIV[id^="banC"]');
-		foreach_delete_element($article, 'DIV#sitePath');
-		foreach_delete_element($article, 'DIV.left_aside');
-		foreach_delete_element($article, 'DIV.ban000_wrapper');
-		foreach_delete_element($article, 'DIV.ban001_wrapper');
-		foreach_delete_element($article, 'DIV.right_aside');
-		foreach_delete_element($article, 'DIV.top_section_bg');
-		foreach_delete_element($article, 'DIV.bottom_section_bg');
-		foreach_delete_element($article, 'DIV#adUnit-007-CONTENTBOARD');
-		foreach_delete_element($article, 'DIV.related_image_number_of_photo');
-		foreach_delete_element($article, 'DIV.related_image_open');
-		foreach_delete_element($article, 'SECTION.tags');
+		$selectors_array[] = 'comment';
+		$selectors_array[] = 'SCRIPT';
+		$selectors_array[] = 'DIV[id^="banC"]';
+		$selectors_array[] = 'DIV#sitePath';
+		$selectors_array[] = 'DIV.left_aside';
+		$selectors_array[] = 'DIV.ban000_wrapper';
+		$selectors_array[] = 'DIV.ban001_wrapper';
+		$selectors_array[] = 'DIV.right_aside';
+		$selectors_array[] = 'DIV.top_section_bg';
+		$selectors_array[] = 'DIV.bottom_section_bg';
+		$selectors_array[] = 'DIV#adUnit-007-CONTENTBOARD';
+		$selectors_array[] = 'DIV.related_image_number_of_photo';
+		$selectors_array[] = 'DIV.related_image_open';
+		$selectors_array[] = 'SECTION.tags';
+		//https://next.gazeta.pl/next/7,151003,26558939,europa-nam-to-zapamieta-wsciekli-nie-beda-eurokraci-tylko.html
+		$selectors_array[] = 'P.art_embed.relatedBox';
+		foreach_delete_element_array($article, $selectors_array);
+
 		clear_paragraphs_from_taglinks($article, 'P.art_paragraph', array('/\?tag=/'));
 		foreach_delete_element_containing_text_from_array($article, 'div.art_embed', array('Zobacz wideo'));
-		//https://next.gazeta.pl/next/7,151003,26558939,europa-nam-to-zapamieta-wsciekli-nie-beda-eurokraci-tylko.html
-		foreach_delete_element($article, 'P.art_embed.relatedBox');
-//		$article = str_get_html($article->save());
 		foreach_replace_outertext_with_subelement_innertext($article, 'DIV.bottom_section', 'SECTION.art_content');
-//		$article = str_get_html($article->save());
 
-		if (FALSE === is_null($element = $article->find('SPAN.article_data', 0)))
+		insert_html($article, 'SPAN.article_data', '<BR>');
+		
+		$article = str_get_html($article->save());
+		foreach ($article->find('DIV.art_embed') as $embed)
 		{
-			$element->outertext = '<BR>'.$element->outertext;
-		}
-
-
-		foreach($article->find('div.art_embed') as $art_embed)
-		{
-			if (FALSE === is_null($art_embed->find('A[href*="twitter.com/user/status/"]', 0)))
+			$url = "";
+			$attribute = "";
+			if (FALSE === is_null($youtube_element = $embed->find('DIV.youtube-player[data-id]', 0)))
 			{
-				$twitter_url = $art_embed->find('a', 0)->getAttribute('href');
-				$twitter_proxy_url = get_proxy_url($twitter_url);
-				$art_embed->outertext = 
-					'<strong><br>'
-					.'<a href='.$twitter_url.'>'
-					."Ramka - ".$twitter_url.'<br>'
-					.'</a>'
-					.'<a href='.$twitter_proxy_url.'>'
-					."Ramka - ".$twitter_proxy_url.'<br>'
-					.'</a>'
-					.'<br></strong>';
+				$attribute = $youtube_element->getAttribute('data-id');
+				$url = 'https://www.youtube.com/watch?v='.$attribute;
+			}
+			else if (FALSE === is_null($generic_element = $embed->find('A[href]', 0)))
+			{
+				$attribute = $generic_element->getAttribute('href');
+				$url = $attribute;
+			}
+			if ("" !== $url)
+			{
+				$proxy_url = get_proxy_url($url);
+				if ($proxy_url !== $url)
+				{
+					$embed->outertext = 
+						'<strong><br>'
+						.'<a href='.$url.'>'
+						."Ramka - ".$url.'<br>'
+						.'</a>'
+						.'<a href='.$proxy_url.'>'
+						."Ramka - ".$proxy_url.'<br>'
+						.'</a>'
+						.'<br></strong>';
+				}
+				else
+				{
+					$embed->outertext = 
+						'<strong><br>'
+						.'<a href='.$url.'>'
+						."Ramka - ".$url.'<br>'
+						.'</a>'
+						.'<br></strong>';
+				}
 			}
 		}
 		$article = str_get_html($article->save());
@@ -185,8 +213,10 @@ class GazetaplBridge extends BridgeAbstract {
 		//https://wiadomosci.gazeta.pl/wiadomosci/7,114884,26873712,sondazowe-eldorado-polski-2050-i-szymona-holowni-trwa-to-oni.html
 		format_article_photos($article, 'DIV.art_embed', FALSE, 'src', 'P.desc');
 
+//		add_style($article, 'H4.art_interview_question, DIV#gazeta_article_lead', array('font-weight: bold;'));
+		replace_tag_and_class($article, 'DIV#gazeta_article_lead', 'single', 'STRONG', 'lead');
+		replace_tag_and_class($article, 'H4', 'multiple', 'H3');
 		$article = str_get_html($article->save());
-		add_style($article, 'H4.art_interview_question, DIV#gazeta_article_lead', array('font-weight: bold;'));
 		add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
 		add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
 		add_style($article, 'FIGCAPTION', getStylePhotoCaption());

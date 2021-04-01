@@ -354,7 +354,10 @@
 			$tag_text = str_replace("&nbsp;", '', $tag_text);
 			$tag_text = trim($tag_text);
 			$tag_text = trim($tag_text, ',;');
-			$tags[] = $tag_text;
+			if (strlen($tag_text) > 0)
+			{
+				$tags[] = $tag_text;
+			}
 		}
 		return array_unique($tags);
 	}
@@ -929,22 +932,20 @@ function getArray($array, $index) {
 //				print_html($photo_element, 'photo_element przed');
 				$img_srcset = $photo_element->getAttribute($attribute_name);
 				$photo_sizes_data = array();
-				$multiple_sizes_array  = explode(',', $img_srcset);
+//				$multiple_sizes_array  = explode(',', $img_srcset);
+				$multiple_sizes_array = preg_split('/( [0-9]+w),?/', $img_srcset, -1, PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY);
+
 //				print_var_dump($img_srcset, 'img_srcset');
 //				print_var_dump($multiple_sizes_array, 'multiple_sizes_array');
 				if (count($multiple_sizes_array) > 1)
 				{
-					foreach($multiple_sizes_array as $key => $single_size_string)
+					
+					for ($i = 0; $i < count($multiple_sizes_array); $i=$i+2)
 					{
-						$single_size_array  = explode(' ', trim($single_size_string));
-//						print_var_dump($single_size_array, 'single_size_array');
-						$img_size_src = $single_size_array[0];
-						$img_size_string = $single_size_array[1];
-//						print_var_dump($img_size_string, 'img_size_string');
+						$img_size_src = $multiple_sizes_array[$i];
+						$img_size_string = $multiple_sizes_array[$i+1];
 						preg_match('/([0-9]+)/', $img_size_string, $output_array);
-//						print_var_dump($output_array, 'output_array');
 						$img_size_int = intval($output_array[1]);
-//						print_var_dump($img_size_int, 'img_size_int');
 						$photo_sizes_data[] = array(
 							'size' => $img_size_int,
 							'src' => $img_size_src
@@ -1282,10 +1283,20 @@ function getArray($array, $index) {
 		$main_element = str_get_html($main_element->save());
 		if (isset($page_url))
 		{
+			foreach ($main_element->find('IMG[src^="//"]') as $image_with_bad_source)
+			{
+				$img_src = $image_with_bad_source->getAttribute('src');
+				$image_with_bad_source->setAttribute('src', 'https:'.$img_src);
+			}
 			foreach ($main_element->find('IMG[src^="/"]') as $image_with_bad_source)
 			{
 				$img_src = $image_with_bad_source->getAttribute('src');
 				$image_with_bad_source->setAttribute('src', $page_url.$img_src);
+			}
+			foreach ($main_element->find('A[href^="//"]') as $link_with_bad_href)
+			{
+				$href = $link_with_bad_href->getAttribute('href');
+				$link_with_bad_href->setAttribute('href', 'https:'.$href);
 			}
 			foreach ($main_element->find('A[href^="/"]') as $link_with_bad_href)
 			{
