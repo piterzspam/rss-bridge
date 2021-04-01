@@ -1,7 +1,7 @@
 <?php
-class OpinieWPplBridge extends BridgeAbstract {
-	const NAME = 'Opinie WP.pl';
-	const URI = 'https://opinie.wp.pl/';
+class WPplBridge extends BridgeAbstract {
+	const NAME = 'WP.pl';
+	const URI = 'https://www.wp.pl/';
 	const DESCRIPTION = 'No description provided';
 	const MAINTAINER = 'No maintainer';
 	const CACHE_TIMEOUT = 86400; // Can be omitted!
@@ -31,6 +31,7 @@ class OpinieWPplBridge extends BridgeAbstract {
 	public function collectData()
 	{
 		include 'myFunctions.php';
+		$this->setGlobalArticlesParams();
 		$GLOBALS['limit'] = intval($this->getInput('limit'));
 		$GLOBALS['my_debug'] = FALSE;
 //		$GLOBALS['my_debug'] = TRUE;
@@ -79,6 +80,16 @@ class OpinieWPplBridge extends BridgeAbstract {
 			echo "<br>Wszystkie {$GLOBALS['all_articles_counter']} artykulow zajelo {$GLOBALS['all_articles_time']}, <br>średnio ".$GLOBALS['all_articles_time']/$GLOBALS['all_articles_counter'] ."<br>";
 		//https://opinie-wp-pl.cdn.ampproject.org/v/s/opinie.wp.pl/kataryna-chcialabym-umiec-sie-tym-bawic-gdyby-to-nie-bylo-takie-grozne-6150491372804225a?amp=1&_js_v=0.1
 	}
+
+	private function setGlobalArticlesParams()
+	{
+		$url = $this->getInput('url');
+		$url_array = parse_url($this->getInput('url'));
+		$host_name = $url_array["host"];
+		$GLOBALS['host_name'] = $host_name;
+		$amp_host_name = str_replace('.', '-', $host_name);
+		$GLOBALS['amp_host_name'] = $amp_host_name;
+	}
 	
 	public function getName()
 	{
@@ -110,6 +121,7 @@ class OpinieWPplBridge extends BridgeAbstract {
 
 	private function addArticleAmp($url_article, $article_html)
 	{
+		$article_html = str_get_html(prepare_article($article_html));
 		$article = $article_html->find('main#content', 0);
 		$article_data = $article_html->find('SCRIPT[type="application/ld+json"]', 0)->innertext;
 		$article_data_parsed = parse_article_data(json_decode($article_data));
@@ -119,27 +131,25 @@ class OpinieWPplBridge extends BridgeAbstract {
 		$author = str_replace(',', '', $author);
 		$tags = return_tags_array($article, 'P.text-grey.tags SPAN A[href*="/tag/"]');
 		//Zduplikowane zdjęcie pod "Spotkania z kumplami": https://opinie.wp.pl/wielka-zmiana-mezczyzn-wirus-ja-tylko-przyspieszyl-6604913984391297a?amp=1&_js_v=0.1
-		foreach_delete_element($article, 'AMP-IMG[src] IMG');
-		foreach_delete_element($article, 'DIV.ad');
-		foreach_delete_element($article, 'P.tags');
-		foreach_delete_element($article, 'comment');
-		foreach_delete_element($article, 'AMP-SOCIAL-SHARE');
-		foreach_delete_element($article, 'SECTION.recommendations');
-		foreach_delete_element($article, 'DIV.seolinks');
-		foreach_delete_element($article, 'A.comment-button');
-		foreach_delete_element($article, 'FOOTER#footer');
-		foreach_delete_element($article, 'amp-video-iframe');
+
+		$selectors_array[] = 'DIV.ad';
+		$selectors_array[] = 'P.tags';
+		$selectors_array[] = 'comment';
+		$selectors_array[] = 'AMP-SOCIAL-SHARE';
+		$selectors_array[] = 'SECTION.recommendations';
+		$selectors_array[] = 'DIV.seolinks';
+		$selectors_array[] = 'A.comment-button';
+		$selectors_array[] = 'FOOTER#footer';
+		$selectors_array[] = 'amp-video-iframe';
+		$selectors_array[] = 'qqqqqqqqqqqqq';
+		foreach_delete_element_array($article, $selectors_array);
 		//https://opinie.wp.pl/zakazac-demonstracji-onr-kataryna-problemy-z-demokracja-6119008400492673a?amp=1&_js_v=0.1
 		//https://opinie.wp.pl/apel-o-zawieszenie-stosunkow-dyplomatycznych-z-polska-kataryna-jestem-wsciekla-6222729167030401a?amp=1&_js_v=0.1
 		//https://opinie.wp.pl/kataryna-kaczynski-stawia-na-dude-6213466100516481a?amp=1&_js_v=0.1
 		foreach_delete_element_containing_text_from_array($article, 'P, H2', array( 'Masz newsa, zdjęcie lub filmik? Prześlij nam przez', 'dla WP Opinie', 'Zobacz też: ', 'Zobacz też - ', 'Źródło: opinie.wp.pl', 'Czytaj także:', 'Zobacz także:'));
 		$this->removeVideoTitles($article);
 
-//		$article = str_get_html($article->save());
-		convert_amp_photos($article);
-		$article = str_get_html($article->save());
 
-		convert_amp_frames_to_links($article);
 
 		format_article_photos($article, 'DIV.header-image-container', TRUE, 'src', 'DIV.header-author');
 		format_article_photos($article, 'DIV.photo.from.amp', FALSE, 'src', 'FIGCAPTION');
@@ -187,7 +197,7 @@ class OpinieWPplBridge extends BridgeAbstract {
 				foreach($found_hrefs as $href_element)
 				{
 					if(isset($href_element->href))
-						$articles_urls[] = 'https://opinie.wp.pl'.$href_element->href;
+						$articles_urls[] = 'https://'.$GLOBALS['host_name'].$href_element->href;
 				}
 			}
 			$url_articles_list = $this->getNextPageUrl($html_articles_list);
@@ -200,7 +210,7 @@ class OpinieWPplBridge extends BridgeAbstract {
 		$next_page_element = $html_articles_list->find('A[rel="next"][href^="/autor/"]', 0);
 		if (FALSE === is_null($next_page_element) && $next_page_element->hasAttribute('href'))
 		{
-			return 'https://opinie.wp.pl'.$next_page_element->getAttribute('href');
+			return 'https://'.$GLOBALS['host_name'].$next_page_element->getAttribute('href');
 		}
 		else
 			return "empty";
@@ -274,15 +284,14 @@ class OpinieWPplBridge extends BridgeAbstract {
 
 	private function getAmpprojectLink($url)
 	{
-		$new_url = $url.'?amp=1&amp_js_v=0.1';
-		$new_url = str_replace('https://', 'https://opinie-wp-pl.cdn.ampproject.org/v/s/', $new_url);
+		$new_url = $url.'?amp=1';
+		$new_url = str_replace('https://', 'https://'.$GLOBALS['amp_host_name'].'.cdn.ampproject.org/c/s/', $new_url);
 		return $new_url;
 	}
 
 	private function getAmpLink($url)
 	{
-//		$url = 'https://opinie.wp.pl'.$url;
-		$new_url = $url.'?amp=1&amp_js_v=0.1';
+		$new_url = $url.'?amp=1';
 		return $new_url;
 	}
 }
