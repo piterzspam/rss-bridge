@@ -354,6 +354,7 @@
 			$tag_text = str_replace("&nbsp;", '', $tag_text);
 			$tag_text = trim($tag_text);
 			$tag_text = trim($tag_text, ',;');
+//			print_var_dump($tag_text, 'tag_text');
 			if (strlen($tag_text) > 0)
 			{
 				$tags[] = $tag_text;
@@ -697,6 +698,41 @@
 		}
 		return $outertext_to_return;
 	}
+	
+	function get_values_from_json($main_element, $variable_with_data, $selector, $wanted_variable_name, $output_type = array(0))
+	{
+		$variable_as_array = get_json_variable_as_array($main_element, $variable_with_data, $selector);
+		$subarrays_by_key = get_subarrays_by_key($variable_as_array, $wanted_variable_name);
+		$flattened_array = flatten_array($subarrays_by_key, $wanted_variable_name);
+		if (FALSE === $output_type)
+		{
+			return $flattened_array;
+		}
+		else if (TRUE === $output_type)
+		{
+			foreach ($flattened_array as $subarray)
+			{
+				if(isset($subarray[$wanted_variable_name]))
+				{
+					$new_array[] = $subarray[$wanted_variable_name];
+				}
+			}
+			return $new_array;
+		}
+		else if (is_array($output_type))
+		{
+			foreach ($output_type as $wanted_position)
+			{
+				if(isset($flattened_array[$output_type][$wanted_variable_name]))
+				{
+					$new_array[] = $flattened_array[$wanted_position][$wanted_variable_name];
+				}
+			}
+			return $new_array;
+		}
+		return NULL;
+	}
+
 
 	function get_json_value($main_element, $string_selector, $search_string)
 	{
@@ -717,9 +753,9 @@
 		}
 	}
 
-	function get_json_variable_as_array($article_html, $variable_name, $selector = 'SCRIPT')
+	function get_json_variable_as_array($article_html, $variable_name = NULL, $selector = 'SCRIPT')
 	{
-		$json_string = get_json_variable($article_html, $variable_name, $selector = 'SCRIPT');
+		$json_string = get_json_variable($article_html, $variable_name, $selector);
 		$article_data_parsed = parse_article_data(json_decode($json_string));
 //		$article_data_parsed = parse_article_data(json_decode('zie{{mniak'));
 		return $article_data_parsed;
@@ -828,12 +864,20 @@ function getArray($array, $index) {
     return null;
 }
 */
-	function get_json_variable($article_html, $variable_name, $selector = 'SCRIPT')
+	function get_json_variable($article_html, $variable_name = NULL, $selector = 'SCRIPT')
 	{
 		foreach($article_html->find($selector) as $script_element)
 		{
 			$script_text = $script_element->innertext;
-			$position = strpos($script_text, $variable_name);
+			if (isset($variable_name))
+			{
+				$position = strpos($script_text, $variable_name);
+			}
+			else
+			{
+				//jeżeli cała zawartość skryptu jest żądana
+				$position = 0;
+			}
 //			print_var_dump($script_text, 'script_text');
 //			print_var_dump($position, 'position');
 			if (FALSE !== $position)

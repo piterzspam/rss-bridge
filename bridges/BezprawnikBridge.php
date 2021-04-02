@@ -132,7 +132,15 @@ class BezprawnikBridge extends BridgeAbstract {
 		$title = get_text_from_attribute($article_html, 'META[property="og:title"][content]', 'content', $url_article);
 		$date = get_text_from_attribute($article_html, 'META[property="article:published_time"][content]', 'content', '');
 		$author = return_authors_as_string($article_html, 'DIV.amp-autor A[href*="/author/"]');
-		$tags = return_authors_as_string($article_html, 'DIV.amp-wp-tax-tag A[rel="tag"]');
+		
+		$tags = array();
+		foreach ($article_html->find('META[property="article:tag"][content]') as $tag_element)
+		{
+			$tags[] = trim($tag_element->content);
+		}
+//		$tags = return_authors_as_string($article_html, 'FOOTER A[rel="tag"]');
+//		$tags = return_authors_as_string($article_html, 'A[rel="tag"]');
+//		print_element($article_html, 'article_html');
 
 		$article = $article_html->find('article', 0);
 //https://bezprawnik.pl/korwin-mikke-wyrzucony-z-facebooka/amp/
