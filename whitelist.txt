@@ -1,6 +1,7 @@
 BezprawnikBridge
 DemagogBridge
 DziennikBridge
+EconomistBridge
 FacebookBridge
 FakeNewsBridge
 ForsalBridge
@@ -16,6 +17,7 @@ LiberteBridge
 MagazynKontaktBridge
 MagazynSWPlusBridge
 MagazynWPBridge
+MyEconomistBridge
 MiesiecznikZnakBridge
 NewsweekBridge
 NiebezpiecznikBridge

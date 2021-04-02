@@ -127,46 +127,44 @@ class BezprawnikBridge extends BridgeAbstract {
 			return;
 		}
 		$article_html = $returned_array['html'];
+		$article_html = str_get_html(prepare_article($article_html));
+	
+		$title = get_text_from_attribute($article_html, 'META[property="og:title"][content]', 'content', $url_article);
+		$date = get_text_from_attribute($article_html, 'META[property="article:published_time"][content]', 'content', '');
+		$author = return_authors_as_string($article_html, 'DIV.amp-autor A[href*="/author/"]');
+		$tags = return_authors_as_string($article_html, 'DIV.amp-wp-tax-tag A[rel="tag"]');
+
 		$article = $article_html->find('article', 0);
-		$article_data = $article_html->find('SCRIPT[type="application/ld+json"]', 0)->innertext;
-		$article_data_parsed = parse_article_data(json_decode($article_data));
-		$title = $article_data_parsed["@graph"][2]["name"];
-		$date = $article_data_parsed["@graph"][2]["datePublished"];
-		$author = $article_data_parsed["@graph"][3]["name"];
-//		$title = $article_html->find('META[property="og:title"]', 0)->content;
-//		$date = $article_html->find('META[property="article:published_time]', 0)->content;
-		$tags = return_tags_array($article, 'DIV.amp-wp-tax-tag [rel="tag"]');
-		convert_amp_photos($article);
-		convert_amp_frames_to_links($article);
 //https://bezprawnik.pl/korwin-mikke-wyrzucony-z-facebooka/amp/
 //https://bezprawnik.pl/rzad-zmienil-ustroj-polski/amp/
 		foreach_delete_element_containing_elements_hierarchy($article, array('ul', 'li', 'h3', 'a'));
-		foreach_delete_element($article, 'comment');
+
+		$selectors_array[] = 'comment';
 		//może pomoże na drugie zdjęcie pod zdjęciem głównynm w czytniku
-		foreach_delete_element($article, 'script');
+		$selectors_array[] = 'script';
 		//może pomoże na drugie zdjęcie pod zdjęciem głównynm w czytniku - 2
-		foreach_delete_element($article, 'NOSCRIPT');
-		foreach_delete_element($article, 'DIV.amp-autor');
-		foreach_delete_element($article, 'FOOTER');
+		$selectors_array[] = 'NOSCRIPT';
+		$selectors_array[] = 'DIV.amp-autor';
+		$selectors_array[] = 'FOOTER';
+		foreach_delete_element_array($article, $selectors_array);
 		clear_paragraphs_from_taglinks($article, 'P', array('/bezprawnik.pl\/tag\//'));
 
 		//zdjęcie autora
-		$author_photo = $article->find('FIGURE[id^="attachment_"][class^="wp-caption alignright amp-wp-"]', 0);
-		if (FALSE === is_null($author_photo))
-		{
-			$author_photo = $author_photo->outertext = '';
-		}
+		if (FALSE === is_null($author_photo = $article->find('FIGURE[id^="attachment_"][class^="wp-caption alignright amp-wp-"]', 0))) $author_photo = $author_photo->outertext = '';
+
 		
 		format_article_photos($article, 'FIGURE.amp-wp-article-featured-image.wp-caption', TRUE);
-		
-/*
-		foreach($article->find('amp-img, img') as $photo_element)
-		{
-			if(isset($photo_element->layout)) $photo_element->layout = NULL;
-			if(isset($photo_element->srcset)) $photo_element->srcset = NULL;
-		}
-*/
-		
+
+
+		$article = str_get_html($article->save());
+		add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
+		add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
+		add_style($article, 'FIGCAPTION', getStylePhotoCaption());
+		//https://bezprawnik.pl/z-kamera-wsrod-notariuszy/amp/
+		//https://bezprawnik.pl/ludzie-umra-po-szczepionkach/amp/
+		add_style($article, 'BLOCKQUOTE', getStyleQuote());
+		$article = str_get_html($article->save());
+
 
 		$this->items[] = array(
 			'uri' => $url_article,
@@ -216,7 +214,7 @@ class BezprawnikBridge extends BridgeAbstract {
 	private function getCustomizedLink($url)
 	{
 		$new_url = $url."amp/";
-		$new_url = str_replace('https://', 'https://bezprawnik-pl.cdn.ampproject.org/c/s/', $new_url);
+//		$new_url = str_replace('https://', 'https://bezprawnik-pl.cdn.ampproject.org/c/s/', $new_url);
 		return $new_url;
 	}
 }
