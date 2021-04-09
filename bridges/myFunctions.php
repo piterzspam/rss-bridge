@@ -515,6 +515,27 @@
 		}
 	}
 
+	function remove_multiple_attributes($main_element, $attributes_array)
+	{
+		$selectors_array = array();
+		foreach ($attributes_array as $key => $value)
+		{
+			$selectors_array[] = "[".$value."]";
+		}
+		$string_selector = implode(', ', $selectors_array);
+		foreach($main_element->find($string_selector) as $element)
+		{
+			foreach ($attributes_array as $attribute)
+			{
+				if($element->hasAttribute($attribute))
+				{
+					$element->removeAttribute($attribute);
+				}
+			}
+		}
+		return $main_element->save();
+	}
+
 	function fix_all_photos_attributes($main_element)
 	{
 		$array_allowed_attributes = array_merge(get_photo_attributes_caption(), get_photo_attributes_img());
