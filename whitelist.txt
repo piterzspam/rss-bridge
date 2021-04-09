@@ -3,6 +3,7 @@ DemagogBridge
 DziennikBridge
 EconomistBridge
 FacebookBridge
+FacebookMobileBridge
 FakeNewsBridge
 ForsalBridge
 GazetaplBridge

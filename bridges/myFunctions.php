@@ -1273,6 +1273,66 @@ function getArray($array, $index) {
 		}
 	}
 
+	function check_string_contains_needle_from_array($string, $needles)
+	{
+		if (is_array($needles) && is_string($string))
+		{
+			foreach ($needles as $needle)
+			{
+				if (FALSE !== strpos($string, $needle))
+				{
+					return TRUE;
+				}
+			}
+			return FALSE;
+		}
+		else
+		{
+			return FALSE;
+		}
+	}
+
+	function replace_single_children($main_element, $tags_array, $excluded_classes, $excluded_ids)
+	{
+		foreach ($tags_array as $tag_pair)
+		{
+			$tag_pair_array = explode("=>", $tag_pair);
+			if (2 === count($tag_pair_array))
+			{
+				$parent_tag = strtolower($tag_pair_array[0]);
+				$child_tag = strtolower($tag_pair_array[1]);
+				$changes_counter = 1;
+				while (0 < $changes_counter)
+				{
+					$changes_counter=0;
+					$main_element_str = $main_element->save();
+					foreach($main_element->find($parent_tag) as $parent_element)
+					{
+						if (1 === count($parent_element->childNodes()))
+						{
+							$first_child = $parent_element->first_child();
+							if ($child_tag === strtolower($first_child->tag))
+							{
+								if (!check_string_contains_needle_from_array($parent_element->id, $excluded_ids) && !check_string_contains_needle_from_array($parent_element->class, $excluded_classes))
+								{
+									$changes_counter++;
+									$main_element_str = str_replace($parent_element->outertext, $first_child->outertext, $main_element_str);
+								}
+								else if (!check_string_contains_needle_from_array($first_child->id, $excluded_ids) && !check_string_contains_needle_from_array($first_child->class, $excluded_classes))
+								{
+									$changes_counter++;
+									$main_element_str = str_replace($parent_element->innertext, $first_child->innertext, $main_element_str);
+								}
+							}
+						}
+					}
+					$main_element = str_get_html($main_element_str);
+				}
+			}
+		}
+		return $main_element->save();
+	}
+
 	function insert_html($main_element, $element_selector, $outertext_before = '', $outertext_after = '', $innertext_before = '', $innertext_after = '')
 	{
 		foreach($main_element->find($element_selector) as $element)
@@ -1303,7 +1363,8 @@ function getArray($array, $index) {
 		$main_element = str_get_html($main_element->save());
 		$main_element_str = $main_element->save();
 		$main_element_str = str_replace('&nbsp;', ' ', $main_element_str);
-//		$main_element_str = preg_replace('/> *</', '><', $main_element_str);
+		//to chyba to samo, to wyżej nie działa, to działa
+		$main_element_str = str_replace("\xc2\xa0", ' ', $main_element_str);
 		while (FALSE !== strpos($main_element_str, '  '))
 		{
 			$main_element_str = str_replace('  ', ' ', $main_element_str);

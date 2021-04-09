@@ -75,6 +75,11 @@ class GazetaplBridge extends BridgeAbstract {
 	private function setGlobalArticlesParams()
 	{
 		$GLOBALS['limit'] = intval($this->getInput('limit'));
+		$url_array = parse_url($this->getInput('url'));
+		$host_name = $url_array["host"];
+		$GLOBALS['host_name'] = $host_name;
+		$amp_host_name = str_replace('.', '-', $host_name);
+		$GLOBALS['amp_host_name'] = $amp_host_name;
 	}
 
 	private function getArticlesUrls()
@@ -83,6 +88,7 @@ class GazetaplBridge extends BridgeAbstract {
 		$url_articles_list = $this->getInput('url');
 		while (count($articles_urls) < $GLOBALS['limit'] && "empty" != $url_articles_list)
 		{
+//			echo "url_articles_list :$url_articles_list<br>";
 			$returned_array = $this->my_get_html($url_articles_list);
 			$html_articles_list = $returned_array['html'];
 			if (200 !== $returned_array['code'] || 0 === count($found_hrefs = $html_articles_list->find('UL.list_tiles LI.entry ARTICLE.article A[href]')))
@@ -108,7 +114,7 @@ class GazetaplBridge extends BridgeAbstract {
 		$next_page_element = $html_articles_list->find('FOOTER.footer DIV.pagination A.next[href]', 0);
 		if (FALSE === is_null($next_page_element) && $next_page_element->hasAttribute('href'))
 		{
-			return $next_page_element->getAttribute('href');
+			return 'https://'.$GLOBALS['host_name'].$next_page_element->getAttribute('href');
 		}
 		else
 			return "empty";
@@ -138,8 +144,8 @@ class GazetaplBridge extends BridgeAbstract {
 //		$title = trim($article->find('H1#article_title', 0)->plaintext);
 		$timestamp = get_text_from_attribute($article, 'TIME', 'datetime', "");
 //		$timestamp = trim($article->find('TIME', 0)->getAttribute('datetime'));
-		$author = return_authors_as_string($article, 'A[rel="author"]');
 //		$author = trim($article->find('A[rel="author"]', 0)->plaintext);
+		$author = return_authors_as_string($article, 'DIV.author_and_date SPAN.article_author');
 		$tags = return_tags_array($article, 'LI.tags_item');
 		$tags = mb_convert_encoding($tags, "ISO-8859-2", "UTF-8");
 

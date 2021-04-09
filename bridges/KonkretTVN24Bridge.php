@@ -17,6 +17,13 @@ class KonkretTVN24Bridge extends BridgeAbstract {
 				'required' => true,
 				'defaultValue' => 3,
 			),
+/*			'skip' => array
+			(
+				'name' => 'Liczba artykułów do pominięcia',
+				'type' => 'number',
+				'required' => true,
+				'defaultValue' => 0,
+			),*/
 			'category' => array(
 				'name' => 'Kategoria',
 				'type' => 'list',
@@ -40,13 +47,24 @@ class KonkretTVN24Bridge extends BridgeAbstract {
 	public function collectData()
 	{
 		include 'myFunctions.php';
+		$GLOBALS['my_debug'] = FALSE;
+//		$GLOBALS['my_debug'] = TRUE;
+//		$GLOBALS['skip'] = $this->getInput('skip');
+		if (TRUE === $GLOBALS['my_debug'])
+		{
+			$GLOBALS['all_articles_time'] = 0;
+			$GLOBALS['all_articles_counter'] = 0;
+		}
 		$GLOBALS['limit'] = $this->getInput('limit');
+
+		
 		$GLOBALS['chosen_category_url'] = $this->getInput('category');
 		
 		$found_urls = $this->getArticlesUrls();
 //		$found_urls[] = 'https://konkret24.tvn24.pl/polska,108/mieszkancy-orzysza-pobili-sie-z-zolnierzami-nato-policja-i-zandarmeria-to-fake-news,1054169.html';
-//		print_var_dump($found_urls);
-		
+//		$found_urls[] = 'https://konkret24.tvn24.pl/polityka,112/prokurator-generalny-ukrainy-zada-wydania-slawomira-nowaka-prokuratura-nie-potwierdza,1024144.html';
+//		$found_urls[] = 'https://konkret24.tvn24.pl/polityka,112/czterokrotnie-pelnomocnik-20-tysiecy-i-sluzbowe-auto,949091.html';
+//		$found_urls[] = 'https://konkret24.tvn24.pl/polityka,112/hollywoodzka-superprodukcja-o-polsce-to-wymysl-dziennikarzy-bynajmniej,988405.html';
 		foreach($found_urls as $url)
 		{
 			$this->addArticle($url);
@@ -59,40 +77,71 @@ class KonkretTVN24Bridge extends BridgeAbstract {
 		$url_articles_list = $GLOBALS['chosen_category_url'];
 		while (count($articles_urls) < $GLOBALS['limit'] && "empty" != $url_articles_list)
 		{
-			$html_articles_list = getSimpleHTMLDOM($url_articles_list);
-			if (0 === count($found_hrefs = $html_articles_list->find('ARTICLE.news-teaser A.news-teaser__link[href]')))
+			$old_count = count($articles_urls);
+			$returned_array = $this->my_get_html($url_articles_list);
+			$html_articles_list = $returned_array['html'];
+			if (200 !== $returned_array['code'] || 0 === count($found_hrefs = $html_articles_list->find('ARTICLE.news-teaser A.news-teaser__link[href]')))
 			{
 				break;
 			}
 			else
 			{
 				foreach($found_hrefs as $href_element)
-					if(isset($href_element->href)) $articles_urls[] = 'https://konkret24.tvn24.pl'.$href_element->href;
+				{
+					if(isset($href_element->href))
+					{
+						$new_url = 'https://konkret24.tvn24.pl'.$href_element->href;
+						if (!in_array($new_url, $articles_urls))
+						{
+							$articles_urls[] = $new_url;
+						}
+					}
+				}
 			}
-			$url_articles_list = $this->getNextPageUrl($html_articles_list);
+			if (count($articles_urls) === $old_count)
+			{
+				break;
+			}
+			$url_articles_list = $this->getNextPageUrl($html_articles_list, $url_articles_list);
 		}
 		return array_slice($articles_urls, 0, $GLOBALS['limit']);
 	}
 
-	private function getNextPageUrl($html_articles_list)
-	{		
+	private function getNextPageUrl($html_articles_list, $url_articles_list)
+	{
 		$next_page_element = $html_articles_list->find('A.pagination__link.pagination__link--next', 0);
 		if (FALSE === is_null($next_page_element) && $next_page_element->hasAttribute('href'))
 		{
-			$url = 'https://konkret24.tvn24.pl'.$next_page_element->getAttribute('href');
-			$url = strtolower($url);
-			return $url;
+			$next_page_url = 'https://konkret24.tvn24.pl'.$next_page_element->getAttribute('href');
+			$next_page_url = strtolower($next_page_url);
+			return $next_page_url;
 		}
 		else
-			return "empty";
+		{
+			preg_match('/(.*,)([0-9]+)(\.html)/', $url_articles_list, $output_array);
+			if (4 === count($output_array))
+			{
+				$current_page_number = intval($output_array[2]);
+				$next_page_number = strval($current_page_number + 1);
+				$next_page_url = $output_array[1].$next_page_number.$output_array[3];
+				return $next_page_url;
+			}
+			else
+			{
+				return "empty";
+			}
+		}
 	}
 
 	private function addArticle($url)
 	{
-		$article_html = getSimpleHTMLDOMCached($url, 86400 * 14);
+		$returned_array = $this->my_get_html($url);
+		if (200 !== $returned_array['code'])
+		{
+			return;
+		}
+		$article_html = $returned_array['html'];
 		$article_html = str_get_html(prepare_article($article_html));
-		$article_html_str = str_replace("\xc2\xa0", '', $article_html->save());
-		$article_html = str_get_html($article_html_str);
 
 		$date = get_json_value($article_html, 'SCRIPT', 'date');
 		
@@ -129,7 +178,6 @@ class KonkretTVN24Bridge extends BridgeAbstract {
 		$selectors_array[] = 'comment';
 		$selectors_array[] = 'DIV.adoSlot';
 		$selectors_array[] = 'DIV.share-container__position';
-		$selectors_array[] = 'comment';
 		foreach_delete_element_array($article, $selectors_array);
 		$article = str_get_html($article->save());
 		foreach_replace_outertext_with_innertext($article, 'DIV.article-content__inner-texts');
@@ -162,10 +210,43 @@ class KonkretTVN24Bridge extends BridgeAbstract {
 //			'content' => $article_html,
 		);
 	}
-
-	function isValidJSON($string) 
+	
+	
+	private function my_get_html($url)
 	{
-    	json_decode($string);
-    	return (json_last_error() == JSON_ERROR_NONE);
+		$context = stream_context_create(array('http' => array('ignore_errors' => true)));
+
+		if (TRUE === $GLOBALS['my_debug'])
+		{
+			$start_request = microtime(TRUE);
+			$page_content = file_get_contents($url, false, $context);
+			$end_request = microtime(TRUE);
+			echo "<br>Article  took " . ($end_request - $start_request) . " seconds to complete - url: $url.";
+			$GLOBALS['all_articles_counter']++;
+			$GLOBALS['all_articles_time'] = $GLOBALS['all_articles_time'] + $end_request - $start_request;
+		}
+		else
+			$page_content = file_get_contents($url, false, $context);
+
+		$code = getHttpCode($http_response_header);
+		if (200 !== $code)
+		{
+			$html_error = createErrorContent($http_response_header);
+			$date = new DateTime("now", new DateTimeZone('Europe/Warsaw'));
+			$date_string = date_format($date, 'Y-m-d H:i:s');
+			$this->items[] = array(
+				'uri' => $url,
+				'title' => "Error ".$code.": ".$url,
+				'timestamp' => $date_string,
+				'content' => $html_error
+			);
+		}
+		$page_html = str_get_html($page_content);
+
+		$return_array = array(
+			'code' => $code,
+			'html' => $page_html,
+		);
+		return $return_array;
 	}
 }
