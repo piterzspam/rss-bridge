@@ -65,14 +65,83 @@ class FacebookMobileBridge extends BridgeAbstract {
 			$GLOBALS['all_articles_time'] = 0;
 			$GLOBALS['all_articles_counter'] = 0;
 		}
-		$returned_array = $this->my_get_html($GLOBALS['url']);
+		$returned_array = $this->my_get_html($GLOBALS['url'], TRUE);
+//		$returned_array = $this->my_get_html($GLOBALS['url'], FALSE);
 		if (200 !== $returned_array['code'])
 		{
 			return;
 		}
-		$article_html = $returned_array['html'];
-		
+		$article_html = str_get_html($returned_array['page_content']);
+
+		$author = get_text_plaintext($article_html, 'TITLE#pageTitle', $GLOBALS['url']);
+		if ($GLOBALS['url'] !== $author)
+		{
+			$author_array = explode(' - ', $author);
+			unset($author_array[count($author_array) - 1]);
+			$author = implode(' - ', $author_array);
+		}
+		$GLOBALS['author'] = $author;
+		///////////////////////////////PRZED
+		$article_html = $this->format_facebook_page($article_html);
+		////////////////////////////PO
+		$photoID = get_json_value($article_html, 'SCRIPT', 'photoID');
+		$old_profil_page_photo_url = get_text_from_attribute($article_html, 'META[property="og:image"][content]', 'content', '');
+		$new_profil_page_photo_url = "https://lookaside.fbsbx.com/lookaside/crawler/media/?media_id=".$photoID;
 		$article_html_str = $article_html->save();
+//		$selector = 'IMG[src*="'.$old_profil_page_photo_url.'"]';
+//					echo "test1<br>";
+//					print_var_dump($selector, "selector");
+//					print_var_dump($old_profil_page_photo_url, "old_profil_page_photo_url");
+//					print_var_dump($new_profil_page_photo_url, "new_profil_page_photo_url");
+//					print_var_dump(count($article_html->find('IMG[src*="'.$old_profil_page_photo_url.'"]', 0)), "count1");
+//					print_var_dump(strpos($old_profil_page_photo_url, $article_html_str), "strpos2");
+//					print_element($article_html, "article_html");
+//					print_html($article_html_str, "article_html_str");
+					
+//		if (strlen($photoID) > 1 && strlen($old_profil_page_photo_url) > 1)
+		if (strlen($photoID) > 1 && strlen($old_profil_page_photo_url) > 1 && !is_null($profile_image = $article_html->find('IMG[src*="'.$old_profil_page_photo_url.'"]', 0)))
+		{
+//					echo "test2<br>";
+			$returned_pic_array = $this->my_get_html($new_profil_page_photo_url, TRUE);
+			if (200 === $returned_pic_array['code'])
+			{
+//					echo "test3<br>";
+				$image_downloaded = $returned_pic_array['page_content'];
+				if ($image_downloaded !== false)
+				{
+//					echo "test4<br>";
+					if (is_int(strpos($new_profil_page_photo_url, ".png")))
+			    		$image_src_base64 = 'data:image/png;base64,'.base64_encode($image_downloaded);
+					else
+			    		$image_src_base64 = 'data:image/jpg;base64,'.base64_encode($image_downloaded);
+					
+					$im = imagecreatefromstring($image_downloaded);
+					$width = imagesx($im);
+					$height = imagesy($im);
+					$newwidth = 100;
+					$newheight = 100;
+					$thumb = imagecreatetruecolor($newwidth, $newheight);
+					// Resize
+					imagecopyresized($thumb, $im, 0, 0, 0, 0, $newwidth, $newheight, $width, $height);
+					ob_start();
+					imagejpeg($thumb);
+					$output = base64_encode(ob_get_contents());
+					ob_end_clean();
+					$image_src_base64 = "data:image/jpg;base64,".$output;
+//					echo "<img src='data:image/jpg;base64,".$output."' />";
+// 					Output
+//					imagejpeg($thumb);
+//					$image = ob_get_contents(); 
+//					ob_end_clean();
+//					echo "<img src='data:image/jpg;base64,".base64_encode($image)."' />";
+					$article_html_str = str_replace($old_profil_page_photo_url, $image_src_base64, $article_html_str);
+				}
+			}
+		}
+		$article_html = str_get_html($article_html_str);
+//		$values_date_modified = get_values_from_json($article_html, NULL, 'BODY SCRIPT', "photoID", TRUE);
+//		print_var_dump($values_date_modified, "values_date_modified");
+
 /*
 		foreach($article_html->find('DIV#pagelet_timeline_main_column DIV.userContent') as $fb_post)
 		{
@@ -104,25 +173,54 @@ class FacebookMobileBridge extends BridgeAbstract {
 			}
 		}
 */
-		$article_html = str_get_html($article_html_str);
+/*
+//		$article_html = str_get_html($article_html_str);
 //		print_html($article_html, "article_html po");
 //		print_element($article_html, "article_html po");
 //		return;
 //		$returned_array = $this->my_get_html($GLOBALS['url'], true);
-		$article_html = $this->format_facebook_page($article_html);
-
-		$author = get_text_plaintext($article_html, 'TITLE#pageTitle', $GLOBALS['url']);
-		if ($GLOBALS['url'] !== $author)
+//		$article_html = str_get_html($article_html->save());
+		foreach($article_html->find('IMG[src="'.$old_profil_page_photo_url.'"]') as $profile_image)
 		{
-			$author_array = explode(' - ', $author);
-			unset($author_array[count($author_array) - 1]);
-			$author = implode(' - ', $author_array);
+			$returned_pic_array = $this->my_get_html($image_src, TRUE);
+			if (200 === $returned_pic_array['code'])
+			{
+//				return;
+				$image_downloaded = $returned_pic_array['page_content'];
+//				print_var_dump($image_downloaded, "image_downloaded");
+//				print_element($image_downloaded, "image_downloaded");
+//				echo "<br><br><br>post_url: $post_url<br>image_src po: $image_src<br>";
+
+//				$options  = array('http' => array('user_agent' => 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)\r\n'));
+//				ini_set('user_agent', 'User-Agent:Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)\r\n');
+//				$context  = stream_context_create($options);
+//				$image_downloaded = file_get_contents($image_src, false, $context);
+//				$image_downloaded = file_get_contents($image_src);
+				if ($image_downloaded !== false)
+				{
+					if (is_int(strpos($image_src, ".png")))
+			    		$image_src = 'data:image/png;base64,'.base64_encode($image_downloaded);
+					else
+			    		$image_src = 'data:image/jpg;base64,'.base64_encode($image_downloaded);
+				}
+				$image->setAttribute('src', NULL);
+				$image->setAttribute('src', $image_src);
+			}
+//			$profile_image->setAttribute('src', NULL);
+			$profile_image->setAttribute('src', "https://lookaside.fbsbx.com/lookaside/crawler/media/?media_id=".$photoID);
+//			$profile_image->setAttribute('style', "https://lookaside.fbsbx.com/lookaside/crawler/media/?media_id=".$photoID);
+//			echo "profile_image->src: ".$profile_image->src."<br>";
 		}
-		$GLOBALS['author'] = $author;
+*/
+		$article_html = str_get_html($article_html->save());
+		foreach_delete_element_array($article_html, array('SCRIPT'));
+		$article_html = str_get_html($article_html->save());
 
-		foreach($article_html->find('DIV#pagelet_timeline_main_column DIV.userContentWrapper') as $fb_post)
+		foreach($article_html->find('DIV#pagelet_timeline_main_column DIV.userContentWrapper, DIV#pages_msite_body_contents ARTICLE[id]') as $fb_post)
 		{
+//			break;
 			$this->addArticle($fb_post);
+//			break;
 		}
 	}
 	
@@ -149,14 +247,34 @@ class FacebookMobileBridge extends BridgeAbstract {
 			$image_src = $image->getAttribute('src');
 //			echo "<br><br><br>post_url: $post_url<br>image_src przed: $image_src<br>";
 			$image_src = htmlspecialchars_decode($image_src);
-//			echo "<br><br><br>post_url: $post_url<br>image_src po: $image_src<br>";
-			$image_downloaded = file_get_contents($image_src);
-			if ($image_downloaded !== false)
+			
+			if (is_int(strpos($image_src, "https")))
 			{
-	    		$image_src = 'data:image/jpg;base64,'.base64_encode($image_downloaded);
+				$returned_pic_array = $this->my_get_html($image_src, TRUE);
+				if (200 === $returned_pic_array['code'])
+				{
+//					return;
+					$image_downloaded = $returned_pic_array['page_content'];
+//					print_var_dump($image_downloaded, "image_downloaded");
+//					print_element($image_downloaded, "image_downloaded");
+//					echo "<br><br><br>post_url: $post_url<br>image_src po: $image_src<br>";
+
+//					$options  = array('http' => array('user_agent' => 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)\r\n'));
+//					ini_set('user_agent', 'User-Agent:Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)\r\n');
+//					$context  = stream_context_create($options);
+//					$image_downloaded = file_get_contents($image_src, false, $context);
+//					$image_downloaded = file_get_contents($image_src);
+					if ($image_downloaded !== false)
+					{
+						if (is_int(strpos($image_src, ".png")))
+				    		$image_src = 'data:image/png;base64,'.base64_encode($image_downloaded);
+						else
+				    		$image_src = 'data:image/jpg;base64,'.base64_encode($image_downloaded);
+					}
+					$image->setAttribute('src', NULL);
+					$image->setAttribute('src', $image_src);
+				}
 			}
-			$image->setAttribute('src', NULL);
-			$image->setAttribute('src', $image_src);
 		}
 		$title = $GLOBALS['author'];
 		//post date
@@ -185,7 +303,7 @@ class FacebookMobileBridge extends BridgeAbstract {
 		$article_html = str_get_html(prepare_article($article_html, 'https://www.facebook.com'));
 		$selectors_array[] = 'STYLE';
 		
-		$selectors_array[] = 'SCRIPT';
+//		$selectors_array[] = 'SCRIPT';
 		$selectors_array[] = 'HEADER';
 		$selectors_array[] = 'NOSCRIPT';
 		$selectors_array[] = 'IMG[src*="https\\3a //"]';
@@ -248,9 +366,9 @@ class FacebookMobileBridge extends BridgeAbstract {
 				}
 			}
 		}
-		$article_html = str_get_html($article_html->save());
-		$selectors_array[] = 'DIV[data-gt]';
-		foreach_delete_element_array($article_html, $selectors_array);
+//		$article_html = str_get_html($article_html->save());
+//		$selectors_array[] = 'DIV[data-gt]';
+//		foreach_delete_element_array($article_html, $selectors_array);
 		$article_html = str_get_html($article_html->save());
 		return $article_html;
 	}
@@ -346,11 +464,10 @@ class FacebookMobileBridge extends BridgeAbstract {
 				'content' => $html_error
 			);
 		}
-		$page_html = str_get_html($page_content);
 
 		$return_array = array(
 			'code' => $code,
-			'html' => $page_html,
+			'page_content' => $page_content,
 		);
 		return $return_array;
 	}
