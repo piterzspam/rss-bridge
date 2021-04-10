@@ -65,7 +65,7 @@ class FacebookMobileBridge extends BridgeAbstract {
 			$GLOBALS['all_articles_time'] = 0;
 			$GLOBALS['all_articles_counter'] = 0;
 		}
-		$returned_array = $this->my_get_html($GLOBALS['url'], TRUE);
+		$returned_array = $this->my_get_html($GLOBALS['url']);
 		if (200 !== $returned_array['code'])
 		{
 			return;
