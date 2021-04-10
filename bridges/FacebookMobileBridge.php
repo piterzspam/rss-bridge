@@ -77,7 +77,8 @@ class FacebookMobileBridge extends BridgeAbstract {
 		{
 			if (!is_null($href_link = $fb_post->find("SPAN.text_exposed_link A[href][!class]", 0)))
 			{
-				$full_post_link = 'https://www.facebook.com'.$href_link->href;
+//				$full_post_link = 'https://www.facebook.com'.$href_link->href;
+				$full_post_link = 'https://m.facebook.com'.$href_link->href;
 				$output_array = explode("?", $full_post_link);
 				$full_post_link = $output_array[0];
 				$post_returned_array = $this->my_get_html($full_post_link, TRUE);
@@ -85,12 +86,14 @@ class FacebookMobileBridge extends BridgeAbstract {
 				{
 					return;
 				}
+				//DIV.msg > DIV[class]
 				$post_article_html = $post_returned_array['html'];
 //				print_html($post_article_html, "post_article_html: $full_post_link");
 //				print_element($post_article_html, "post_article_html: $full_post_link");
-				if (!is_null($full_post = $post_article_html->find("DIV.userContent", 0)))
+//				if (!is_null($full_post = $post_article_html->find('DIV.msg DIV[class=""]', 0)))
+				if (!is_null($full_post = $post_article_html->find('DIV.story_body_container', 0)))
 				{
-					$article_html_str = str_replace($fb_post->outertext, $full_post->outertext, $article_html_str);
+					$article_html_str = str_replace($fb_post->outertext, '<div class="userContent">'.$full_post->outertext.'</div>', $article_html_str);
 //					print_html($full_post, "full_post: $full_post_link");
 //					$fb_post->outertext = $full_post->outertext;
 				}
@@ -175,8 +178,11 @@ class FacebookMobileBridge extends BridgeAbstract {
 //		$article_html = str_get_html(prepare_article($article_html, $GLOBALS['url']));
 		$article_html = str_get_html(prepare_article($article_html, 'https://www.facebook.com'));
 		$selectors_array[] = 'STYLE';
+		
 		$selectors_array[] = 'SCRIPT';
+		$selectors_array[] = 'HEADER';
 		$selectors_array[] = 'NOSCRIPT';
+		
 		$selectors_array[] = 'DIV[style="height:40px"]';
 		$selectors_array[] = 'DIV[id^="feed_subtitle_"] DIV[data-hover="tooltip"][data-tooltip-content]';
 		$selectors_array[] = 'SPAN[role="presentation"]';
@@ -234,6 +240,9 @@ class FacebookMobileBridge extends BridgeAbstract {
 				}
 			}
 		}
+		$article_html = str_get_html($article_html->save());
+		$selectors_array[] = 'DIV[data-gt]';
+		foreach_delete_element_array($article_html, $selectors_array);
 		$article_html = str_get_html($article_html->save());
 		return $article_html;
 	}
