@@ -65,7 +65,7 @@ class FacebookMobileBridge extends BridgeAbstract {
 			$GLOBALS['all_articles_time'] = 0;
 			$GLOBALS['all_articles_counter'] = 0;
 		}
-		$returned_array = $this->my_get_html($GLOBALS['url']);
+		$returned_array = $this->my_get_html($GLOBALS['url'], TRUE);
 		if (200 !== $returned_array['code'])
 		{
 			return;
@@ -73,6 +73,7 @@ class FacebookMobileBridge extends BridgeAbstract {
 		$article_html = $returned_array['html'];
 		
 		$article_html_str = $article_html->save();
+/*
 		foreach($article_html->find('DIV#pagelet_timeline_main_column DIV.userContent') as $fb_post)
 		{
 			if (!is_null($href_link = $fb_post->find("SPAN.text_exposed_link A[href][!class]", 0)))
@@ -100,6 +101,7 @@ class FacebookMobileBridge extends BridgeAbstract {
 //				break;
 			}
 		}
+*/
 		$article_html = str_get_html($article_html_str);
 //		print_html($article_html, "article_html po");
 //		print_element($article_html, "article_html po");
