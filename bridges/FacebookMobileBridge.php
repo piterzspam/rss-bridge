@@ -92,7 +92,9 @@ class FacebookMobileBridge extends BridgeAbstract {
 //				print_html($post_article_html, "post_article_html: $full_post_link");
 //				print_element($post_article_html, "post_article_html: $full_post_link");
 //				if (!is_null($full_post = $post_article_html->find('DIV.msg DIV[class=""]', 0)))
-				if (!is_null($full_post = $post_article_html->find('DIV.story_body_container', 0)))
+
+//do strony mobilnej	if (!is_null($full_post = $post_article_html->find('DIV.story_body_container', 0)))
+				if (!is_null($full_post = $post_article_html->find('DIV.userContent', 0)))
 				{
 					$article_html_str = str_replace($fb_post->outertext, '<div class="userContent">'.$full_post->outertext.'</div>', $article_html_str);
 //					print_html($full_post, "full_post: $full_post_link");
@@ -296,12 +298,25 @@ class FacebookMobileBridge extends BridgeAbstract {
 	{
 		if (TRUE === $get_premium)
 		{
-			$context = stream_context_create(
+/*
+		$context = stream_context_create(
 				array(
 					'http' => array(
 						'ignore_errors' => true,
 					    'header'=>"User-Agent:Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)\r\n"
 					)
+				)
+			);
+*/				
+			$context = stream_context_create(
+				array(
+					'http'=>array(
+						'ignore_errors' => true,
+			    		'method'=>"GET",
+			    		'header'=>"Accept-language: en\r\n" .
+			            	"Cookie: foo=bar\r\n" .  // check function.stream-context-create on php.net
+			            	"User-Agent: Mozilla/5.0 (iPad; U; CPU OS 3_2 like Mac OS X; en-us) AppleWebKit/531.21.10 (KHTML, like Gecko) Version/4.0.4 Mobile/7B334b Safari/531.21.102011-10-16 20:23:10\r\n" // i.e. An iPad 
+			 		)
 				)
 			);
 		}
