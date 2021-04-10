@@ -143,7 +143,9 @@ class FacebookMobileBridge extends BridgeAbstract {
 		foreach($fb_post->find('IMG[src]') as $image)
 		{
 			$image_src = $image->getAttribute('src');
+//			echo "<br><br><br>post_url: $post_url<br>image_src przed: $image_src<br>";
 			$image_src = htmlspecialchars_decode($image_src);
+//			echo "<br><br><br>post_url: $post_url<br>image_src po: $image_src<br>";
 			$image_downloaded = file_get_contents($image_src);
 			if ($image_downloaded !== false)
 			{
@@ -182,6 +184,8 @@ class FacebookMobileBridge extends BridgeAbstract {
 		$selectors_array[] = 'SCRIPT';
 		$selectors_array[] = 'HEADER';
 		$selectors_array[] = 'NOSCRIPT';
+		$selectors_array[] = 'IMG[src*="https\\3a //"]';
+		
 		
 		$selectors_array[] = 'DIV[style="height:40px"]';
 		$selectors_array[] = 'DIV[id^="feed_subtitle_"] DIV[data-hover="tooltip"][data-tooltip-content]';
