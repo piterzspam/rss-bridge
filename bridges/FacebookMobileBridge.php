@@ -65,84 +65,44 @@ class FacebookMobileBridge extends BridgeAbstract {
 			$GLOBALS['all_articles_time'] = 0;
 			$GLOBALS['all_articles_counter'] = 0;
 		}
-//		$returned_array = $this->my_get_html($GLOBALS['url'], true);
 		$returned_array = $this->my_get_html($GLOBALS['url']);
 		if (200 !== $returned_array['code'])
 		{
 			return;
 		}
-
 		$article_html = $returned_array['html'];
-//		$article_html = str_get_html(prepare_article($article_html, 'https://m.facebook.com'));
-		$article_html = str_get_html(prepare_article($article_html, 'https://www.facebook.com'));
-//		$article_html = str_get_html(prepare_article($article_html, $GLOBALS['url']));
-
-
-		$selectors_array[] = 'STYLE';
-		$selectors_array[] = 'SCRIPT';
-		$selectors_array[] = 'NOSCRIPT';
-		$selectors_array[] = 'DIV[style="height:40px"]';
-		$selectors_array[] = 'DIV[id^="feed_subtitle_"] DIV[data-hover="tooltip"][data-tooltip-content]';
-		$selectors_array[] = 'SPAN[role="presentation"]';
-		$selectors_array[] = 'A[onclick][href*="facebook.com"]';
-		$selectors_array[] = 'NOSCRIPT';
-		$selectors_array[] = 'NOSCRIPT';
 		
-		//Wideo
-		$selectors_array[] = 'DIV[style="height:282px;width:500px;"]';
-		$selectors_array[] = 'FORM.commentable_item';
-		foreach_delete_element_array($article_html, $selectors_array);
-		foreach_replace_outertext_with_subelement_outertext($article_html, 'A[rel="theater"]', 'IMG.scaledImageFitWidth.img, IMG.scaledImageFitHeight.img');
-		$article_html = str_get_html($this->remove_useless_classes($article_html->save()));
-		$article_html = str_get_html($this->remove_useless_classes($article_html->save()));
-		$article_html = str_get_html($this->remove_empty_elements($article_html->save(), "DIV"));
-		$article_html = str_get_html($this->remove_empty_elements($article_html->save(), "SPAN"));
-
-		$tags_array[] = "DIV=>DIV";
-		$tags_array[] = "SPAN=>SPAN";
-		$tags_array[] = "SPAN=>A";
-		$tags_array[] = "DIV=>IMG";
-		$tags_array[] = "DIV=>P";
-
-		$excluded_classes[] = "userContentWrapper";
-		$excluded_ids[] = "pagelet_timeline_main_column";
-
-		$article_html_str = replace_single_children($article_html, $tags_array, $excluded_classes, $excluded_ids);
-		$article_html = str_get_html($article_html_str);
-		foreach($article_html->find('A[href^="https://l.facebook.com/l.php?u="]') as $href_element)
+		$article_html_str = $article_html->save();
+		foreach($article_html->find('DIV#pagelet_timeline_main_column DIV.userContent') as $fb_post)
 		{
-			$href_url = $href_element->href;
-			$href_url = str_replace("https://l.facebook.com/l.php?u=", "", $href_url);
-			$new_href_url_array = explode('&amp;h=', $href_url);
-			$href_url = urldecode($new_href_url_array[0]);
-			$href_element->href = $href_url;
-		}
-		$article_html = str_get_html($article_html->save());
-		$attributes_array[] = "data-ft";
-		$attributes_array[] = "data-shorten";
-		$attributes_array[] = "ajaxify";
-		$attributes_array[] = "aria-hidden";
-		$attributes_array[] = "tabindex";
-		$attributes_array[] = "target";
-		$article_html_str = remove_multiple_attributes($article_html, $attributes_array);
-		$article_html = str_get_html($article_html_str);
-
-		replace_attribute($article_html, '[style=""]', 'style', NULL);
-		$article_html = str_get_html($article_html->save());
-
-		foreach($article_html->find('P') as $paragraph)
-		{
-			foreach($paragraph->find('SPAN') as $span)
+			if (!is_null($href_link = $fb_post->find("SPAN.text_exposed_link A[href][!class]", 0)))
 			{
-				if ("..." === $span->plaintext)
+				$full_post_link = 'https://www.facebook.com'.$href_link->href;
+				$output_array = explode("?", $full_post_link);
+				$full_post_link = $output_array[0];
+				$post_returned_array = $this->my_get_html($full_post_link, TRUE);
+				if (200 !== $post_returned_array['code'])
 				{
-					$next_element = $span->next_sibling();
-					$span->outertext = "";
-					$next_element->outertext = $next_element->innertext;
+					return;
 				}
+				$post_article_html = $post_returned_array['html'];
+//				print_html($post_article_html, "post_article_html: $full_post_link");
+//				print_element($post_article_html, "post_article_html: $full_post_link");
+				if (!is_null($full_post = $post_article_html->find("DIV.userContent", 0)))
+				{
+					$article_html_str = str_replace($fb_post->outertext, $full_post->outertext, $article_html_str);
+//					print_html($full_post, "full_post: $full_post_link");
+//					$fb_post->outertext = $full_post->outertext;
+				}
+//				break;
 			}
 		}
-		$article_html = str_get_html($article_html->save());
+		$article_html = str_get_html($article_html_str);
+//		print_html($article_html, "article_html po");
+//		print_element($article_html, "article_html po");
+//		return;
+//		$returned_array = $this->my_get_html($GLOBALS['url'], true);
+		$article_html = $this->format_facebook_page($article_html);
 
 		$author = get_text_plaintext($article_html, 'TITLE#pageTitle', $GLOBALS['url']);
 		if ($GLOBALS['url'] !== $author)
@@ -161,7 +121,11 @@ class FacebookMobileBridge extends BridgeAbstract {
 	
 	private function addArticle($fb_post)
 	{
-		//Fix zdjęć
+		//post url
+		if (!is_null($href_element = $fb_post->find('DIV[id^="feed_subtitle_"] A[href]', 0)))
+		{
+			$post_url = $href_element->href;
+		}
 		foreach($fb_post->find('A[href]') as $href_element)
 		{
 			$href_url = $href_element->href;
@@ -172,6 +136,7 @@ class FacebookMobileBridge extends BridgeAbstract {
 				$href_element->href = $href_url;
 			}
 		}
+		//Fix zdjęć
 		foreach($fb_post->find('IMG[src]') as $image)
 		{
 			$image_src = $image->getAttribute('src');
@@ -184,11 +149,6 @@ class FacebookMobileBridge extends BridgeAbstract {
 			$image->setAttribute('src', NULL);
 			$image->setAttribute('src', $image_src);
 		}
-		//post url
-		if (!is_null($href_element = $fb_post->find('DIV[id^="feed_subtitle_"] A[href]', 0)))
-		{
-			$post_url = $href_element->href;
-		}
 		$title = $GLOBALS['author'];
 		//post date
 		if (!is_null($date_element = $fb_post->find('ABBR[data-utime]', 0)))
@@ -198,17 +158,84 @@ class FacebookMobileBridge extends BridgeAbstract {
 			$readable_date = date("Y-m-d H:i:s", $unix_timestamp);
 			$title = $title.' - '.$readable_date;
 		}
-		
-	
-//		print_element($fb_post, 'fb_post po');
 		$this->items[] = array(
 			'uri' => $post_url,
 			'title' => $title,
 			'timestamp' => $post_date,
 			'author' => $GLOBALS['author'],
-//			'content' => $article,
 			'content' => $fb_post,
 		);
+	}
+	
+	private function format_facebook_page($article_html)
+	{
+//		print_var_dump(count($article_html->find('SPAN.text_exposed_link A[href]')), "SPAN.text_exposed_link A[href]");
+//		print_var_dump(count($article_html->find('SPAN.text_exposed_link A[href][!class]')), "SPAN.text_exposed_link A[href][!class]");
+//		$article_html = str_get_html(prepare_article($article_html, 'https://m.facebook.com'));
+//		$article_html = str_get_html(prepare_article($article_html, $GLOBALS['url']));
+		$article_html = str_get_html(prepare_article($article_html, 'https://www.facebook.com'));
+		$selectors_array[] = 'STYLE';
+		$selectors_array[] = 'SCRIPT';
+		$selectors_array[] = 'NOSCRIPT';
+		$selectors_array[] = 'DIV[style="height:40px"]';
+		$selectors_array[] = 'DIV[id^="feed_subtitle_"] DIV[data-hover="tooltip"][data-tooltip-content]';
+		$selectors_array[] = 'SPAN[role="presentation"]';
+		$selectors_array[] = 'A[onclick][href*="facebook.com"]';
+		$selectors_array[] = 'NOSCRIPT';
+		//Wideo
+		$selectors_array[] = 'DIV[style="height:282px;width:500px;"]';
+		$selectors_array[] = 'FORM.commentable_item';
+		foreach_delete_element_array($article_html, $selectors_array);
+		foreach_replace_outertext_with_subelement_outertext($article_html, 'A[rel="theater"]', 'IMG.scaledImageFitWidth.img, IMG.scaledImageFitHeight.img');
+		$article_html = str_get_html($this->remove_useless_classes($article_html->save()));
+		$article_html = str_get_html($this->remove_useless_classes($article_html->save()));
+		$article_html = str_get_html($this->remove_empty_elements($article_html->save(), "DIV"));
+		$article_html = str_get_html($this->remove_empty_elements($article_html->save(), "SPAN"));
+
+		$tags_array[] = "DIV=>DIV";
+		$tags_array[] = "SPAN=>SPAN";
+		$tags_array[] = "SPAN=>A";
+		$tags_array[] = "DIV=>IMG";
+		$tags_array[] = "DIV=>P";
+		$excluded_classes[] = "userContentWrapper";
+		$excluded_ids[] = "pagelet_timeline_main_column";
+		$article_html_str = replace_single_children($article_html, $tags_array, $excluded_classes, $excluded_ids);
+		$article_html = str_get_html($article_html_str);
+		foreach($article_html->find('A[href^="https://l.facebook.com/l.php?u="]') as $href_element)
+		{
+			$href_url = $href_element->href;
+			$href_url = str_replace("https://l.facebook.com/l.php?u=", "", $href_url);
+			$new_href_url_array = explode('&amp;h=', $href_url);
+			$href_url = urldecode($new_href_url_array[0]);
+			$href_element->href = $href_url;
+		}
+		$article_html = str_get_html($article_html->save());
+		$attributes_array[] = "data-ft";
+		$attributes_array[] = "data-shorten";
+		$attributes_array[] = "ajaxify";
+		$attributes_array[] = "aria-hidden";
+		$attributes_array[] = "tabindex";
+		$attributes_array[] = "target";
+		$attributes_array[] = "style";
+		$article_html_str = remove_multiple_attributes($article_html, $attributes_array);
+		$article_html = str_get_html($article_html_str);
+		//DIV[style="width:500px; height:500px;"]
+		//jeżeli jest kilka zdjęć w poście jak tu: https://www.facebook.com/wojownicyklawiatury/posts/236861054861137
+
+		foreach($article_html->find('P') as $paragraph)
+		{
+			foreach($paragraph->find('SPAN') as $span)
+			{
+				if ("..." === $span->plaintext)
+				{
+					$next_element = $span->next_sibling();
+					$span->outertext = "";
+					$next_element->outertext = $next_element->innertext;
+				}
+			}
+		}
+		$article_html = str_get_html($article_html->save());
+		return $article_html;
 	}
 
 	private function remove_useless_classes($main_element_str)
