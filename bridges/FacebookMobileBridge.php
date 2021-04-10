@@ -162,8 +162,9 @@ class FacebookMobileBridge extends BridgeAbstract {
 */
 
 		//jeżeli jest post cytowany, to trzeba usunąć miniaturkę tamterj strony
+		//, IMG.img[src^="https://lookaside.fbsbx.com/lookaside/crawler/media/?media_id="]
 		$article_html = str_get_html($article_html->save());
-		foreach_delete_element_array($article_html, array('SCRIPT, IMG.img[src^="https://lookaside.fbsbx.com/lookaside/crawler/media/?media_id="]'));
+		foreach_delete_element_array($article_html, array('SCRIPT, A.lfloat[href^="https://www.facebook.com/"] IMG.img[src^="https://lookaside.fbsbx.com/lookaside/crawler/media/?media_id="]'));
 		$article_html = str_get_html($article_html->save());
 
 		foreach($article_html->find('DIV#pagelet_timeline_main_column DIV.userContentWrapper, DIV#pages_msite_body_contents ARTICLE[id]') as $fb_post)
