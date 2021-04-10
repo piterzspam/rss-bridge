@@ -73,13 +73,13 @@ class FacebookMobileBridge extends BridgeAbstract {
 		$article_html = $returned_array['html'];
 		
 		$article_html_str = $article_html->save();
-/*
+
 		foreach($article_html->find('DIV#pagelet_timeline_main_column DIV.userContent') as $fb_post)
 		{
 			if (!is_null($href_link = $fb_post->find("SPAN.text_exposed_link A[href][!class]", 0)))
 			{
-//				$full_post_link = 'https://www.facebook.com'.$href_link->href;
-				$full_post_link = 'https://m.facebook.com'.$href_link->href;
+				$full_post_link = 'https://www.facebook.com'.$href_link->href;
+//				$full_post_link = 'https://m.facebook.com'.$href_link->href;
 				$output_array = explode("?", $full_post_link);
 				$full_post_link = $output_array[0];
 				$post_returned_array = $this->my_get_html($full_post_link, TRUE);
@@ -101,7 +101,7 @@ class FacebookMobileBridge extends BridgeAbstract {
 //				break;
 			}
 		}
-*/
+
 		$article_html = str_get_html($article_html_str);
 //		print_html($article_html, "article_html po");
 //		print_element($article_html, "article_html po");
