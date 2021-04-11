@@ -394,12 +394,13 @@ class FacebookMobileBridge extends BridgeAbstract {
 			$html_error = createErrorContent($http_response_header);
 			$date = new DateTime("now", new DateTimeZone('Europe/Warsaw'));
 			$date_string = date_format($date, 'Y-m-d H:i:s');
-			$this->items[] = array(
+		/*	$this->items[] = array(
 				'uri' => $url,
 				'title' => "Error ".$code.": ".$url,
 				'timestamp' => $date_string,
 				'content' => $html_error
 			);
+			*/
 		}
 
 		$return_array = array(
