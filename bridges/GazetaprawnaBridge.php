@@ -44,39 +44,6 @@ class GazetaprawnaBridge extends BridgeAbstract {
 		)
 	);
 
-	public function collectData()
-	{
-		include 'myFunctions.php';
-		$GLOBALS['limit'] = $this->getInput('limit');
-		$GLOBALS['my_debug'] = FALSE;
-//		$GLOBALS['my_debug'] = TRUE;
-//		$GLOBALS['ignore_number'] = 10;
-		if (TRUE === $GLOBALS['my_debug'])
-		{
-			$GLOBALS['all_articles_time'] = 0;
-			$GLOBALS['all_articles_counter'] = 0;
-		}
-		$url_articles_list = $this->getInput('url');
-
-		$GLOBALS['opinions_params'] = array(
-			'OPINIA',
-			'KOMENTARZ'
-		);
-		$this->setGlobalArticlesParams();
-		$GLOBALS['url_articles_list'] = $url_articles_list;
-
-//		$new_urls = array();
-//		$new_urls[] = 'https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8094787,chinski-blad-europy-opinia-piotr-arak.html';
-//		$new_urls[] = 'https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8094155,economicus-2020-oto-nominowani-w-kategorii-najlepszy-poradnik-biznesowy.html';
-//		$new_urls[] = 'https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8094315,rzad-uslugi-publiczne-transfery-likwidacja-nierownosci-opinia.html';
-//		$new_urls[] = 'https://serwisy.gazetaprawna.pl/zdrowie/artykuly/8076239,lista-antywywozowa-szczepionka-przeciw-covid-19.html';
-		$articles_data = $this->getArticlesUrls();
-		foreach ($articles_data as $article_data)
-		{
-			$this->addArticle(str_get_html($article_data['html']), $article_data['url']);
-		}
-	}
-
 	public function getName()
 	{
 		switch($this->queriedContext)
@@ -104,6 +71,279 @@ class GazetaprawnaBridge extends BridgeAbstract {
 			default:
 				return parent::getURI();
 		}
+	}
+
+	public function collectData()
+	{
+		include 'myFunctions.php';
+		$GLOBALS['limit'] = $this->getInput('limit');
+		$GLOBALS['my_debug'] = FALSE;
+		$GLOBALS['my_debug'] = TRUE;
+//		$GLOBALS['ignore_number'] = 10;
+		if (TRUE === $GLOBALS['my_debug'])
+		{
+			$GLOBALS['all_articles_time'] = 0;
+			$GLOBALS['all_articles_counter'] = 0;
+		}
+		$url_articles_list = $this->getInput('url');
+
+		$GLOBALS['opinions_params'] = array(
+			'OPINIA',
+			'KOMENTARZ'
+		);
+		$this->setGlobalArticlesParams();
+		$GLOBALS['url_articles_list'] = $url_articles_list;
+
+//		$new_urls = array();
+//		$new_urls[] = 'https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8094787,chinski-blad-europy-opinia-piotr-arak.html';
+//		$new_urls[] = 'https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8094155,economicus-2020-oto-nominowani-w-kategorii-najlepszy-poradnik-biznesowy.html';
+//		$new_urls[] = 'https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8094315,rzad-uslugi-publiczne-transfery-likwidacja-nierownosci-opinia.html';
+//		$new_urls[] = 'https://serwisy.gazetaprawna.pl/zdrowie/artykuly/8076239,lista-antywywozowa-szczepionka-przeciw-covid-19.html';
+		$articles_data = $this->getArticlesUrls();
+		foreach ($articles_data as $article_data)
+		{
+			$this->addArticleCanonical(str_get_html($article_data['html']), $article_data['url']);
+		}
+	}
+
+
+	private function addArticleAmp($article_html, $url_article_link)
+	{
+//		$url_article_link = 'https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8094155,economicus-2020-oto-nominowani-w-kategorii-najlepszy-poradnik-biznesowy.html';
+		$tags = return_tags_array($article_html, 'DIV#relatedTopics A[href]');
+		$price_param = $this->getArticlePriceParam($article_html);
+		$amp_project_url = $this->getCustomizedLink($url_article_link);
+//		$amp_project_url = $this->getCustomizedLink('https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8094155,economicus-2020-oto-nominowani-w-kategorii-najlepszy-poradnik-biznesowy.html');
+		
+//		echo "<br>url: <br>$url_article_link <br>amp_project_url: <br>$amp_project_url<br>";
+//		return;
+		if ("premium" === $price_param)
+		{
+			$returned_array = $this->my_get_html($amp_project_url);
+			if (200 !== $returned_array['code'])
+			{
+				return;
+			}
+			else
+			{
+				$article_html = $returned_array['html'];
+			}
+		}
+		$article_html = str_get_html(prepare_article($article_html));
+		$article = $article_html->find('DIV#page', 0);
+
+		//title
+		$title = get_text_plaintext($article, 'H1.headline', $amp_project_url);
+		$title = $this->getChangedTitle($title, $price_param);
+		//authors
+		$author = return_authors_as_string($article, 'DIV.dateAuthor SPAN.author');
+		//
+		$date = get_json_value($article_html, 'SCRIPT[type="application/ld+json"]', 'datePublished');
+
+
+		$selectors_array[] = 'DIV.adBox';
+		$selectors_array[] = 'DIV.listArticle.listArticlePopular';
+		$selectors_array[] = 'DIV.social-box';
+		$selectors_array[] = 'qqqqqqqqqqqqq';
+		$selectors_array[] = 'qqqqqqqqqqqqq';
+		$selectors_array[] = 'qqqqqqqqqqqqq';
+		$selectors_array[] = 'qqqqqqqqqqqqq';
+		foreach_delete_element_array($article, $selectors_array);
+		$article = str_get_html($article->save());
+		replace_tag_and_class($article, 'DIV.frameArea', 'multiple', 'P', 'frameArea');
+		$article = str_get_html($article->save());
+
+		//https://prawo.gazetaprawna.pl/artykuly/8054640,nowelizacja-ustawy-o-wlasnosci-lokali-eksmisja-utrata-mieszkania.html.amp?amp_js_v=0.1
+		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8094787,chinski-blad-europy-opinia-piotr-arak.html
+		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8094155,economicus-2020-oto-nominowani-w-kategorii-najlepszy-poradnik-biznesowy.html
+		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8094315,rzad-uslugi-publiczne-transfery-likwidacja-nierownosci-opinia.html
+		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8080209,paszport-covidowy-przywileje-podroze-szczepionka-covid.html
+		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8123606,marek-kajs-wilki-jak-sie-zachowac-odstrzal-gdos.html
+		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8123578,problemy-z-astrazeneca-o-co-chodzi.html
+		clear_paragraphs_from_taglinks($article, 'P.hyphenate, DIV.frameArea', array(
+			'/gazetaprawna\.pl\/tagi\//',
+			'/gazetaprawna\.pl\/$/',
+			'/gazetaprawna\.pl$/',
+			'/serwisy\.gazetaprawna\.pl\/.*\/tematy\//',
+			'/gazetaprawna\.pl\/[a-z]*$/',
+		));
+		$article = str_get_html($article->save());
+
+		$this->items[] = array(
+			'uri' => $amp_project_url,
+			'title' => $title,
+			'timestamp' => $date,
+			'author' => $author,
+			'categories' => $tags,
+			'content' => $article
+		);
+	}
+
+
+	private function addArticleCanonical($article_html, $url_article_link)
+	{
+//		$url_article_link = "https://serwisy.gazetaprawna.pl/samorzad/artykuly/8134645,rynek-mafii-smieciowej-inspektor-ochrony-srodowiska-audyt.html";
+		$tags = return_tags_array($article_html, 'DIV#relatedTopics A[href]');
+		$price_param = $this->getArticlePriceParam($article_html);
+		if ("premium" === $price_param)
+		{
+			$returned_array = $this->my_get_html($url_article_link, TRUE);
+			if (200 !== $returned_array['code'])
+			{
+				return;
+			}
+			else
+			{
+				$article_html = $returned_array['html'];
+			}
+		}
+		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8118990,lowcy-przygod-w-dalekich-krainach-raimund-schulz-rok-1000-valerie-hansen.html
+		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8123606,marek-kajs-wilki-jak-sie-zachowac-odstrzal-gdos.html
+		replace_attribute($article_html, 'IMG[data-original^="http"][src^="data:image/"]', 'src', 'data-original');
+		$article_html = str_get_html(prepare_article($article_html));
+
+		$article = $article_html->find('SECTION.detailSection', 0);
+		//title
+		$title = get_text_plaintext($article, 'H1.mainTitle', $url_article_link);
+		$title = $this->getChangedTitle($title, $price_param);
+		//authors
+		$author = return_authors_as_string($article, 'DIV.authBox A[href*="/autor/"]');
+		//date
+		$date = get_text_from_attribute($article_html, 'META[property="article:published_time"][content]', 'content', "");
+
+		//Usuwanie zbędnych elementów
+		$selectors_array = array();
+		$selectors_array[] = 'comment';
+		$selectors_array[] = 'SCRIPT';
+		$selectors_array[] = 'DIV.widget.video.videoScrollClass';
+		$selectors_array[] = 'NOSCRIPT';
+		$selectors_array[] = 'ASIDE#rightColumnBox';
+		$selectors_array[] = 'DIV#banner_art_video_out';
+		$selectors_array[] = 'DIV#relatedTopics';
+		$selectors_array[] = 'DIV#widgetStop';
+		$selectors_array[] = 'DIV.authorSourceProfile';
+		$selectors_array[] = 'DIV.streamNews';
+		$selectors_array[] = 'DIV.plistaDetailDesktop';
+		$selectors_array[] = 'DIV.commentsBox';
+		$selectors_array[] = 'DIV.detailAllBoxes';
+		$selectors_array[] = 'DIV.social-container';
+		$selectors_array[] = 'DIV.serviceLogoWrapper';
+		$selectors_array[] = 'DIV.infor-ad';
+		$selectors_array[] = 'DIV.bottomAdsBox';
+		$selectors_array[] = 'DIV.promoFrame.pulse2PromoFrame.withDescription.article';
+		$selectors_array[] = 'qqqqqqqqqqqqq';
+		$selectors_array[] = 'qqqqqqqqqqqqq';
+		$selectors_array[] = 'qqqqqqqqqqqqq';
+//		$selectors_array[] = '.articleImageDescription';
+		foreach_delete_element_array($article, $selectors_array);
+		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8118990,lowcy-przygod-w-dalekich-krainach-raimund-schulz-rok-1000-valerie-hansen.html
+		replace_attribute($article, '[data-item-uuid]', 'data-item-uuid', NULL);
+		$article = str_get_html($article->save());
+//Przeniesienie zdjęcia autora na koniec, żeby się ładnie pobierało pierwsze zdjęcie główne widoczne na liście artykułów
+		move_element($article, 'DIV.articleHeading DIV.dateWrapper', 'DIV.articleHeading', 'innertext', 'before');
+		$article = str_get_html($article->save());
+		move_element($article, 'DIV.articleHeading DIV.author', 'DIV#articleFooterAuthorSource', 'outertext', 'after');
+		$article = str_get_html($article->save());
+		insert_html($article, 'DIV.author', '<hr>', '', '', '');
+		$article = str_get_html($article->save());
+//Usuwanie linków do słów kluczowych		
+		//https://prawo.gazetaprawna.pl/artykuly/8054640,nowelizacja-ustawy-o-wlasnosci-lokali-eksmisja-utrata-mieszkania.html.amp?amp_js_v=0.1
+		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8094787,chinski-blad-europy-opinia-piotr-arak.html
+		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8094155,economicus-2020-oto-nominowani-w-kategorii-najlepszy-poradnik-biznesowy.html
+		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8094315,rzad-uslugi-publiczne-transfery-likwidacja-nierownosci-opinia.html
+		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8080209,paszport-covidowy-przywileje-podroze-szczepionka-covid.html
+		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8123606,marek-kajs-wilki-jak-sie-zachowac-odstrzal-gdos.html
+		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8123578,problemy-z-astrazeneca-o-co-chodzi.html
+		clear_paragraphs_from_taglinks($article, 'P.hyphenate, DIV.frameArea', array(
+			'/gazetaprawna\.pl\/tagi\//',
+			'/gazetaprawna\.pl\/$/',
+			'/gazetaprawna\.pl$/',
+			'/serwisy\.gazetaprawna\.pl\/.*\/tematy\//',
+			'/gazetaprawna\.pl\/[a-z]*$/',
+		));
+		$article = str_get_html($article->save());
+//Przenoszenie podpisów zdjęć do jednego elementu
+		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8094155,economicus-2020-oto-nominowani-w-kategorii-najlepszy-poradnik-biznesowy.html
+		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8123606,marek-kajs-wilki-jak-sie-zachowac-odstrzal-gdos.html
+		foreach_combine_two_elements($article, 'DIV.frameWrap DIV.articleImageAuthor', 1, 1, 'DIV', 'frameWrap', 'DIV.articleImageDescription', 'innertext', 'innertext', 'DIV', 'frameWrap');
+		foreach_combine_two_elements($article, 'DIV.image DIV.imageCaptionWrapper', 1, 1, 'DIV', 'frameWrap', 'DIV.articleImageAuthor, DIV.articleImageDescription', 'outertext', 'outertext', 'DIV', 'intext_photo');
+		$article = str_get_html($article->save());
+		foreach($article->find('DIV.intext_photo DIV.frameWrap') as $element_frameWrap)
+		{
+			$next_element = $element_frameWrap->find('.frameArea', 0);
+			$new_html = '';
+			if (FALSE === is_null($next_element))
+			{
+				$new_html = $new_html.$next_element->innertext;
+				while (FALSE === is_null($next_element = $next_element->next_sibling()))
+				{
+					$new_html = $new_html.'<br>'.$next_element->innertext;
+				}
+			}
+			$element_frameWrap->innertext = $new_html;
+		}
+//Poprawienie formatowania zdjęć
+		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8094155,economicus-2020-oto-nominowani-w-kategorii-najlepszy-poradnik-biznesowy.html
+		format_article_photos($article, 'FIGURE.mainPhoto', TRUE, 'src', 'SPAN.imageDescription');
+		format_article_photos($article, 'DIV.intext_photo', FALSE, 'src', 'DIV.frameWrap');
+		format_article_photos($article, 'DIV.image', FALSE);//jeżeli było zdjęcie bez podpisu, to nie zostało zamienione na intext_photo
+		$article = str_get_html($article->save());
+//Poprawienie formatowanie treści artykułu		
+		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8137260,granica-usa-meksyk-jak-rozwiazac-kwestie-migracji.html
+		foreach_replace_outertext_with_innertext($article, 'DIV.frameWrap');
+		$article = str_get_html($article->save());
+		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8137260,granica-usa-meksyk-jak-rozwiazac-kwestie-migracji.html
+		replace_tag_and_class($article, 'DIV.frameArea.srodtytul', 'multiple', 'H2', NULL);
+		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8137260,granica-usa-meksyk-jak-rozwiazac-kwestie-migracji.html
+		replace_tag_and_class($article, 'DIV#lead', 'single', 'STRONG', NULL);
+		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8137260,granica-usa-meksyk-jak-rozwiazac-kwestie-migracji.html
+		replace_tag_and_class($article, 'DIV.frameArea.wazne', 'multiple', 'BLOCKQUOTE', NULL);
+		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8123557,zycie-w-pandemii-lockdown-wplyw-na-czlowieka.html
+		replace_tag_and_class($article, 'DIV.frameArea.wyroznienie', 'multiple', 'BLOCKQUOTE', NULL);
+		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8094785,sekularyzacja-przyspiesza-takze-w-polsce-wywiad.html
+		replace_tag_and_class($article, 'DIV.frameArea.pytanie', 'multiple', 'STRONG', NULL);
+		replace_tag_and_class($article, 'DIV.frameArea.tresc', 'multiple', 'P', NULL);
+		replace_part_of_class($article, '.frameArea', 'multiple', 'frameArea ', '');
+		$article = str_get_html($article->save());
+/////////////////////////////////////////////////////////////////
+/*
+		TODO To DO
+		//https://serwisy.gazetaprawna.pl/orzeczenia/artykuly/8078983,antonik-burmistrz-prezes-spoldzielnia-mieszkaniowa-brodno-porozumienie-etyka.html
+		foreach($article->find('H2') as $element)
+		{
+			$element->outertext = '<br>'.$element->outertext;
+		}
+*/
+		//https://www.gazetaprawna.pl/firma-i-prawo/artykuly/8077582,konkurs-na-facebooku-polubienie-posta-kara-od-skarbowki.html
+		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8094785,sekularyzacja-przyspiesza-takze-w-polsce-wywiad.html
+		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8123557,zycie-w-pandemii-lockdown-wplyw-na-czlowieka.html
+//		add_style($article, '.srodtytul, .pytanie, .wyroznienie, DIV#lead', array('font-weight: bold;'));
+
+		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8079800,sztuczna-inteligencja-rezolucja-ue-azja-usa-slowik.html
+		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8094315,rzad-uslugi-publiczne-transfery-likwidacja-nierownosci-opinia.html
+//		add_style($article, 'DIV#lead', array('margin-bottom: 18px;'));
+
+
+		add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
+		add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
+		add_style($article, 'FIGCAPTION', getStylePhotoCaption());
+		add_style($article, 'BLOCKQUOTE', getStyleQuote());
+
+		//Splaszczenie struktury
+		foreach_replace_outertext_with_subelement_innertext($article, 'DIV.detailContentWrapper', 'DIV.detailContent');
+		foreach_replace_outertext_with_subelement_innertext($article, 'ARTICLE#leftColumnBox', 'DIV.whitelistPremium');
+		foreach_replace_outertext_with_innertext($article, 'SECTION.detailSection');
+
+
+		$amp_project_url = $this->getCustomizedLink($url_article_link);
+		$this->items[] = array(
+			'uri' => $amp_project_url,
+			'title' => $title,
+			'timestamp' => $date,
+			'author' => $author,
+			'categories' => $tags,
+			'content' => $article
+		);
 	}
 
 	private function getArticlesUrls()
@@ -181,169 +421,6 @@ class GazetaprawnaBridge extends BridgeAbstract {
 		}
 		else
 			return "empty";
-	}
-
-
-	private function addArticle($article_html, $url_article_link)
-	{
-		$tags = return_tags_array($article_html, 'DIV#relatedTopics A[href]');
-		$price_param = $this->getArticlePriceParam($article_html);
-		if ("premium" === $price_param)
-		{
-			$returned_array = $this->my_get_html($url_article_link, TRUE);
-			if (200 !== $returned_array['code'])
-			{
-				return;
-			}
-			else
-			{
-				$article_html = $returned_array['html'];
-			}
-		}
-		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8118990,lowcy-przygod-w-dalekich-krainach-raimund-schulz-rok-1000-valerie-hansen.html
-		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8123606,marek-kajs-wilki-jak-sie-zachowac-odstrzal-gdos.html
-		replace_attribute($article_html, 'IMG[data-original^="http"][src^="data:image/"]', 'src', 'data-original');
-		$article_html = str_get_html(prepare_article($article_html));
-
-		$article = $article_html->find('SECTION.detailSection', 0);
-		//title
-		$title = get_text_plaintext($article, 'H1.mainTitle', $url_article_link);
-		$title = $this->getChangedTitle($title, $price_param);
-		//authors
-		$author = return_authors_as_string($article, 'DIV.authBox A[href*="/autor/"]');
-		//date
-		$date = get_text_from_attribute($article_html, 'META[property="article:published_time"][content]', 'content', "");
-
-		$str = $article->save();
-		$char_to_replace = chr(hexdec(20));
-		$string_to_replace = $char_to_replace.$char_to_replace;
-		while (FALSE !== strpos($str, $string_to_replace))
-		{
-			$str = str_replace($string_to_replace, $char_to_replace, $str);
-		}
-		$article = str_get_html($str);
-		
-
-		$selectors_array = array();
-		$selectors_array[] = 'comment';
-		$selectors_array[] = 'SCRIPT';
-		$selectors_array[] = 'DIV.widget.video.videoScrollClass';
-		$selectors_array[] = 'NOSCRIPT';
-		$selectors_array[] = 'ASIDE#rightColumnBox';
-		$selectors_array[] = 'DIV#banner_art_video_out';
-		$selectors_array[] = 'DIV#relatedTopics';
-		$selectors_array[] = 'DIV#widgetStop';
-		$selectors_array[] = 'DIV.authorSourceProfile';
-		$selectors_array[] = 'DIV.streamNews';
-		$selectors_array[] = 'DIV.plistaDetailDesktop';
-		$selectors_array[] = 'DIV.commentsBox';
-		$selectors_array[] = 'DIV.detailAllBoxes';
-		$selectors_array[] = 'DIV.social-container';
-		$selectors_array[] = 'DIV.serviceLogoWrapper';
-		$selectors_array[] = 'DIV.infor-ad';
-		$selectors_array[] = 'DIV.bottomAdsBox';
-		$selectors_array[] = 'DIV.promoFrame.pulse2PromoFrame.withDescription.article';
-		$selectors_array[] = 'qqqqqqqqqqqqq';
-		$selectors_array[] = 'qqqqqqqqqqqqq';
-		$selectors_array[] = 'qqqqqqqqqqqqq';
-//		$selectors_array[] = '.articleImageDescription';
-		
-		foreach_delete_element_array($article, $selectors_array);
-
-		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8118990,lowcy-przygod-w-dalekich-krainach-raimund-schulz-rok-1000-valerie-hansen.html
-		replace_attribute($article, '[data-item-uuid]', 'data-item-uuid', NULL);
-
-		$article = str_get_html($article->save());
-		//https://prawo.gazetaprawna.pl/artykuly/8054640,nowelizacja-ustawy-o-wlasnosci-lokali-eksmisja-utrata-mieszkania.html.amp?amp_js_v=0.1
-		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8094787,chinski-blad-europy-opinia-piotr-arak.html
-		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8094155,economicus-2020-oto-nominowani-w-kategorii-najlepszy-poradnik-biznesowy.html
-		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8094315,rzad-uslugi-publiczne-transfery-likwidacja-nierownosci-opinia.html
-		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8080209,paszport-covidowy-przywileje-podroze-szczepionka-covid.html
-		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8123606,marek-kajs-wilki-jak-sie-zachowac-odstrzal-gdos.html
-		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8123578,problemy-z-astrazeneca-o-co-chodzi.html
-		clear_paragraphs_from_taglinks($article, 'P.hyphenate, DIV.frameArea', array(
-			'/gazetaprawna\.pl\/tagi\//',
-			'/gazetaprawna\.pl\/$/',
-			'/gazetaprawna\.pl$/',
-			'/serwisy\.gazetaprawna\.pl\/.*\/tematy\//',
-			'/gazetaprawna\.pl\/[a-z]*$/',
-		));
-		$article = str_get_html($article->save());
-
-		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8094155,economicus-2020-oto-nominowani-w-kategorii-najlepszy-poradnik-biznesowy.html
-		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8123606,marek-kajs-wilki-jak-sie-zachowac-odstrzal-gdos.html
-		foreach_combine_two_elements($article, 'DIV.frameWrap DIV.articleImageAuthor', 1, 1, 'DIV', 'frameWrap', 'DIV.articleImageDescription', 'innertext', 'innertext', 'DIV', 'frameWrap');
-		foreach_combine_two_elements($article, 'DIV.image DIV.imageCaptionWrapper', 1, 1, 'DIV', 'frameWrap', 'DIV.articleImageAuthor, DIV.articleImageDescription', 'outertext', 'outertext', 'DIV', 'intext_photo');
-
-		$article = str_get_html($article->save());
-		foreach($article->find('DIV.intext_photo DIV.frameWrap') as $element_frameWrap)
-		{
-			$next_element = $element_frameWrap->find('.frameArea', 0);
-			$new_html = '';
-			if (FALSE === is_null($next_element))
-			{
-				$new_html = $new_html.$next_element->innertext;
-				while (FALSE === is_null($next_element = $next_element->next_sibling()))
-				{
-					$new_html = $new_html.'<br>'.$next_element->innertext;
-				}
-			}
-			$element_frameWrap->innertext = $new_html;
-		}
-
-		
-
-
-
-
-		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8094155,economicus-2020-oto-nominowani-w-kategorii-najlepszy-poradnik-biznesowy.html
-		format_article_photos($article, 'FIGURE.mainPhoto', TRUE, 'src', 'SPAN.imageDescription');
-		format_article_photos($article, 'DIV.intext_photo', FALSE, 'src', 'DIV.frameWrap');
-		format_article_photos($article, 'DIV.image', FALSE);//jeżeli było zdjęcie bez podpisu, to nie zostało zamienione na intext_photo
-		$article = str_get_html($article->save());
-		foreach($article->find('DIV.frameArea') as $element)
-		{
-			$element->tag = 'p';
-		}
-		foreach_replace_outertext_with_innertext($article, 'DIV.frameWrap');
-		$article = str_get_html($article->save());
-
-/*
-		TODO To DO
-		//https://serwisy.gazetaprawna.pl/orzeczenia/artykuly/8078983,antonik-burmistrz-prezes-spoldzielnia-mieszkaniowa-brodno-porozumienie-etyka.html
-		foreach($article->find('H2') as $element)
-		{
-			$element->outertext = '<br>'.$element->outertext;
-		}
-*/
-		//https://www.gazetaprawna.pl/firma-i-prawo/artykuly/8077582,konkurs-na-facebooku-polubienie-posta-kara-od-skarbowki.html
-		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8094785,sekularyzacja-przyspiesza-takze-w-polsce-wywiad.html
-		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8123557,zycie-w-pandemii-lockdown-wplyw-na-czlowieka.html
-		add_style($article, '.srodtytul, .pytanie, .wyroznienie, DIV#lead', array('font-weight: bold;'));
-
-		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8079800,sztuczna-inteligencja-rezolucja-ue-azja-usa-slowik.html
-		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8094315,rzad-uslugi-publiczne-transfery-likwidacja-nierownosci-opinia.html
-		add_style($article, 'DIV#lead', array('margin-bottom: 18px;'));
-
-
-		add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
-		add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
-		add_style($article, 'FIGCAPTION', getStylePhotoCaption());
-
-		//Splaszczenie struktury
-		foreach_replace_outertext_with_subelement_innertext($article, 'DIV.detailContentWrapper', 'DIV.detailContent');
-		foreach_replace_outertext_with_subelement_innertext($article, 'ARTICLE#leftColumnBox', 'DIV.whitelistPremium');
-		foreach_replace_outertext_with_innertext($article, 'SECTION.detailSection');
-
-
-		$this->items[] = array(
-			'uri' => $url_article_link,
-			'title' => $title,
-			'timestamp' => $date,
-			'author' => $author,
-			'categories' => $tags,
-			'content' => $article
-		);
 	}
 
 	private function getChangedTitle($title, $price_param)
