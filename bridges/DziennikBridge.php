@@ -1,6 +1,6 @@
 <?php
 class DziennikBridge extends BridgeAbstract {
-	const NAME = 'Dziennik.pl - Strona autora';
+	const NAME = 'Dziennik.pl';
 	const URI = 'https://www.dziennik.pl/';
 	const DESCRIPTION = 'No description provided';
 	const MAINTAINER = 'No maintainer';
@@ -15,13 +15,13 @@ class DziennikBridge extends BridgeAbstract {
 				'name' => 'URL',
 				'type' => 'text',
 				'required' => true,
-				'defaultValue' => 3,
 			),
 			'limit' => array
 			(
 				'name' => 'Liczba artykułów',
 				'type' => 'number',
-				'required' => true
+				'required' => true,
+				'defaultValue' => 3,
 			),
 			'tylko_opinie' => array
 			(
@@ -30,15 +30,50 @@ class DziennikBridge extends BridgeAbstract {
 				'required' => false,
 				'title' => 'Tylko opinie'
 			),
-			'tylko_darmowe' => array
+			'type' => array
 			(
-				'name' => 'Tylko darmowe',
-				'type' => 'checkbox',
-				'required' => false,
-				'title' => 'Tylko darmowe'
+				'name' => 'Czy płatne?',
+				'type' => 'list',
+				'required' => true,
+				'values' => array(
+    			    'Darmowe i premium' => 'both',
+    			    'Tylko darmowe' => 'free',
+    			    'Tylko premium' => 'premium'
+    			 )
 			),
 		)
 	);
+
+	public function getName()
+	{
+		switch($this->queriedContext)
+		{
+			case 'Parametry':
+				if(isset($GLOBALS['author_name']) && 1 < strlen($GLOBALS['author_name']))
+				{
+					return "Dziennik.pl - ".ucfirst($GLOBALS['author_name']);
+				}
+				else
+				{
+					return parent::getName();
+				}
+				break;
+			default:
+				return parent::getName();
+		}
+	}
+
+	public function getURI()
+	{
+		switch($this->queriedContext)
+		{
+			case 'Parametry':
+					return $this->getInput('url');
+				break;
+			default:
+				return parent::getURI();
+		}
+	}
 
 /*
 	public function getIcon()
@@ -46,149 +81,334 @@ class DziennikBridge extends BridgeAbstract {
 		return 'https://c.disquscdn.com/uploads/forums/349/4323/favicon.png';
 	}
 */
+
+
 	public function collectData()
 	{
-		$url_articles_list = $this->getInput('url');
-		$GLOBALS['limit'] = $this->getInput('limit');
-
-		$titles = array();
-		while (count($this->items) < $GLOBALS['limit'])
+		include 'myFunctions.php';
+		$this->setGlobalArticlesParams();
+		$articles_data = $this->getArticlesUrls();
+		foreach ($articles_data as $article_data)
 		{
-			$html_articles_list = getSimpleHTMLDOM($url_articles_list);
-			if (0 !== count($found_urls = $html_articles_list->find('DIV.boxArticleList', 0)->find('A[href][title]')))
+			$this->addArticleCanonical(str_get_html($article_data['html']), $article_data['url']);
+		}
+	}
+
+	private function setGlobalArticlesParams()
+	{
+		$GLOBALS['limit'] = intval($this->getInput('limit'));
+		$GLOBALS['my_debug'] = FALSE;
+//		$GLOBALS['my_debug'] = TRUE;
+//		$GLOBALS['ignore_number'] = 10;
+		if (TRUE === $GLOBALS['my_debug'])
+		{
+			$GLOBALS['all_articles_time'] = 0;
+			$GLOBALS['all_articles_counter'] = 0;
+		}
+		$GLOBALS['opinions_params'] = array(
+			'OPINIA',
+			'KOMENTARZ',
+			'FELIETON',
+		);
+		$GLOBALS['url_articles_list'] = $this->getInput('url');
+		$GLOBALS['wanted_only_opinions'] = $this->getInput('tylko_opinie');
+		if (TRUE === is_null($GLOBALS['wanted_only_opinions']))
+		{
+			$GLOBALS['wanted_only_opinions'] = FALSE;
+		}
+		$GLOBALS['wanted_article_type'] = $this->getInput('type');
+		if (TRUE === is_null($GLOBALS['wanted_article_type']))
+		{
+			$GLOBALS['wanted_article_type'] = "both";
+		}
+	}
+
+	private function getArticlesUrls()
+	{
+		$GLOBALS['author_name'] = "";
+		$articles_urls = array();
+		$articles_titles = array();
+		$articles_data = array();
+		$url_articles_list = $GLOBALS['url_articles_list'];
+//		$ignored_counter = 0;
+		while (count($articles_data) < $GLOBALS['limit'] && "empty" != $url_articles_list)
+		{
+			$returned_array = $this->my_get_html($url_articles_list);
+			$html_articles_list = $returned_array['html'];
+			if (200 !== $returned_array['code'] || 0 === count($found_leads = $html_articles_list->find('DIV.boxArticleList DIV.itarticle')))
 			{
-				foreach($found_urls as $article_link)
+				break;
+			}
+			else
+			{
+				$GLOBALS['author_name'] = get_text_plaintext($html_articles_list, 'SECTION.stream DIV.titleBox H1, SECTION.stream HEADER.authorInfo H1', $GLOBALS['author_name']);
+				foreach($found_leads as $lead)
 				{
-					if (count($this->items) < $GLOBALS['limit'])
+					if (count($articles_data) >= $GLOBALS['limit'])
 					{
-						$title = $article_link->getAttribute('title');
-						$href = $article_link->getAttribute('href');
-						$href = $href.".amp";
-//						$article_html = getSimpleHTMLDOMCached($href, (86400/(count($this->items)+1)*$GLOBALS['limit']));
-						$article_html = getSimpleHTMLDOMCached($href, 86400 * 14);
-						$GLOBALS['is_article_free'] = $this->isArticleFree($article_html);
-						$GLOBALS['is_article_opinion'] = $this->isArticleOpinion($article_html);
-						if ($this->meetsConditions() === TRUE && FALSE === in_array($title, $titles))
+						break;
+					}
+					$title_element = $lead->find('.itemTitle', 0);
+					$href_element = $lead->find('A[href]', 0);
+					if (FALSE === is_null($title_element) && FALSE === is_null($href_element))
+					{
+						$title = trim($title_element->plaintext);
+						$url = $href_element->href;
+//						$url = "https://wiadomosci.dziennik.pl/opinie/artykuly/8129369,mobbing-szkola-filmowa-przemoc-aktor-studia-piotr-bartuszek.html";
+//						$url = "https://film.dziennik.pl/recenzje/artykuly/8137058,wytepic-cale-to-bydlo-czego-nauczyla-mnie-osmiornica-maggie-vod-piec-smakow-netflix-hbo-dobrycynk.html";
+//						if (FALSE === in_array($title, $articles_titles) && FALSE === strpos($url, '/dgp/') && FALSE !== strpos($title, 'linii'))
+						if (!in_array($title, $articles_titles))
 						{
-							$titles[] = $title;
-							$this->addArticle($href, $article_html);
+/*							$ignored_counter++;
+							if ($ignored_counter > $GLOBALS['ignore_number'])
+							{
+								$GLOBALS['ignore_number'] = 20;*/
+								$returned_array = $this->my_get_html($url);
+								if (200 === $returned_array['code'])
+								{
+									$article_html = $returned_array['html'];
+									$article_html = str_get_html($this->remove_useless_elements($article_html));
+									if ($this->meetsConditions($article_html))
+									{
+										$articles_urls[] = $url;
+										$articles_titles[] = $title;
+										$articles_data[] = array
+										(
+											'url' => $url,
+											'html' => $article_html->save(),
+										);
+									}
+								}
+//							}
 						}
 					}
 				}
 			}
-			else
-			{
-				break;
-			}
-			$url_articles_list = $html_articles_list->find('A.next', 0)->getAttribute('href');
+			$url_articles_list = $this->getNextPageUrl($html_articles_list);
 		}
+		return array_slice($articles_data, 0, $GLOBALS['limit']);
+	}
+	
+	private function getNextPageUrl($html_articles_list)
+	{		
+		$next_page_element = $html_articles_list->find('DIV.pagination A.next[href]', 0);
+		if (FALSE === is_null($next_page_element) && $next_page_element->hasAttribute('href'))
+		{
+			return $next_page_element->getAttribute('href');
+		}
+		else
+			return "empty";
 	}
 
-	private function addArticle($href, $article_html)
+	private function remove_useless_elements($main_element)
 	{
-		$article = $article_html->find('article', 0);
-		$article_data = $article_html->find('SCRIPT[type="application/ld+json"]', 0)->innertext;
-		$article_data_parsed = $this->parse_article_data(json_decode($article_data));
-		
-		$date = trim($article_data_parsed["datePublished"]);
-		$title = trim($article_data_parsed["headline"]);
-		$author = trim($article_data_parsed["author"]["name"]);
+		$selectors_array[] = 'comment';
+		$selectors_array[] = 'SCRIPT';
+		$selectors_array[] = 'NOSCRIPT';
+		$selectors_array[] = 'DIV.social-container';
+		$selectors_array[] = 'DIV.bottomAdsBox';
+		$selectors_array[] = 'DIV#googleAdsCont';
+		$selectors_array[] = 'DIV#relatedTopics';
+		$selectors_array[] = 'DIV.detailAllBoxes';
+		$selectors_array[] = 'FIGURE.seeAlso';
+		$selectors_array[] = 'DIV.infor-ad';
+		$selectors_array[] = 'DIV.commentsBox';
+		$selectors_array[] = 'DIV.streamNews';
+		$selectors_array[] = 'DIV#adoceangplyncgfnrlgo';
+		$selectors_array[] = 'DIV.inforAdsRectSrod';
+		$selectors_array[] = 'DIV#banner_art_video_out';
+		$selectors_array[] = 'DIV.widget.video.videoScrollClass';
+		$selectors_array[] = 'DIV#widgetStop';
+		$selectors_array[] = 'SOURCE[srcset]';
+		$selectors_array[] = 'DIV.inforAdsRectSrod';
+		foreach_delete_element_array($main_element, $selectors_array);
+		return $main_element->save();
+	}
 
-		$this->foreach_delete_element($article, 'comment');
-		$this->foreach_delete_element($article, 'script');
-		$this->foreach_delete_element($article, 'DIV.social-box');
-		$this->foreach_delete_element($article, 'DIV#lightbox');
-		$this->foreach_delete_element($article, 'DIV#lightbox2');
-		$this->foreach_delete_element($article, 'DIV.adBoxTop');
-		$this->foreach_delete_element($article, 'DIV.adBox');
-		$this->foreach_delete_element($article, 'DIV.widget.video');
-		$this->foreach_delete_element($article, 'amp-analytics');
-		$this->foreach_delete_element($article, 'DIV.listArticle');
-		$this->clear_paragraphs_from_taglinks($article, 'P.hyphenate', array('/dziennik\.pl\/tagi\//'));
+	private function addArticleCanonical($article_html, $url_article_link)
+	{
+//		$article_html = str_get_html(prepare_article($article_html));
+		//https://film.dziennik.pl/recenzje/artykuly/8137058,wytepic-cale-to-bydlo-czego-nauczyla-mnie-osmiornica-maggie-vod-piec-smakow-netflix-hbo-dobrycynk.html
+		replace_attribute($article_html, 'IMG[data-original^="http"][src^="data:image/"]', 'src', 'data-original');
+		$article_html = str_get_html(prepare_article($article_html));
+		$article = $article_html->find('ARTICLE.articleDetail', 0);
+		$price_param = $this->getArticlePriceParam($article);
+//title
+		$title = get_text_plaintext($article, 'H1.mainTitle', $url_article_link);
+		$title = $this->getChangedTitle($title, $price_param);	
+//tags
+		$tags = return_tags_array($article, 'DIV.relatedTopicWrapper SPAN.relatedTopic');
+//authors
+		$author = return_authors_as_string($article, 'DIV.authBox DIV.authDesc');
+//date
+		$date = get_text_from_attribute($article_html, 'META[property="article:published_time"][content]', 'content', "");
 
-		foreach($article->find('amp-img') as $ampimg)
-			$ampimg->tag = "img";
-		foreach($article->find('amp-img, img') as $photo_element)
+
+//		$article = str_get_html($article->save());
+		foreach_delete_element_containing_subelement($article, 'DIV.frameWrap', 'DIV.promoFrame.pulse2PromoFrame.withDescription.article');
+//		$article = str_get_html($article->save());
+
+		clear_paragraphs_from_taglinks($article, 'P.hyphenate, DIV.frameArea', array(
+			'/dziennik\.pl\/tagi\//',
+			'/dziennik\.pl\/[a-z]*$/',
+		));
+		$article = str_get_html($article->save());
+		$attributes_array[] = "data-text-len";
+		$attributes_array[] = "data-scroll";
+		$attributes_array[] = "data-async-ad-slot";
+		$article = str_get_html(remove_multiple_attributes($article, $attributes_array));
+//		$article = str_get_html($this->remove_empty_elements($article->save(), "DIV"));
+//		$article = str_get_html($this->remove_empty_elements($article->save(), "SPAN"));
+//		$article = str_get_html($article_str);
+		replace_part_of_class($article, '.adSlotSibling', 'multiple', ' adSlotSibling', '');
+		replace_tag_and_class($article, 'DIV#lead', 'single', 'STRONG', NULL);
+		replace_tag_and_class($article, 'P.hyphenate', 'multiple', 'P', "");
+		$article = str_get_html($article->save());
+//POCZĄTEK kopiowania z gazety prawnej
+//Przenoszenie podpisów zdjęć do jednego elementu
+		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8094155,economicus-2020-oto-nominowani-w-kategorii-najlepszy-poradnik-biznesowy.html
+		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8123606,marek-kajs-wilki-jak-sie-zachowac-odstrzal-gdos.html
+		foreach_combine_two_elements($article, 'DIV.frameWrap DIV.articleImageAuthor', 1, 1, 'DIV', 'frameWrap', 'DIV.articleImageDescription', 'innertext', 'innertext', 'DIV', 'frameWrap');
+		foreach_combine_two_elements($article, 'DIV.image DIV.imageCaptionWrapper', 1, 1, 'DIV', 'frameWrap', 'DIV.articleImageAuthor, DIV.articleImageDescription', 'outertext', 'outertext', 'DIV', 'intext_photo');
+		$article = str_get_html($article->save());
+		foreach($article->find('DIV.intext_photo DIV.frameWrap') as $element_frameWrap)
 		{
-			if(isset($photo_element->width)) $photo_element->width = NULL;
-			if(isset($photo_element->height)) $photo_element->height = NULL;
+			$next_element = $element_frameWrap->find('.frameArea', 0);
+			$new_html = '';
+			if (FALSE === is_null($next_element))
+			{
+				$new_html = $new_html.$next_element->innertext;
+				while (FALSE === is_null($next_element = $next_element->next_sibling()))
+				{
+					$new_html = $new_html.'<br>'.$next_element->innertext;
+				}
+			}
+			$element_frameWrap->innertext = $new_html;
 		}
-
-		if ($GLOBALS['is_article_opinion'])
+//Poprawienie formatowania zdjęć		
+		$article = str_get_html($article->save());
+		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8094155,economicus-2020-oto-nominowani-w-kategorii-najlepszy-poradnik-biznesowy.html
+		format_article_photos($article, 'FIGURE.mainPhoto', TRUE, 'src', 'SPAN.imageDescription');
+		format_article_photos($article, 'DIV.intext_photo', FALSE, 'src', 'DIV.frameWrap');
+		format_article_photos($article, 'DIV.image', FALSE);//jeżeli było zdjęcie bez podpisu, to nie zostało zamienione na intext_photo
+		$article = str_get_html($article->save());
+//Poprawienie formatowanie treści artykułu		
+		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8137260,granica-usa-meksyk-jak-rozwiazac-kwestie-migracji.html
+		foreach_replace_outertext_with_innertext($article, 'DIV.frameWrap');
+		$article = str_get_html($article->save());
+		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8137260,granica-usa-meksyk-jak-rozwiazac-kwestie-migracji.html
+		replace_tag_and_class($article, 'DIV.frameArea.srodtytul', 'multiple', 'H2', NULL);
+		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8137260,granica-usa-meksyk-jak-rozwiazac-kwestie-migracji.html
+		replace_tag_and_class($article, 'DIV#lead', 'single', 'STRONG', NULL);
+		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8137260,granica-usa-meksyk-jak-rozwiazac-kwestie-migracji.html
+		replace_tag_and_class($article, 'DIV.frameArea.wazne', 'multiple', 'BLOCKQUOTE', NULL);
+		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8123557,zycie-w-pandemii-lockdown-wplyw-na-czlowieka.html
+		replace_tag_and_class($article, 'DIV.frameArea.wyroznienie', 'multiple', 'BLOCKQUOTE', NULL);
+		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8094785,sekularyzacja-przyspiesza-takze-w-polsce-wywiad.html
+		replace_tag_and_class($article, 'DIV.frameArea.pytanie', 'multiple', 'STRONG', NULL);
+		replace_tag_and_class($article, 'DIV.frameArea.tresc', 'multiple', 'P', NULL);
+		replace_part_of_class($article, '.frameArea', 'multiple', 'frameArea ', '');
+//KONIEC kopiowania z gazety prawnej		
+		$article = str_get_html($article->save());
+		foreach($article->find('DIV.embeddedApp') as $embeddedApp)
 		{
-			$title = str_replace('[OPINIA]', '', $title);
-			$title = '[OPINIA] '.$title;
+			if (!is_null($params_element = $embeddedApp->find("DIV[data-params]", 0)))
+			{
+				$params = $params_element->getAttribute("data-params");
+				$frame_url = get_json_value_from_given_text(html_entity_decode($params), 'url');
+				$frame_outertext = get_frame_outertext($frame_url);
+				$embeddedApp->outertext = $frame_outertext;
+			}
 		}
+		format_article_photos($article, 'FIGURE.mainPhoto', TRUE, 'src', 'FIGCAPTION');
+		$article = str_get_html($article->save());
+		add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
+		add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
+		add_style($article, 'FIGCAPTION', getStylePhotoCaption());
+		add_style($article, 'BLOCKQUOTE', getStyleQuote());
+		$article = str_get_html($article->save());
+//		replace_tag_and_class($article, '[class]', 'multiple', NULL, "");
+//		$article = str_get_html($article->save());
+//		foreach 
+//		get_json_value_from_given_text($string, $variable_name);
 
-		if ($GLOBALS['is_article_free'])
-			$title = '[FREE] '.$title;
-		else
-			$title = '[PREMIUM] '.$title;
-
+		$amp_project_url = $this->getCustomizedLink($url_article_link);
 		$this->items[] = array(
-			'uri' => $href,
+			'uri' => $amp_project_url,
 			'title' => $title,
 			'timestamp' => $date,
 			'author' => $author,
-			'content' => $article
+			'categories' => $tags,
+			'content' => $article,
 		);
 	}
 
-	private function clear_paragraphs_from_taglinks($article, $paragrapghSearchString, $regexArray)
+	private function remove_empty_elements($main_element_str, $tag)
 	{
-		foreach($article->find($paragrapghSearchString) as $paragraph)
-			foreach($paragraph->find('A') as $a_element)
-				foreach($regexArray as $regex)
-					if(1 === preg_match($regex, $a_element->href))
-						$a_element->outertext = $a_element->plaintext;
+		$main_element = str_get_html($main_element_str);
+		foreach($main_element->find($tag) as $empty_element)
+		{
+/*			print_html($empty_element->outertext, "empty_element->outertext");
+			print_html($empty_element->innertext, "empty_element->innertext");
+			print_html($empty_element->plaintext, "empty_element->plaintext");
+			print_var_dump($empty_element->outertext, "empty_element->outertext");
+			print_var_dump($empty_element->innertext, "empty_element->innertext");
+			print_var_dump($empty_element->plaintext, "empty_element->plaintext");
+			hex_dump($empty_element->outertext);
+			hex_dump($empty_element->innertext);
+			hex_dump($empty_element->plaintext);*/
+			if (0 === strlen($empty_element->innertext) && 0 === strlen($empty_element->plaintext))
+			{
+				$main_element_str = str_replace($empty_element->outertext, "", $main_element_str);
+			}
+		}
+		return $main_element_str;
 	}
 
-	
-	private function parse_article_data($article_data)
+	private function getCustomizedLink($url)
 	{
-		if (TRUE === is_object($article_data))
-		{
-			$article_data = (array)$article_data;
-			foreach ($article_data as $key => $value)
-				$article_data[$key] = $this->parse_article_data($value);
-			return $article_data;
-		}
-		else if (TRUE === is_array($article_data))
-		{
-			foreach ($article_data as $key => $value)
-				$article_data[$key] = $this->parse_article_data($value);
-			return $article_data;
-		}
-		else
-			return $article_data;
+		preg_match('/https?:\/\/(([^\.]*)\..*)/', $url, $output_array);
+		return ('https://'.$output_array[2].'-dziennik-pl.cdn.ampproject.org/v/s/'.$output_array[1].'.amp?amp_js_v=0.1');
 	}
-	
 
-	private function meetsConditions()
+	private function getChangedTitle($title, $price_param)
 	{
-		$only_opinions = $this->getInput('tylko_opinie');
-		if (TRUE === is_null($only_opinions)) $only_opinions = FALSE;
-		$only_free = $this->getInput('tylko_darmowe');
-		if (TRUE === is_null($only_free)) $only_free = FALSE;
+		preg_match_all('/\[[^\]]*\]/', $title, $title_categories);
+		$title_prefix = "";
+		foreach($title_categories[0] as $category)
+		{
+			$title = str_replace($category, '', $title);
+			$title_prefix = $title_prefix.$category;
+		}
+		$new_title = '['.strtoupper($price_param).']'.$title_prefix.' '.trim($title);
+		return $new_title;
+	}
 
-		if(FALSE === $only_opinions && FALSE === $only_free)
+	private function meetsConditions($article_html)
+	{
+		$article_price_param = $this->getArticlePriceParam($article_html);
+		$article_opinion_param = $this->getArticleOpinionParam($article_html);
+		$is_price_param_fullfiled = FALSE;
+		$is_opinion_param_fullfiled = FALSE;
+		if ('both' === $GLOBALS['wanted_article_type'])
+		{
+			$is_price_param_fullfiled = TRUE;
+		}
+		else if ($article_price_param === $GLOBALS['wanted_article_type'])
+		{
+			$is_price_param_fullfiled = TRUE;
+		}
+		if (FALSE === $GLOBALS['wanted_only_opinions'])
+		{
+			$is_opinion_param_fullfiled = TRUE;
+		}
+		else if ($article_opinion_param === $GLOBALS['wanted_only_opinions'])
+		{
+			$is_opinion_param_fullfiled = TRUE;
+		}
+		if (TRUE === $is_price_param_fullfiled && TRUE === $is_opinion_param_fullfiled)
 		{
 			return TRUE;
-		}
-		else if(FALSE === $only_opinions && TRUE === $only_free)
-		{
-			if ($GLOBALS['is_article_free'])
-				return TRUE;
-		}
-		else if(TRUE === $only_opinions && FALSE === $only_free)
-		{
-			if ($GLOBALS['is_article_opinion'])
-				return TRUE;
-		}
-		else if(TRUE === $only_opinions && TRUE === $only_free)
-		{
-			if ($GLOBALS['is_article_opinion'] && $GLOBALS['is_article_free'])
-				return TRUE;
 		}
 		else
 		{
@@ -196,77 +416,93 @@ class DziennikBridge extends BridgeAbstract {
 		}
 	}
 
-	private function isArticleFree($article_html)
+	private function getArticlePriceParam($article_html)
 	{
-		$article = $article_html->find('ARTICLE', 0);
-		//Jeżeli element istneje (FALSE === is_null), to jest to artykul platny
-		if (is_null($article->find('A[id][href*="edgp.gazetaprawna.pl"]', 0)))
-			return TRUE;
-		else
-			return FALSE;	
+		//Żeby ostatni element był sensowny
+//		$selectors_array[] = 'comment';
+//		$selectors_array[] = 'SCRIPT';
+//		$selectors_array[] = 'NOSCRIPT';
+//		foreach_delete_element_array($article_html, $selectors_array);
+		//Link nie będący premium (nie jest ostatni) CZYTAJ WIĘCEJ TUTAJ>>>
+		//https://wiadomosci.dziennik.pl/opinie/artykuly/8137333,transplciowe-dziecko-krystyna-pawlowicz-titanic-dzieci-kody-kulturowe-iii-rp-pis-po-donald-tusk-zbigniew-ziobro.html
+		//Link będący premium CZYTAJ WIĘCEJ w MAGAZYNIE DGP >>>
+		//https://wiadomosci.dziennik.pl/opinie/artykuly/8136820,liberal-polityka-zagranica-cywilizacja-spoleczenstwo.html
+		//Link będący premium CZYTAJ CAŁOŚĆ NA GAZETAPRAWNA.PL>>>
+		//https://wiadomosci.dziennik.pl/opinie/artykuly/8137603,wojna-antoni-macierewicz-katastrofa-smolenska.html
+		//Link będący premium CAŁY WYWIAD Z ANDŻELIKĄ BORYS PRZECZYTASZ W ŚRODOWYM WYDANIU DGP
+		//https://wiadomosci.dziennik.pl/opinie/artykuly/8127257,andzelika-borys-zatrzymanie-bialorus-wywiad-dgp.html
+		//Link będący premium będący w ostatnim paragrafie przed DIV.inforAdsRectSrod
+		//https://wiadomosci.dziennik.pl/opinie/artykuly/8129369,mobbing-szkola-filmowa-przemoc-aktor-studia-piotr-bartuszek.html
+		if (!is_null($detail = $article_html->find("DIV#detail", 0)))
+		{
+			$last_child = $detail->last_child();
+			while (0 === strlen($last_child->plaintext))
+			{
+				$last_child = $last_child->prev_sibling();
+			}
+			if (!is_null($last_link = $last_child->find('A[href*="gazetaprawna.pl"]', 0)))
+			{
+				if(check_string_contains_needle_from_array($last_link->plaintext, array("CZYTAJ CAŁOŚĆ", "CZYTAJ WIĘCEJ", "CAŁY WYWIAD")))
+				{
+					return "premium";
+				}
+			}
+		}
+		return "free";
 	}
-	private function isArticleOpinion($article_html)
+
+	private function getArticleOpinionParam($article_html)
 	{
-		$title = $article_html->find('H1.headline', 0)->plaintext;
-		if (FALSE !== strpos($title, '[OPINIA]'))
-			return TRUE;
+		$title_element = $article_html->find('H1.mainTitle', 0);
+		if (FALSE === is_null($title_element))
+		{
+			$title = $title_element->plaintext;
+			foreach($GLOBALS['opinions_params'] as $param)
+			{
+				if (FALSE !== strpos($title, $param))
+					return TRUE;
+			}
+			return FALSE;
+		}
 		else
 			return FALSE;
 	}
-
-	private function single_delete_element_containing_subelement($ancestor, $descendant_string)
+	
+	private function my_get_html($url)
 	{
-		if (FALSE === is_null($descendant = $ancestor->find($descendant_string, 0)))
-			$descendant->outertext = '';
-	}
+		$context = stream_context_create(array('http' => array('ignore_errors' => true)));
 
-	private function single_delete_subelement($ancestor, $descendant_string)
-	{
-		if (FALSE === is_null($descendant = $ancestor->find($descendant_string, 0)))
-			$ancestor->outertext = '';
-	}
-
-	private function single_delete_element_containing_text($ancestor, $descendant_string)
-	{
-		if (FALSE === is_null($ancestor))
-			if (FALSE !== strpos($ancestor->plaintext, $descendant_string))
-				$ancestor->outertext = '';
-	}
-
-	private function foreach_delete_element($ancestor, $descendant_string)
-	{
-		foreach($ancestor->find($descendant_string) as $descendant)
-			$descendant->outertext = '';
-	}
-
-	private function foreach_delete_element_containing_elements_hierarchy($element, $hierarchy)
-	{
-		$last = count($hierarchy)-1;
-		$counter = 0;
-		foreach($element->find($hierarchy[$last]) as $found)
+		if (TRUE === $GLOBALS['my_debug'])
 		{
-			$counter++;
-			$iterator = $last-1;
-			while ($iterator >= 0 && $found->parent->tag === $hierarchy[$iterator])
-			{
-				$found = $found->parent;
-				$iterator--;
-			}
-			if ($iterator === -1)
-			{
-				$found->outertext = '';
-			}
+			$start_request = microtime(TRUE);
+			$page_content = file_get_contents($url, false, $context);
+			$end_request = microtime(TRUE);
+			echo "<br>Article  took " . ($end_request - $start_request) . " seconds to complete - url: $url.";
+			$GLOBALS['all_articles_counter']++;
+			$GLOBALS['all_articles_time'] = $GLOBALS['all_articles_time'] + $end_request - $start_request;
 		}
-	}
+		else
+			$page_content = file_get_contents($url, false, $context);
 
-	private function get_proxy_url($url)
-	{
-		$twitter_proxy = 'nitter.net';
-		$instagram_proxy = 'bibliogram.art';
-		$facebook_proxy = 'mbasic.facebook.com';
-		$url = preg_replace('/.*[\.\/]twitter\.com(.*)/', 'https://'.$twitter_proxy.'${1}', $url);
-		$url = preg_replace('/.*[\.\/]instagram\.com(.*)/', 'https://'.$instagram_proxy.'${1}', $url);
-		$url = preg_replace('/.*[\.\/]facebook\.com(.*)/', 'https://'.$facebook_proxy.'${1}', $url);
-		return $url;
+		$code = getHttpCode($http_response_header);
+		if (200 !== $code)
+		{
+			$html_error = createErrorContent($http_response_header);
+			$date = new DateTime("now", new DateTimeZone('Europe/Warsaw'));
+			$date_string = date_format($date, 'Y-m-d H:i:s');
+			$this->items[] = array(
+				'uri' => $url,
+				'title' => "Error ".$code.": ".$url,
+				'timestamp' => $date_string,
+				'content' => $html_error
+			);
+		}
+		$page_html = str_get_html($page_content);
+
+		$return_array = array(
+			'code' => $code,
+			'html' => $page_html,
+		);
+		return $return_array;
 	}
 }

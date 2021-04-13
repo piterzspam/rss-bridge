@@ -517,6 +517,7 @@
 
 	function remove_multiple_attributes($main_element, $attributes_array)
 	{
+		$attributes_array = array_unique($attributes_array);
 		$selectors_array = array();
 		foreach ($attributes_array as $key => $value)
 		{
@@ -753,6 +754,20 @@
 		}
 		return NULL;
 	}
+	
+	function get_json_value_from_given_text($string, $variable_name)
+	{
+		preg_match('/["\']'.$variable_name.'["\'] *: *["\'](.*?)["\']/', $string, $output_array);
+		if (isset($output_array[1]))
+		{
+			$value = $output_array[1];
+			return $value;
+		}
+		else
+		{
+			return NULL;
+		}
+	}
 
 
 	function get_json_value($main_element, $string_selector, $search_string)
@@ -766,7 +781,6 @@
 			
 			if (isset($output_array[1]))
 			{
-//				print_var_dump($output_array, 'output_array');
 //				print_var_dump($script_text, 'script_text');
 				$value = $output_array[1];
 				return $value;
@@ -1115,7 +1129,14 @@ function getArray($array, $index) {
 				}
 				if (isset($new_class))
 				{
-					$element->class = $new_class;
+					if (strlen($new_class) > 0)
+					{
+						$element->class = $new_class;
+					}
+					else
+					{
+						$element->class = NULL;
+					}
 				}
 			}
 		}
@@ -1129,7 +1150,14 @@ function getArray($array, $index) {
 				}
 				if (isset($new_class))
 				{
-					$element->class = $new_class;
+					if (strlen($new_class) > 0)
+					{
+						$element->class = $new_class;
+					}
+					else
+					{
+						$element->class = NULL;
+					}
 				}
 			}
 		}
@@ -1145,7 +1173,7 @@ function getArray($array, $index) {
 				if (isset($part_to_insert))
 				{
 //					print_html($element, 'element_to_stay przed');
-					$element->class = str_replace($part_to_replace, $part_to_insert, $element->class);
+					$element->class = trim(str_replace($part_to_replace, $part_to_insert, $element->class));
 //					print_html($element, 'element_to_stay po');
 				}
 			}

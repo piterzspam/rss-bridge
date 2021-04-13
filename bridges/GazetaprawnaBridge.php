@@ -36,10 +36,10 @@ class GazetaprawnaBridge extends BridgeAbstract {
 				'type' => 'list',
 				'required' => true,
 				'values' => array(
-    			    'Darmowe i premium' => 'both',
-    			    'Tylko darmowe' => 'free',
-    			    'Tylko premium' => 'premium'
-    			 )
+					'Darmowe i premium' => 'both',
+					'Tylko darmowe' => 'free',
+					'Tylko premium' => 'premium'
+				)
 			),
 		)
 	);
@@ -78,7 +78,7 @@ class GazetaprawnaBridge extends BridgeAbstract {
 		include 'myFunctions.php';
 		$GLOBALS['limit'] = $this->getInput('limit');
 		$GLOBALS['my_debug'] = FALSE;
-		$GLOBALS['my_debug'] = TRUE;
+//		$GLOBALS['my_debug'] = TRUE;
 //		$GLOBALS['ignore_number'] = 10;
 		if (TRUE === $GLOBALS['my_debug'])
 		{
