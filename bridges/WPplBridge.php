@@ -32,15 +32,6 @@ class WPplBridge extends BridgeAbstract {
 	{
 		include 'myFunctions.php';
 		$this->setGlobalArticlesParams();
-		$GLOBALS['limit'] = intval($this->getInput('limit'));
-		$GLOBALS['my_debug'] = FALSE;
-//		$GLOBALS['my_debug'] = TRUE;
-		if (TRUE === $GLOBALS['my_debug'])
-		{
-			$GLOBALS['all_articles_time'] = 0;
-			$GLOBALS['all_articles_counter'] = 0;
-		}
-
 		$found_urls = $this->getArticlesUrls();
 //		print_var_dump($found_urls);
 
@@ -83,31 +74,53 @@ class WPplBridge extends BridgeAbstract {
 
 	private function setGlobalArticlesParams()
 	{
-		$url = $this->getInput('url');
+		//https://opinie-wp-pl.cdn.ampproject.org/c/s/opinie.wp.pl/kataryna-hackowanie-systemu-rzadowych-obostrzen-zabawa-w-kotka-i-myszke-opinia-6628299841584000a?amp=1
+		$GLOBALS['limit'] = intval($this->getInput('limit'));
+		$GLOBALS['my_debug'] = FALSE;
+		$GLOBALS['url_articles_list'] = $this->getInput('url');
+		if (TRUE === $GLOBALS['my_debug'])
+		{
+			$GLOBALS['all_articles_time'] = 0;
+			$GLOBALS['all_articles_counter'] = 0;
+		}
 		$url_array = parse_url($this->getInput('url'));
-		$host_name = $url_array["host"];
-		$GLOBALS['host_name'] = $host_name;
-		$amp_host_name = str_replace('.', '-', $host_name);
-		$GLOBALS['amp_host_name'] = $amp_host_name;
+		$GLOBALS['prefix'] = $url_array["scheme"].'://'.$url_array["host"];
+		$GLOBALS['host'] = ucfirst($url_array["host"]);
+		$GLOBALS['amp_projext_prefix'] = str_replace('.', '-', $GLOBALS['prefix']);
+		$GLOBALS['amp_projext_prefix'] = $GLOBALS['amp_projext_prefix'].".cdn.ampproject.org/c/s/";
 	}
 	
 	public function getName()
 	{
-		if (FALSE === isset($GLOBALS['author_name']))
-			return self::NAME;
-		else
-			$author_name = $GLOBALS['author_name'];
-
-		$url = $this->getInput('url');
-		if (is_null($url))
-			return self::NAME;
-		else
+/*
+		echo 'GLOBALS[\'host\']<br>';
+		var_dump($GLOBALS['host']);
+		echo '<br><br>GLOBALS[\'author_name\']<br>';
+		var_dump($GLOBALS['author_name']);
+		echo '<br><br>isset($GLOBALS[\'host\']<br>';
+		var_dump(isset($GLOBALS['host']));
+		echo '<br><br>isset($GLOBALS[\'author_name\']<br>';
+		var_dump(isset($GLOBALS['author_name']));
+		echo '<br><br>strlen($GLOBALS[\'host\']<br>';
+		var_dump(strlen($GLOBALS['host']));
+		echo '<br><br>strlen($GLOBALS[\'author_name\']<br>';
+		var_dump(strlen($GLOBALS['author_name']));
+		echo "<br><br><br><br>";
+*/
+		switch($this->queriedContext)
 		{
-			$url_array = parse_url($this->getInput('url'));
-			$host_name = $url_array["host"];
-			$host_name = ucwords($host_name);
+			case 'Parametry':
+				if(1 < strlen($GLOBALS['host']) && 1 < strlen($GLOBALS['author_name']))
+				{
+					return $GLOBALS['host']." - ".ucfirst($GLOBALS['author_name']);
+				}
+				else if (1 < strlen($GLOBALS['host']))
+				{
+					return $GLOBALS['host'];
+				}
+			default:
+				return parent::getName();
 		}
-		return $host_name." - ".$author_name;
 	}
 	
 	public function getURI()
@@ -176,6 +189,7 @@ class WPplBridge extends BridgeAbstract {
 
 	private function getArticlesUrls()
 	{
+		$GLOBALS['author_name'] = "";
 		$articles_urls = array();
 		$url_articles_list = $this->getInput('url');
 		while (count($articles_urls) < $GLOBALS['limit'] && "empty" != $url_articles_list)
@@ -193,11 +207,11 @@ class WPplBridge extends BridgeAbstract {
 			}
 			else
 			{
-				$GLOBALS['author_name'] = get_text_plaintext($html_articles_list, 'H1.author--name', "");
+				$GLOBALS['author_name'] = get_text_plaintext($html_articles_list, 'H1.author--name, H1.sectionPage--title', $GLOBALS['author_name']);
 				foreach($found_hrefs as $href_element)
 				{
 					if(isset($href_element->href))
-						$articles_urls[] = 'https://'.$GLOBALS['host_name'].$href_element->href;
+						$articles_urls[] = $GLOBALS['prefix'].$href_element->href;
 				}
 			}
 			$url_articles_list = $this->getNextPageUrl($html_articles_list);
@@ -210,7 +224,7 @@ class WPplBridge extends BridgeAbstract {
 		$next_page_element = $html_articles_list->find('A[rel="next"][href^="/autor/"]', 0);
 		if (FALSE === is_null($next_page_element) && $next_page_element->hasAttribute('href'))
 		{
-			return 'https://'.$GLOBALS['host_name'].$next_page_element->getAttribute('href');
+			return $GLOBALS['prefix'].$next_page_element->getAttribute('href');
 		}
 		else
 			return "empty";
@@ -285,7 +299,7 @@ class WPplBridge extends BridgeAbstract {
 	private function getAmpprojectLink($url)
 	{
 		$new_url = $url.'?amp=1';
-		$new_url = str_replace('https://', 'https://'.$GLOBALS['amp_host_name'].'.cdn.ampproject.org/c/s/', $new_url);
+		$new_url = str_replace('https://', $GLOBALS['amp_projext_prefix'], $new_url);
 		return $new_url;
 	}
 
