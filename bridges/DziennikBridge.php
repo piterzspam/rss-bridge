@@ -326,6 +326,8 @@ class DziennikBridge extends BridgeAbstract {
 		add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
 		add_style($article, 'FIGCAPTION', getStylePhotoCaption());
 		add_style($article, 'BLOCKQUOTE', getStyleQuote());
+		insert_html($article, 'DIV#detail', '', '<HR>');
+		
 		$article = str_get_html($article->save());
 //		replace_tag_and_class($article, '[class]', 'multiple', NULL, "");
 //		$article = str_get_html($article->save());
@@ -433,6 +435,8 @@ class DziennikBridge extends BridgeAbstract {
 		//https://wiadomosci.dziennik.pl/opinie/artykuly/8127257,andzelika-borys-zatrzymanie-bialorus-wywiad-dgp.html
 		//Link będący premium będący w ostatnim paragrafie przed DIV.inforAdsRectSrod
 		//https://wiadomosci.dziennik.pl/opinie/artykuly/8129369,mobbing-szkola-filmowa-przemoc-aktor-studia-piotr-bartuszek.html
+		//Napis będący premoim będący w ostatnim paragrafie CZYTAJ WIĘCEJ WE WTORKOWYM "DZIENNIKU GAZECIE PRAWNEJ">>> 
+		//https://wiadomosci.dziennik.pl/opinie/artykuly/8138497,sedziowie-lubia-sanki.html
 		if (!is_null($detail = $article_html->find("DIV#detail", 0)))
 		{
 			$last_child = $detail->last_child();
@@ -440,7 +444,7 @@ class DziennikBridge extends BridgeAbstract {
 			{
 				$last_child = $last_child->prev_sibling();
 			}
-			if (!is_null($last_link = $last_child->find('A[href*="gazetaprawna.pl"]', 0)))
+			if (!is_null($last_link = $last_child->find('A[href*="gazetaprawna.pl"], STRONG', 0)))
 			{
 				if(check_string_contains_needle_from_array($last_link->plaintext, array("CZYTAJ CAŁOŚĆ", "CZYTAJ WIĘCEJ", "CAŁY WYWIAD")))
 				{
