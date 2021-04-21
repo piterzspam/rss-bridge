@@ -1,7 +1,7 @@
 <?php
-class WPplBridge extends BridgeAbstract {
-	const NAME = 'WP.pl';
-	const URI = 'https://www.wp.pl/';
+class PISMBridge extends BridgeAbstract {
+	const NAME = 'PISM';
+	const URI = 'https://www.pism.pl/';
 	const DESCRIPTION = 'No description provided';
 	const MAINTAINER = 'No maintainer';
 	const CACHE_TIMEOUT = 86400; // Can be omitted!
@@ -33,7 +33,7 @@ class WPplBridge extends BridgeAbstract {
 		include 'myFunctions.php';
 		$this->setGlobalArticlesParams();
 		$found_urls = $this->getArticlesUrls();
-//		print_var_dump($found_urls, "found_urls");
+//		print_var_dump($found_urls);
 
 //		$found_urls[] = 'https://opinie.wp.pl/kataryna-chcialabym-umiec-sie-tym-bawic-gdyby-to-nie-bylo-takie-grozne-6150491372804225a';
 //		$found_urls[] = 'https://opinie.wp.pl/zakazac-demonstracji-onr-kataryna-problemy-z-demokracja-6119008400492673a';
@@ -76,7 +76,6 @@ class WPplBridge extends BridgeAbstract {
 	{
 		//https://opinie-wp-pl.cdn.ampproject.org/c/s/opinie.wp.pl/kataryna-hackowanie-systemu-rzadowych-obostrzen-zabawa-w-kotka-i-myszke-opinia-6628299841584000a?amp=1
 		$GLOBALS['limit'] = intval($this->getInput('limit'));
-//		$GLOBALS['my_debug'] = TRUE;
 		$GLOBALS['my_debug'] = FALSE;
 		$GLOBALS['url_articles_list'] = $this->getInput('url');
 		if (TRUE === $GLOBALS['my_debug'])
@@ -154,7 +153,7 @@ class WPplBridge extends BridgeAbstract {
 		$selectors_array[] = 'DIV.seolinks';
 		$selectors_array[] = 'A.comment-button';
 		$selectors_array[] = 'FOOTER#footer';
-//		$selectors_array[] = 'amp-video-iframe';
+		$selectors_array[] = 'amp-video-iframe';
 		$selectors_array[] = 'qqqqqqqqqqqqq';
 		foreach_delete_element_array($article, $selectors_array);
 		//https://opinie.wp.pl/zakazac-demonstracji-onr-kataryna-problemy-z-demokracja-6119008400492673a?amp=1&_js_v=0.1
@@ -180,8 +179,7 @@ class WPplBridge extends BridgeAbstract {
 		$this->items[] = array(
 			//Fix &amp z linku
 			'uri' => htmlentities($url_article, ENT_QUOTES, 'UTF-8'),
-//			'title' => $title,
-			'title' => getChangedTitle($title),
+			'title' => $title,
 			'timestamp' => $date,
 			'author' => $author,
 			'categories' => $tags,
@@ -213,13 +211,7 @@ class WPplBridge extends BridgeAbstract {
 				foreach($found_hrefs as $href_element)
 				{
 					if(isset($href_element->href))
-					{
-						$new_url = $GLOBALS['prefix'].$href_element->href;
-						if (!in_array($new_url, $articles_urls))
-						{
-							$articles_urls[] = $new_url;
-						}
-					}
+						$articles_urls[] = $GLOBALS['prefix'].$href_element->href;
 				}
 			}
 			$url_articles_list = $this->getNextPageUrl($html_articles_list);
@@ -229,7 +221,7 @@ class WPplBridge extends BridgeAbstract {
 
 	private function getNextPageUrl($html_articles_list)
 	{		
-		$next_page_element = $html_articles_list->find('A[rel="next"][href]', 0);
+		$next_page_element = $html_articles_list->find('A[rel="next"][href^="/autor/"]', 0);
 		if (FALSE === is_null($next_page_element) && $next_page_element->hasAttribute('href'))
 		{
 			return $GLOBALS['prefix'].$next_page_element->getAttribute('href');
@@ -281,10 +273,25 @@ class WPplBridge extends BridgeAbstract {
 		foreach($article->find('amp-video-iframe') as $amp_video_iframe)
 		{
 			$previous = $amp_video_iframe->prev_sibling();
-			if ('h2' === $previous->tag)
+			if ('div' === $previous->tag)
 			{
-				$previous->outertext='';
-				$amp_video_iframe->outertext='';
+				$attributes=$previous->getAllAttributes();
+				if ('ad' === $attributes['class'])
+				{
+					$previous_second = $previous->prev_sibling();
+					$previous->outertext='';
+					if ('h2' === $previous_second->tag)
+					{
+						$previous_second->outertext='';
+					}
+				}
+			}
+			else
+			{
+				if ('h2' === $previous->tag)
+				{
+					$previous->outertext='';
+				}
 			}
 		}
 	}

@@ -235,7 +235,8 @@ class DziennikBridge extends BridgeAbstract {
 		$price_param = $this->getArticlePriceParam($article);
 //title
 		$title = get_text_plaintext($article, 'H1.mainTitle', $url_article_link);
-		$title = $this->getChangedTitle($title, $price_param);	
+		$title = getChangedTitle($title);
+		$title = $this->getChangedTitle($title, $price_param);
 //tags
 		$tags = return_tags_array($article, 'DIV.relatedTopicWrapper SPAN.relatedTopic');
 //authors
@@ -433,10 +434,12 @@ class DziennikBridge extends BridgeAbstract {
 		//https://wiadomosci.dziennik.pl/opinie/artykuly/8137603,wojna-antoni-macierewicz-katastrofa-smolenska.html
 		//Link będący premium CAŁY WYWIAD Z ANDŻELIKĄ BORYS PRZECZYTASZ W ŚRODOWYM WYDANIU DGP
 		//https://wiadomosci.dziennik.pl/opinie/artykuly/8127257,andzelika-borys-zatrzymanie-bialorus-wywiad-dgp.html
-		//Link będący premium będący w ostatnim paragrafie przed DIV.inforAdsRectSrod
+		//Link będący premium w ostatnim paragrafie przed DIV.inforAdsRectSrod
 		//https://wiadomosci.dziennik.pl/opinie/artykuly/8129369,mobbing-szkola-filmowa-przemoc-aktor-studia-piotr-bartuszek.html
-		//Napis będący premoim będący w ostatnim paragrafie CZYTAJ WIĘCEJ WE WTORKOWYM "DZIENNIKU GAZECIE PRAWNEJ">>> 
+		//Napis będący premium w ostatnim paragrafie CZYTAJ WIĘCEJ WE WTORKOWYM "DZIENNIKU GAZECIE PRAWNEJ">>> 
 		//https://wiadomosci.dziennik.pl/opinie/artykuly/8138497,sedziowie-lubia-sanki.html
+		//Napis będący premium w ostatnim paragrafie CAŁY TEKST DOSTĘPNY W INTERNETOWYM WYDANIU MAGAZYNU "DZIENNIKA GAZETY PRAWNEJ">>>
+		//https://wiadomosci.dziennik.pl/opinie/artykuly/8143430,dzieci-spadek-dzietnosci-zjawisko-kara-za-dziecko.html
 		if (!is_null($detail = $article_html->find("DIV#detail", 0)))
 		{
 			$last_child = $detail->last_child();
@@ -446,7 +449,7 @@ class DziennikBridge extends BridgeAbstract {
 			}
 			if (!is_null($last_link = $last_child->find('A[href*="gazetaprawna.pl"], STRONG', 0)))
 			{
-				if(check_string_contains_needle_from_array($last_link->plaintext, array("CZYTAJ CAŁOŚĆ", "CZYTAJ WIĘCEJ", "CAŁY WYWIAD")))
+				if(check_string_contains_needle_from_array($last_link->plaintext, array("CZYTAJ CAŁOŚĆ", "CZYTAJ WIĘCEJ", "CAŁY WYWIAD", "CAŁY TEKST")))
 				{
 					return "premium";
 				}

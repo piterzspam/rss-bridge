@@ -231,7 +231,7 @@ class GazetaplBridge extends BridgeAbstract {
 
 		$this->items[] = array(
 			'uri' => $url_article,
-			'title' => $title,
+			'title' => getChangedTitle($title),
 			'timestamp' => $timestamp,
 			'author' => $author,
 			'content' => $article,

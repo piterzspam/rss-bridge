@@ -174,6 +174,8 @@ class NewsweekBridge extends BridgeAbstract {
 		add_style($article, 'BLOCKQUOTE', getStyleQuote());
 //		$article = str_get_html($article->save());
 	
+		$title = getChangedTitle($title);
+		$title = str_replace("[SŁUCHAJ PODCASTU]", "[PODCAST]", $title);
 		$this->items[] = array(
 			'uri' => $url,
 			'title' => $title,

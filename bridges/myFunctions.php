@@ -1405,6 +1405,97 @@ function getArray($array, $index) {
 		}
 	}
 
+	
+	
+	function my_get_html($url, $get_premium = FALSE)
+	{
+		if (TRUE === $get_premium)
+		{
+			$context = stream_context_create(
+				array(
+					'http' => array(
+						'ignore_errors' => true,
+					    'header'=>"User-Agent:Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)\r\n"
+					)
+				)
+			);
+		}
+		else
+		{
+			$context = stream_context_create(
+				array(
+					'http' => array(
+						'ignore_errors' => true
+					)
+				)
+			);
+		}
+
+		if (TRUE === $GLOBALS['my_debug'])
+		{
+			$start_request = microtime(TRUE);
+			$page_content = file_get_contents($url, false, $context);
+			$end_request = microtime(TRUE);
+			echo "<br>Article  took " . ($end_request - $start_request) . " seconds to complete - url: $url.";
+			$GLOBALS['all_articles_counter']++;
+			$GLOBALS['all_articles_time'] = $GLOBALS['all_articles_time'] + $end_request - $start_request;
+		}
+		else
+			$page_content = file_get_contents($url, false, $context);
+		$page_html = str_get_html($page_content);
+
+		$code = getHttpCode($http_response_header);
+		if (200 !== $code)
+		{
+			$html_error = createErrorContent($http_response_header);
+			$date = new DateTime("now", new DateTimeZone('Europe/Warsaw'));
+			$date_string = date_format($date, 'Y-m-d H:i:s');
+			$page_html = array(
+				'uri' => $url,
+				'title' => "Error ".$code.": ".$url,
+				'timestamp' => $date_string,
+				'content' => $html_error
+			);
+		}
+
+		$return_array = array(
+			'code' => $code,
+			'html' => $page_html,
+		);
+		return $return_array;
+	}
+
+	function getChangedTitle($title)
+	{
+		preg_match_all('/\(([^\) ]*)\)/', $title, $output_array);
+		foreach($output_array[0] as $key => $value)
+		{
+			$title = str_replace($value, "[".$output_array[1][$key]."]", $title);
+		}
+		preg_match_all('/\[[^\]]*\]/', $title, $title_categories);
+		foreach($title_categories[0] as $category)
+		{
+			$title = trim(str_replace($category, '', $title));
+		}
+		$title_prefixes = $title_categories[0];
+		foreach($title_prefixes as $key => $title_prefix)
+		{
+			$title_prefixes[$key] = mb_strtoupper($title_prefix,"UTF-8");
+		}
+		$title_prefixes = array_unique($title_prefixes);
+		$prefixes_combined = "";
+		foreach($title_prefixes as $title_prefix)
+		{
+			$prefixes_combined = $title_prefix.$prefixes_combined;
+		}
+		while (FALSE !== strpos($title, '  '))
+		{
+			$title = str_replace('  ', ' ', $title);
+		}
+		$new_title = trim($prefixes_combined.' '.trim($title));
+		return $new_title;
+	}
+
 	function prepare_article($main_element, $page_url = NULL)
 	{
 //		print_element($main_element, 'main_element przed');

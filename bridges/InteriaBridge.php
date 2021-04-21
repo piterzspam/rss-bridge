@@ -215,7 +215,7 @@ class InteriaBridge extends BridgeAbstract {
 		$amp_project_url = $this->getCustomizedLink($article_html, $url_article_link);
 		$this->items[] = array(
 			'uri' => $amp_project_url,
-			'title' => $title,
+			'title' => getChangedTitle($title),
 			'timestamp' => $date,
 			'author' => $author,
 			'categories' => $tags,

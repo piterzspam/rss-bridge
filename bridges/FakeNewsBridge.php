@@ -97,11 +97,9 @@ class FakeNewsBridge extends FeedExpander {
 		if (isset($rating))
 		{
 			$prefix = '['.strtoupper($rating).'] ';
-			$prefix = str_replace('ł', 'Ł', $prefix);
-			$prefix = str_replace('ę', 'Ę', $prefix);
-			$prefix = str_replace('ś', 'Ś', $prefix);
 			$item['title'] = $prefix.$item['title'];
 		}
+		$item['title'] = getChangedTitle($item['title']);
 		$article = str_get_html($article->save());
 		add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
 		add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());

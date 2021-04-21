@@ -172,7 +172,7 @@ class OnetBridge extends BridgeAbstract {
 
 		$author = return_authors_as_string($article, 'DIV.dateAuthor SPAN.author');
 		$title = get_text_plaintext($article, 'H1.name.headline', $amp_url);
-		$title = $this->getChangedTitle($title);
+//		$title = $this->getChangedTitle($title);
 
 		foreach_delete_element($article, 'comment');
 		foreach_delete_element($article, 'script');
@@ -232,7 +232,7 @@ class OnetBridge extends BridgeAbstract {
 
 		$this->items[] = array(
 			'uri' => $amp_url,
-			'title' => $title,
+			'title' => getChangedTitle($title),
 			'timestamp' => $date,
 			'author' => $author,
 			'categories' => $tags,
