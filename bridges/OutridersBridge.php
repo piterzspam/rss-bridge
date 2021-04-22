@@ -1,4 +1,5 @@
 <?php
+	
 class OutridersBridge extends FeedExpander {
 
 	const MAINTAINER = 'No maintainer';
@@ -54,12 +55,17 @@ class OutridersBridge extends FeedExpander {
 		}
 	}
 
+	public function getIcon()
+	{
+		return 'https://outride.rs/wp-content/themes/outriders2/assets/images/favicons/favicon-196x196.png';
+	}
+
 	public function collectData()
 	{
 		$GLOBALS['name'] = "test1";
 		include 'myFunctions.php';
 		$GLOBALS['my_debug'] = FALSE;
-//		$GLOBALS['my_debug'] = TRUE;
+		//$GLOBALS['my_debug'] = TRUE;
 		if (TRUE === $GLOBALS['my_debug'])
 		{
 			$GLOBALS['all_articles_time'] = 0;
@@ -79,13 +85,24 @@ class OutridersBridge extends FeedExpander {
 
 	}
 
+
 	private function getArticlesBriefs()
 	{
 		$GLOBALS['limit'] = $this->getInput('limit');
 		$articles_urls = array();
-		$returned_array = $this->my_get_html('https://brief.outride.rs/pl');
-		$html_issues_list = $returned_array['html'];
-		if (200 !== $returned_array['code'] || 0 === count($found_issues_hrefs = $html_issues_list->find('DIV.issues A.issue-box[href]')))
+
+		$returned_array = my_get_html('https://brief.outride.rs/pl');
+		if (200 === $returned_array['code'])
+		{
+			$html_issues_list = $returned_array['html'];
+		}
+		else if (200 !== $returned_array['code'])
+		{
+			$this->items[] = $returned_array['html'];
+			return;
+		}
+
+		if (0 === count($found_issues_hrefs = $html_issues_list->find('DIV.issues A.issue-box[href]')))
 		{
 			return $articles_urls;
 		}
@@ -98,17 +115,28 @@ class OutridersBridge extends FeedExpander {
 			}
 		}
 		$issues_urls = array_slice($issues_urls, 0, $GLOBALS['limit']);
+
 		foreach($issues_urls as $issue_url)
 		{
-			$returned_array = $this->my_get_html($issue_url);
-			$html_articles_list = $returned_array['html'];
-			if (200 === $returned_array['code'] && 0 !== count($found_articles_hrefs = $html_articles_list->find('UL.issue-nav LI.issue-nav__item A.issue-nav__link[href]')))
+			$returned_array = my_get_html($issue_url);
+			if (200 !== $returned_array['code'])
 			{
-				$date = '';
+				$this->items[] = $returned_array['html'];
+				return;
+			}
+			$html_articles_list = $returned_array['html'];
+			if (0 !== count($found_articles_hrefs = $html_articles_list->find('UL.issue-nav LI.issue-nav__item A.issue-nav__link[href]')))
+			{
+				$date = "";
 				if (FALSE === is_null($data_script = $html_articles_list->find('DIV[id$="nuxt"] + SCRIPT', 0)))
 				{
 					preg_match('/[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\+[0-9]{2}:[0-9]{2}/', $data_script->outertext, $output_array);
 					$date = $output_array[0];
+				}
+				$cover_outertext = "";
+				if (FALSE === is_null($cover_element = $html_articles_list->find('DIV.intro__cover', 0)))
+				{
+					$cover_outertext = $cover_element->outertext;
 				}
 				foreach($found_articles_hrefs as $href_element)
 				{
@@ -117,7 +145,8 @@ class OutridersBridge extends FeedExpander {
 						$articles_urls[] = array
 						(
 							'url' => 'https://brief.outride.rs'.$href_element->href,
-							'date' => $date
+							'date' => $date,
+							'cover' => $cover_outertext,
 						);
 					}
 				}
@@ -125,35 +154,38 @@ class OutridersBridge extends FeedExpander {
 		}
 		foreach($articles_urls as $url_array)
 		{
-			$this->addArticleBrief($url_array['url'], $url_array['date']);
+			$this->addArticleBrief($url_array['url'], $url_array['date'], $url_array['cover']);
 		}
 	}
 
-	private function addArticleBrief($url, $date)
+	private function addArticleBrief($url, $date, $cover_code)
 	{
-		$returned_array = $this->my_get_html($url);
+		$returned_array = my_get_html($url);
 		if (200 !== $returned_array['code'])
 		{
+			$this->items[] = $returned_array['html'];
 			return;
 		}
+
 		$article_html = $returned_array['html'];
 		$article = $article_html->find('ARTICLE[id].post', 0);
+		insert_html($article, "HEADER", NULL, $cover_code);
+		$article = str_get_html($article->save());
+
 		//tytuł
-		$title = $url;
-		if (FALSE === is_null($title_element = $article->find('H1.post__title', 0)))
-		{
-			$title = trim($title_element->plaintext);
-		}
-		
+		$title = get_text_plaintext($article, 'H1.post__title', $url);
 		preg_match('/brief-[0-9]*/', $url, $output_array);
 		$brief_number = ucwords($output_array[0]);
+		$title = $brief_number.': '.$title;
+
 		//tagi
 		$tags = return_tags_array($article, 'DIV.categories A[href]');
 		$tags = array_merge(array($brief_number), $tags);
 		foreach_delete_element($article, 'DIV.categories');
+
 		$this->items[] = array(
 			'uri' => $url,
-			'title' => $brief_number.': '.$title,
+			'title' => $title,
 			'timestamp' => $date,
 			'author' => 'Outriders',
 			'categories' => $tags,
@@ -184,38 +216,57 @@ class OutridersBridge extends FeedExpander {
 				return;
 			}
 		}
-		$returned_array = $this->my_get_html($item['uri']);
+		$returned_array = my_get_html($item['uri']);
 		if (200 !== $returned_array['code'])
 		{
+			$this->items[] = $returned_array['html'];
 			return;
 		}
 		$article_html = $returned_array['html'];
+		$article_html = str_get_html(prepare_article($article_html));
 		//outride.rs##BODY.post-template > ARTICLE.gallery
 		//https://outride.rs/pl/minsk-decentralizacja-protestu/
 		//outride.rs##BODY > DIV#\5f _nuxt
 		//https://outride.rs/pl/wspolnota-odpowiedz-na-wylesianie/
 		//outride.rs##BODY.post-template > ARTICLE.article
 		//https://outride.rs/pl/rezim-nie-lubi-tego-co-robimy/
-		$js_element = $article_html->find('DIV[id$="_nuxt"][data-server-rendered="true"]', 0);
-		if (FALSE === is_null($js_element))
+		//$js_element = $article_html->find('DIV[id$="_nuxt"][data-server-rendered="true"], BODY.post-template-interactives', 0);
+		$static_article = $article_html->find('BODY.post-template.post-template-single-new', 0);
+		if (is_null($static_article))
 		{
-//			echo "Artykul z js: ".$item['uri']."<br>";
+		//	echo "Artykul z js: ".$item['uri']."<br>";
 			return $item;
 		}
+		else
+		{
+		//	echo "Artykul bez js: ".$item['uri']."<br>";
+		}
 		$article = $article_html->find('BODY.single-post ARTICLE', 0);
-		$this->format_article_photos_sources($article);
-//		echo "numer: ".count($this->items).", url: ".$item['uri']."<br><br>";
-//		print_html($article);
-		foreach_delete_element($article, 'SCRIPT');
-		foreach_delete_element($article, 'NOSCRIPT');
-		foreach_delete_element($article, 'LINK');
-		foreach_delete_element($article, 'DIV.context-modal');
-		foreach_delete_element($article, 'AUDIO.or-player');
+		move_element($article, 'H1.article__title', 'DIV.article__thumbnail', 'outertext', 'before');
+		$article = str_get_html($article->save());
+		move_element($article, 'DIV.article-date', 'DIV.article__thumbnail', 'outertext', 'after');
+		$article = str_get_html($article->save());
+		move_element($article, 'DIV.article-author', 'DIV.article__text', 'outertext', 'after');
+		$article = str_get_html($article->save());
+		insert_html($article, "DIV.article-author", "<HR>");
+		$article = str_get_html($article->save());
+		
+
+		$selectors_array[] = 'SCRIPT';
+		$selectors_array[] = 'NOSCRIPT';
+		$selectors_array[] = 'LINK';
+		$selectors_array[] = 'DIV.context-modal';
+		$selectors_array[] = 'AUDIO.or-player';
+		$selectors_array[] = 'qqqqqqqq';
+		$selectors_array[] = 'qqqqqqqq';
+		$selectors_array[] = 'qqqqqqqq';
+		foreach_delete_element_array($article, $selectors_array);
 		//FIGCAPTION
 		format_article_photos($article, 'DIV.article__thumbnail', TRUE);
 		format_article_photos($article, 'FIGURE.wp-block-image', FALSE, 'src', 'FIGCAPTION');
 		//https://outride.rs/pl/konflikt-w-gorskim-karabachu/
 		format_article_photos($article, 'DIV.gallery-photo', FALSE, 'src', 'DIV.gallery-photo__text.text-under');
+
 		$article = str_get_html($article->save());
 		add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
 		add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
@@ -225,65 +276,6 @@ class OutridersBridge extends FeedExpander {
 
 		$item['content'] = $article;
 		return $item;
-	}
-
-
-
-	private function format_article_photos_sources($article)
-	{
-		foreach($article->find('IMG[srcset]') as $photo_element)
-		{
-			$img_src = $photo_element->getAttribute('src');
-			$img_src = str_replace('-300x200', '', $img_src);
-			if($photo_element->hasAttribute('srcset'))
-			{
-				$img_srcset = $photo_element->getAttribute('srcset');
-				$srcset_array  = explode(',', $img_srcset);
-				$last = count($srcset_array) - 1;
-				$last_url_string = trim($srcset_array[$last]);
-				$last_url_array  = explode(' ', $last_url_string);
-				$img_src = $last_url_array[0];
-			}
-			$photo_element->setAttribute('src', $img_src);
-		}
-	}
-
-	private function my_get_html($url)
-	{
-		$context = stream_context_create(array('http' => array('ignore_errors' => true)));
-
-		if (TRUE === $GLOBALS['my_debug'])
-		{
-			$start_request = microtime(TRUE);
-			$page_content = file_get_contents($url, false, $context);
-			$end_request = microtime(TRUE);
-			echo "<br>Article  took " . ($end_request - $start_request) . " seconds to complete - url: $url.";
-			$GLOBALS['all_articles_counter']++;
-			$GLOBALS['all_articles_time'] = $GLOBALS['all_articles_time'] + $end_request - $start_request;
-		}
-		else
-			$page_content = file_get_contents($url, false, $context);
-
-		$code = getHttpCode($http_response_header);
-		if (200 !== $code)
-		{
-			$html_error = createErrorContent($http_response_header);
-			$date = new DateTime("now", new DateTimeZone('Europe/Warsaw'));
-			$date_string = date_format($date, 'Y-m-d H:i:s');
-			$this->items[] = array(
-				'uri' => $url,
-				'title' => "Error ".$code.": ".$url,
-				'timestamp' => $date_string,
-				'content' => $html_error
-			);
-		}
-		$page_html = str_get_html($page_content);
-
-		$return_array = array(
-			'code' => $code,
-			'html' => $page_html,
-		);
-		return $return_array;
 	}
 }
 // Imaginary empty line!
