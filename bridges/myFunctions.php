@@ -1244,6 +1244,7 @@ function getArray($array, $index) {
 
 	function fix_background_image($main_element, $where_to_move_children = 1)
 	{
+//		print_var_dump(gettype($main_element), "gettype(main_element)");
 //		print_element($main_element, 'main_element przed');
 		foreach ($main_element->find('[style^="background-image:"]') as $background_element)
 		{
@@ -1464,6 +1465,29 @@ function getArray($array, $index) {
 		);
 		return $return_array;
 	}
+	
+
+	function remove_empty_elements($main_element, $tag)
+	{
+		$main_element_str = $main_element->save();
+		foreach($main_element->find($tag) as $empty_element)
+		{
+/*			print_html($empty_element->outertext, "empty_element->outertext");
+			print_html($empty_element->innertext, "empty_element->innertext");
+			print_html($empty_element->plaintext, "empty_element->plaintext");
+			print_var_dump($empty_element->outertext, "empty_element->outertext");
+			print_var_dump($empty_element->innertext, "empty_element->innertext");
+			print_var_dump($empty_element->plaintext, "empty_element->plaintext");
+			hex_dump($empty_element->outertext);
+			hex_dump($empty_element->innertext);
+			hex_dump($empty_element->plaintext);*/
+			if (0 === strlen($empty_element->innertext) && 0 === strlen($empty_element->plaintext))
+			{
+				$main_element_str = str_replace($empty_element->outertext, "", $main_element_str);
+			}
+		}
+		return $main_element_str;
+	}
 
 	function getChangedTitle($title)
 	{
@@ -1498,6 +1522,7 @@ function getArray($array, $index) {
 
 	function prepare_article($main_element, $page_url = NULL)
 	{
+//		print_var_dump(gettype($main_element), "gettype(main_element)");
 //		print_element($main_element, 'main_element przed');
 		fix_background_image($main_element, -1);
 		$main_element = str_get_html($main_element->save());
