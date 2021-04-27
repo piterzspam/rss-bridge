@@ -40,17 +40,30 @@ class WPplBridge extends BridgeAbstract {
 //		$found_urls[] = 'https://opinie.wp.pl/apel-o-zawieszenie-stosunkow-dyplomatycznych-z-polska-kataryna-jestem-wsciekla-6222729167030401a';
 		foreach($found_urls as $canonical_url)
 		{
+			$getAmp = FALSE;
+//			$ampproject_returned_array = $this->my_get_html($ampproject_url);
 			$ampproject_url = $this->getAmpprojectLink($canonical_url);
-			$ampproject_returned_array = $this->my_get_html($ampproject_url);
+			$ampproject_returned_array = my_get_html($ampproject_url);
 			if (200 === $ampproject_returned_array['code'])
 			{
 				$ampproject_article_html = $ampproject_returned_array['html'];
-				$this->addArticleAmp($ampproject_url, $ampproject_article_html);
+				if (!is_null($redirect_element = $ampproject_article_html->find('BODY[onload^="location.replace("]', 0)))
+				{
+					$getAmp = TRUE;
+				}
+				else
+				{
+					$this->addArticleAmp($ampproject_url, $ampproject_article_html);
+				}
 			}
 			else
 			{
+				$getAmp = TRUE;
+			}
+			if ($getAmp)
+			{
 				$amp_url = $this->getAmpLink($canonical_url);
-				$amp_returned_array = $this->my_get_html($amp_url);
+				$amp_returned_array = my_get_html($amp_url);
 				if (200 === $amp_returned_array['code'])
 				{
 					$amp_article_html = $amp_returned_array['html'];
@@ -58,11 +71,23 @@ class WPplBridge extends BridgeAbstract {
 				}
 				else
 				{
-					$canonical_returned_array = $this->my_get_html($canonical_url);
+					$canonical_returned_array = my_get_html($canonical_url);
 					if (200 === $canonical_returned_array['code'])
 					{
 						$canonical_article_html = $canonical_returned_array['html'];
-						$this->addArticleAmp($canonical_url, $canonical_article_html);
+						$date = new DateTime("now", new DateTimeZone('Europe/Warsaw'));
+						$date_string = date_format($date, 'Y-m-d H:i:s');
+						$page_html = array(
+							'uri' => $canonical_url,
+							'title' => $canonical_url,
+							'timestamp' => $date_string,
+							'content' => $canonical_article_html
+						);
+						$this->items[] = $page_html;
+					}
+					else
+					{
+						$this->items[] = $canonical_returned_array['html'];
 					}
 				}
 			}
@@ -135,17 +160,30 @@ class WPplBridge extends BridgeAbstract {
 
 	private function addArticleAmp($url_article, $article_html)
 	{
+//		echo "addArticleAmp: <br>$url_article<br><br>";
 		$article_html = str_get_html(prepare_article($article_html));
 		$article = $article_html->find('main#content', 0);
-		$article_data = $article_html->find('SCRIPT[type="application/ld+json"]', 0)->innertext;
-		$article_data_parsed = parse_article_data(json_decode($article_data));
-		$date = trim($article_data_parsed["datePublished"]);
-		$title = trim($article_data_parsed["headline"]);
-		$author = $article->find('P[data-st-area="Autor"] SPAN.uppercase', 0)->plaintext;
-		$author = str_replace(',', '', $author);
-		$tags = return_tags_array($article, 'P.text-grey.tags SPAN A[href*="/tag/"]');
+		//https://sportowefakty-wp-pl.cdn.ampproject.org/c/s/sportowefakty.wp.pl/amp/kolarstwo/926408/43-lata-temu-polscy-kolarze-zgineli-w-katastrofie-lotniczej-po-otwarciu-trumny-o
+		if (!is_null($article_test = $article->find('ARTICLE[id].article', 0)))
+		{
+			$article = $article_test;
+		}		
+		$date = get_json_value($article_html, 'SCRIPT[type="application/ld+json"]', 'datePublished');
+		$title = get_json_value($article_html, 'SCRIPT[type="application/ld+json"]', 'headline');
+		//nazwisko autora ma na końcu przecinek
+		$author = "";
+		$author_selector = 'P[data-st-area="Autor"] SPAN.uppercase, DIV.indicator__authorname SPAN.indicator__authorname--name';
+		foreach ($article->find($author_selector) as $author_element)
+		{
+			$new_author = trim($author_element->plaintext);
+			$new_author = remove_substring_if_exists_last($new_author, ",");
+			$author = $author.", ".$new_author;
+		}
+		//$author = return_authors_as_string($article, 'P[data-st-area="Autor"] SPAN.uppercase, DIV.indicator__authorname SPAN.indicator__authorname--name', "");
+		$author = remove_substring_if_exists_first($author, ", ");
+		//https://www-money-pl.cdn.ampproject.org/c/s/www.money.pl/gospodarka/polski-manhattan-bezdomnych-ogrzewana-nora-za-prace-w-zsypach-6629704500415008a.html?amp=1		
+		$tags = return_tags_array($article, 'P A.tag-link, P.text-grey.tags SPAN A[href]');
 		//Zduplikowane zdjęcie pod "Spotkania z kumplami": https://opinie.wp.pl/wielka-zmiana-mezczyzn-wirus-ja-tylko-przyspieszyl-6604913984391297a?amp=1&_js_v=0.1
-
 		$selectors_array[] = 'DIV.ad';
 		$selectors_array[] = 'P.tags';
 		$selectors_array[] = 'comment';
@@ -154,20 +192,36 @@ class WPplBridge extends BridgeAbstract {
 		$selectors_array[] = 'DIV.seolinks';
 		$selectors_array[] = 'A.comment-button';
 		$selectors_array[] = 'FOOTER#footer';
-//		$selectors_array[] = 'amp-video-iframe';
-		$selectors_array[] = 'qqqqqqqqqqqqq';
+		//https://sportowefakty-wp-pl.cdn.ampproject.org/c/s/sportowefakty.wp.pl/amp/kolarstwo/926408/43-lata-temu-polscy-kolarze-zgineli-w-katastrofie-lotniczej-po-otwarciu-trumny-o
+		$selectors_array[] = 'DIV.wpsocial-shareBox';
+		$selectors_array[] = 'UL.teasers';
+		$selectors_array[] = 'DIV.center-content';
 		foreach_delete_element_array($article, $selectors_array);
+		$article = str_get_html($article->save());
 		//https://opinie.wp.pl/zakazac-demonstracji-onr-kataryna-problemy-z-demokracja-6119008400492673a?amp=1&_js_v=0.1
 		//https://opinie.wp.pl/apel-o-zawieszenie-stosunkow-dyplomatycznych-z-polska-kataryna-jestem-wsciekla-6222729167030401a?amp=1&_js_v=0.1
 		//https://opinie.wp.pl/kataryna-kaczynski-stawia-na-dude-6213466100516481a?amp=1&_js_v=0.1
-		foreach_delete_element_containing_text_from_array($article, 'P, H2', array( 'Masz newsa, zdjęcie lub filmik? Prześlij nam przez', 'dla WP Opinie', 'Zobacz też: ', 'Zobacz też - ', 'Źródło: opinie.wp.pl', 'Czytaj także:', 'Zobacz także:'));
-		$this->removeVideoTitles($article);
-
-
-
+		$article = str_get_html($article->save());
+		foreach ($article->find("P") as $paragraph)
+		{
+			if (check_string_contains_needle_from_array($paragraph->plaintext, array("ZOBACZ WIDEO:")))
+			{
+				if (!is_null($paragraph->find("AMP-VIDEO-IFRAME", 0)))
+				{
+					$paragraph->outertext = "";
+				}
+			}
+			else if (check_string_contains_needle_from_array($paragraph->plaintext, array("Masz newsa, zdjęcie lub filmik?")))
+			{
+				$paragraph->outertext = "";
+			}
+		}
+		$article = str_get_html($article->save());
+		//https://sportowefakty-wp-pl.cdn.ampproject.org/c/s/sportowefakty.wp.pl/amp/kolarstwo/926408/43-lata-temu-polscy-kolarze-zgineli-w-katastrofie-lotniczej-po-otwarciu-trumny-o
+		format_article_photos($article, 'DIV.image.top-image', TRUE, 'src', 'SMALL');
+		format_article_photos($article, 'DIV.image', FALSE, 'src', 'SMALL');
 		format_article_photos($article, 'DIV.header-image-container', TRUE, 'src', 'DIV.header-author');
 		format_article_photos($article, 'DIV.photo.from.amp', FALSE, 'src', 'FIGCAPTION');
-
 		$article = str_get_html($article->save());
 		//https://opinie.wp.pl/kataryna-zyjemy-w-okrutnym-swiecie-ale-aborcja-embriopatologiczna-musi-pozostac-opinia-6567085945505921a?amp=1&_js_v=0.1
 		add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
@@ -175,12 +229,9 @@ class WPplBridge extends BridgeAbstract {
 		add_style($article, 'FIGCAPTION', getStylePhotoCaption());
 		add_style($article, 'BLOCKQUOTE', getStyleQuote());
 		$article = str_get_html($article->save());
-
-//		$url_article = str_replace('https://opinie-wp-pl.cdn.ampproject.org/v/s/', 'https://', $url_article);
 		$this->items[] = array(
 			//Fix &amp z linku
 			'uri' => htmlentities($url_article, ENT_QUOTES, 'UTF-8'),
-//			'title' => $title,
 			'title' => getChangedTitle($title),
 			'timestamp' => $date,
 			'author' => $author,

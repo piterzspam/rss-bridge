@@ -106,7 +106,7 @@ class MagazynWPBridge extends BridgeAbstract {
 
 	private function addArticleAmp($url_article)
 	{
-//		echo "addArticleAmp: <br>$url_article<br><br>";
+		//echo "addArticleAmp: <br>$url_article<br><br>";
 		$returned_array = my_get_html($url_article);
 		if (200 === $returned_array['code'])
 		{
@@ -135,9 +135,9 @@ class MagazynWPBridge extends BridgeAbstract {
 			$new_author = remove_substring_if_exists_last($new_author, ",");
 			$author = $author.", ".$new_author;
 		}
-//		$author = return_authors_as_string($article, 'P[data-st-area="Autor"] SPAN.uppercase, DIV.indicator__authorname SPAN.indicator__authorname--name', "");
+		//$author = return_authors_as_string($article, 'P[data-st-area="Autor"] SPAN.uppercase, DIV.indicator__authorname SPAN.indicator__authorname--name', "");
 		$author = remove_substring_if_exists_first($author, ", ");
-//https://www-money-pl.cdn.ampproject.org/c/s/www.money.pl/gospodarka/polski-manhattan-bezdomnych-ogrzewana-nora-za-prace-w-zsypach-6629704500415008a.html?amp=1		
+		//https://www-money-pl.cdn.ampproject.org/c/s/www.money.pl/gospodarka/polski-manhattan-bezdomnych-ogrzewana-nora-za-prace-w-zsypach-6629704500415008a.html?amp=1		
 		$tags = return_tags_array($article, 'P A.tag-link, P.text-grey.tags SPAN A[href]');
 		//Zduplikowane zdjęcie pod "Spotkania z kumplami": https://opinie.wp.pl/wielka-zmiana-mezczyzn-wirus-ja-tylko-przyspieszyl-6604913984391297a?amp=1&_js_v=0.1
 		$selectors_array[] = 'DIV.ad';
