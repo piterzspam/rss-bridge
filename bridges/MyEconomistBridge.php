@@ -20,7 +20,8 @@ class MyEconomistBridge extends BridgeAbstract {
 			$GLOBALS['all_articles_counter'] = 0;
 		}
 		
-		$returned_array = my_get_html(self::URI);
+//		$returned_array = my_get_html(self::URI);
+		$returned_array = my_get_html(self::URI, TRUE);
 		if (200 === $returned_array['code'])
 		{
 			$article_html = $returned_array['html'];
