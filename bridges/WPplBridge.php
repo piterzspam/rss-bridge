@@ -89,7 +89,7 @@ class WPplBridge extends BridgeAbstract {
 				$canonical_returned_array = my_get_html($canonical_url);
 				if (200 === $canonical_returned_array['code'])
 				{
-					$canonical_article_html = $canonical_returned_array['html'];
+/*					$canonical_article_html = $canonical_returned_array['html'];
 					$date = new DateTime("now", new DateTimeZone('Europe/Warsaw'));
 					$date_string = date_format($date, 'Y-m-d H:i:s');
 					$page_html = array(
@@ -97,8 +97,8 @@ class WPplBridge extends BridgeAbstract {
 						'title' => $canonical_url,
 						'timestamp' => $date_string,
 						'content' => $canonical_article_html
-					);
-					$this->items[] = $page_html;
+					);*/
+					$this->items[] = $canonical_article_html;
 				}
 				else
 				{

@@ -19,11 +19,18 @@ class MyEconomistBridge extends BridgeAbstract {
 			$GLOBALS['all_articles_time'] = 0;
 			$GLOBALS['all_articles_counter'] = 0;
 		}
-		$returned_array = $this->my_get_html(self::URI);
-		if (200 !== $returned_array['code'])
+		
+		$returned_array = my_get_html(self::URI);
+		if (200 === $returned_array['code'])
 		{
+			$article_html = $returned_array['html'];
+		}
+		else
+		{
+			$this->items[] = $returned_array['html'];
 			return;
 		}
+
 		$article_html = $returned_array['html'];
 		$article_html = str_get_html(prepare_article($article_html));
 		$article = $article_html->find('MAIN#content', 0);
