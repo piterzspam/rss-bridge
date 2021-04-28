@@ -41,6 +41,7 @@ class WPplBridge extends BridgeAbstract {
 		foreach($found_urls as $canonical_url)
 		{
 			$getAmp = FALSE;
+			$getCanonical = FALSE;
 //			$ampproject_returned_array = $this->my_get_html($ampproject_url);
 			$ampproject_url = $this->getAmpprojectLink($canonical_url);
 			$ampproject_returned_array = my_get_html($ampproject_url);
@@ -60,6 +61,7 @@ class WPplBridge extends BridgeAbstract {
 			{
 				$getAmp = TRUE;
 			}
+
 			if ($getAmp)
 			{
 				$amp_url = $this->getAmpLink($canonical_url);
@@ -67,28 +69,40 @@ class WPplBridge extends BridgeAbstract {
 				if (200 === $amp_returned_array['code'])
 				{
 					$amp_article_html = $amp_returned_array['html'];
-					$this->addArticleAmp($amp_url, $amp_article_html);
-				}
-				else
-				{
-					$canonical_returned_array = my_get_html($canonical_url);
-					if (200 === $canonical_returned_array['code'])
+					if (!is_null($redirect_element = $amp_article_html->find('BODY[onload^="location.replace("]', 0)))
 					{
-						$canonical_article_html = $canonical_returned_array['html'];
-						$date = new DateTime("now", new DateTimeZone('Europe/Warsaw'));
-						$date_string = date_format($date, 'Y-m-d H:i:s');
-						$page_html = array(
-							'uri' => $canonical_url,
-							'title' => $canonical_url,
-							'timestamp' => $date_string,
-							'content' => $canonical_article_html
-						);
-						$this->items[] = $page_html;
+						$getCanonical = TRUE;
 					}
 					else
 					{
-						$this->items[] = $canonical_returned_array['html'];
+						$this->addArticleAmp($amp_url, $amp_article_html);
 					}
+				}
+				else
+				{
+					$getCanonical = TRUE;
+				}
+			}
+
+			if ($getCanonical)
+			{
+				$canonical_returned_array = my_get_html($canonical_url);
+				if (200 === $canonical_returned_array['code'])
+				{
+					$canonical_article_html = $canonical_returned_array['html'];
+					$date = new DateTime("now", new DateTimeZone('Europe/Warsaw'));
+					$date_string = date_format($date, 'Y-m-d H:i:s');
+					$page_html = array(
+						'uri' => $canonical_url,
+						'title' => $canonical_url,
+						'timestamp' => $date_string,
+						'content' => $canonical_article_html
+					);
+					$this->items[] = $page_html;
+				}
+				else
+				{
+					$this->items[] = $canonical_returned_array['html'];
 				}
 			}
 		}
@@ -112,8 +126,8 @@ class WPplBridge extends BridgeAbstract {
 		$url_array = parse_url($this->getInput('url'));
 		$GLOBALS['prefix'] = $url_array["scheme"].'://'.$url_array["host"];
 		$GLOBALS['host'] = ucfirst($url_array["host"]);
-		$GLOBALS['amp_projext_prefix'] = str_replace('.', '-', $GLOBALS['prefix']);
-		$GLOBALS['amp_projext_prefix'] = $GLOBALS['amp_projext_prefix'].".cdn.ampproject.org/c/s/";
+		$GLOBALS['amp_project_prefix'] = str_replace('.', '-', $GLOBALS['prefix']);
+		$GLOBALS['amp_project_prefix'] = $GLOBALS['amp_project_prefix'].".cdn.ampproject.org/c/s/";
 	}
 	
 	public function getName()
@@ -343,7 +357,7 @@ class WPplBridge extends BridgeAbstract {
 	private function getAmpprojectLink($url)
 	{
 		$new_url = $url.'?amp=1';
-		$new_url = str_replace('https://', $GLOBALS['amp_projext_prefix'], $new_url);
+		$new_url = str_replace('https://', $GLOBALS['amp_project_prefix'], $new_url);
 		return $new_url;
 	}
 
