@@ -1455,7 +1455,7 @@ function getArray($array, $index) {
 				'uri' => $url,
 				'title' => "Error ".$code.": ".$url,
 				'timestamp' => $date_string,
-				'content' => $html_error
+				'content' => '<h1 class="error">Error:</h1>'.$html_error.'<br><br><h1 class="content">Content:</h1><br>'.$page_html
 			);
 		}
 
