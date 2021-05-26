@@ -74,6 +74,10 @@ class NewsweekBridge extends BridgeAbstract {
 
 	private function addArticle($url)
 	{
+/*		$counter = 0;
+		print_var_dump($counter, "counter przed");
+		iterator($counter);
+		print_var_dump($counter, "counter po");*/
 		$returned_array = $this->my_get_html($url);
 		if (200 !== $returned_array['code'])
 			return;
@@ -162,12 +166,23 @@ class NewsweekBridge extends BridgeAbstract {
 		foreach_delete_element($article, 'DIV#fbComments');
 		foreach_delete_element($article, 'UL.breadCrumb');
 		foreach_delete_element($article, 'DIV.tags');
+		foreach_delete_element($article, 'DIV.placeholder');
+		 
 //		$article = str_get_html($article->save());
 
 		format_article_photos($article, 'DIV.artPhoto', FALSE, 'src', 'SPAN');
 		$article = str_get_html($article->save());
+		move_element($article, 'DIV.authorBox', 'ARTICLE', 'innertext', 'after');
+		$article = str_get_html($article->save());
+		insert_html($article, 'DIV.authorBox', '<HR>', '');
+		$article = str_get_html($article->save());
+		replace_tag_and_class($article, 'SPAN.label', 'single', 'DIV', NULL);
+		$article = str_get_html($article->save());
+		replace_tag_and_class($article, 'P.lead', 'single', 'STRONG', NULL);
+		$article = str_get_html($article->save());
+		 
 
-		add_style($article, 'P.lead', array('font-weight: bold;'));
+//		add_style($article, 'P.lead', array('font-weight: bold;'));
 		add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
 		add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
 		add_style($article, 'FIGCAPTION', getStylePhotoCaption());

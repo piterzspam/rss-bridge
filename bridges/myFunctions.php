@@ -1116,6 +1116,13 @@ function getArray($array, $index) {
 		}
 	}
 
+	function iterator($copy_counter)
+	{
+//		print_var_dump($copy_counter, "copy_counter przed");
+		$copy_counter++;
+//		print_var_dump($copy_counter, "copy_counter po");
+	}
+
 	function replace_tag_and_class($main_element, $element_selector, $count = 'single', $new_tag = NULL, $new_class = NULL)
 	{
 		if ('single' === $count)
@@ -1161,6 +1168,7 @@ function getArray($array, $index) {
 				}
 			}
 		}
+//		$article = str_get_html($main_element->save());
 	}
 
 	function replace_part_of_class($main_element, $element_selector, $count = 'single', $part_to_replace, $part_to_insert)
@@ -1432,20 +1440,48 @@ function getArray($array, $index) {
 			);
 		}
 
-		if (TRUE === $GLOBALS['my_debug'])
+		$code = 0;
+		$counter301 = 0;
+		while ($code !== 200 && 5 > $counter301)
 		{
-			$start_request = microtime(TRUE);
-			$page_content = file_get_contents($url, false, $context);
-			$end_request = microtime(TRUE);
-			echo "<br>Article  took " . ($end_request - $start_request) . " seconds to complete - url: $url.";
-			$GLOBALS['all_articles_counter']++;
-			$GLOBALS['all_articles_time'] = $GLOBALS['all_articles_time'] + $end_request - $start_request;
+			if (TRUE === $GLOBALS['my_debug'])
+			{
+				$start_request = microtime(TRUE);
+				$page_content = file_get_contents($url, false, $context);
+				$end_request = microtime(TRUE);
+				echo "<br>Article  took " . ($end_request - $start_request) . " seconds to complete - url: $url.";
+				$GLOBALS['all_articles_counter']++;
+				$GLOBALS['all_articles_time'] = $GLOBALS['all_articles_time'] + $end_request - $start_request;
+			}
+			else
+			{
+				$page_content = file_get_contents($url, false, $context);
+			}
+			$code = getHttpCode($http_response_header);
+//			print_var_dump($http_response_header, "http_response_header");
+
+			foreach($http_response_header as $header)
+			{
+				if (FALSE !== strpos($header, "Location: "))
+				{
+					$redirection_link = $header;
+//					print_var_dump($redirection_link, "redirection_link");
+					$redirection_link = str_replace("Location: ", "", $redirection_link);
+					$redirection_link = str_replace("https:", "", $redirection_link);
+					
+					$redirection_link = remove_substring_if_exists_first($redirection_link, "https:");
+					$redirection_link = "https:".$redirection_link;
+//					print_var_dump($redirection_link, "redirection_link");
+					$url = $redirection_link;
+				}
+			}
+			if (301 == $code)
+			{
+				$counter301++;
+			}
 		}
-		else
-			$page_content = file_get_contents($url, false, $context);
 		$page_html = str_get_html($page_content);
 
-		$code = getHttpCode($http_response_header);
 		if (200 !== $code)
 		{
 			$html_error = createErrorContent($http_response_header);
@@ -1462,6 +1498,7 @@ function getArray($array, $index) {
 		$return_array = array(
 			'code' => $code,
 			'html' => $page_html,
+			'url' => $url,
 		);
 		return $return_array;
 	}

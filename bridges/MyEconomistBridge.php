@@ -22,6 +22,7 @@ class MyEconomistBridge extends BridgeAbstract {
 		
 //		$returned_array = my_get_html(self::URI);
 		$returned_array = my_get_html(self::URI, TRUE);
+//		$returned_array = my_get_html("https://server4.kproxy.com/servlet/redirect.srv/sruj/scctybbdsv/spqr/p2/espresso", TRUE);
 		if (200 === $returned_array['code'])
 		{
 			$article_html = $returned_array['html'];
@@ -55,7 +56,8 @@ class MyEconomistBridge extends BridgeAbstract {
 			$date = "";
 		$url = self::URI.'#'.$date;
 
-
+		print_element($article_html, "article_html");
+		return;
 //		print_var_dump($values_headline, 'values_headline');
 //		print_var_dump($values_date_modified, 'values_date_modified');
 

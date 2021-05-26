@@ -46,7 +46,7 @@ class GazetaWeekendBridge extends BridgeAbstract {
 		
 		while (count($articles_urls) < $GLOBALS['limit'] && "empty" != $url_articles_list)
 		{
-			$returned_array = $this->my_get_html($url_articles_list);
+			$returned_array = my_get_html($url_articles_list);
 			$html_articles_list = $returned_array['html'];
 			if (200 !== $returned_array['code'] || 0 === count($found_hrefs = $html_articles_list->find('LI.indexPremium__element HEADER.indexPremium__title A.indexPremium__info--link[href][title], DIV.midIndex.lazy_load A.midIndex__titleLink[href]')))
 			{
@@ -78,7 +78,8 @@ class GazetaWeekendBridge extends BridgeAbstract {
 
 	private function addArticle($url)
 	{
-		$returned_array = $this->my_get_html($url);
+		$returned_array = my_get_html($url);
+		$url = $returned_array['url'];
 		if (200 === $returned_array['code'])
 		{
 			$article_html = $returned_array['html'];
@@ -247,7 +248,7 @@ class GazetaWeekendBridge extends BridgeAbstract {
 		foreach ($article->find('SCRIPT[src*="video.onnetwork.tv/embed.php?"]') as $script)
 		{
 			$attribute_url = $script->getAttribute('src');
-			$returned_array = $this->my_get_html($attribute_url);
+			$returned_array = my_get_html($attribute_url);
 			if (200 === $returned_array['code'])
 			{
 				$str_html = $returned_array['html']->save();

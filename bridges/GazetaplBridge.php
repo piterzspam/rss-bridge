@@ -89,7 +89,7 @@ class GazetaplBridge extends BridgeAbstract {
 		while (count($articles_urls) < $GLOBALS['limit'] && "empty" != $url_articles_list)
 		{
 //			echo "url_articles_list :$url_articles_list<br>";
-			$returned_array = $this->my_get_html($url_articles_list);
+			$returned_array = my_get_html($url_articles_list);
 			$html_articles_list = $returned_array['html'];
 			if (200 !== $returned_array['code'] || 0 === count($found_hrefs = $html_articles_list->find('UL.list_tiles LI.entry ARTICLE.article A[href]')))
 			{
@@ -122,12 +122,13 @@ class GazetaplBridge extends BridgeAbstract {
 
 	private function addArticle($url_article)
 	{
-		$returned_array = $this->my_get_html($url_article);
+		$returned_array = my_get_html($url_article);
 		if (200 !== $returned_array['code'])
 		{
 			return;
 		}
 		$article_html = $returned_array['html'];
+		$url = $returned_array['url'];
 		replace_attribute($article_html, 'IMG[src$="/image_placeholder_small.svg"][data-src]', 'src', 'data-src');
 		$article_html = str_get_html(prepare_article($article_html));
 /*
@@ -171,7 +172,15 @@ class GazetaplBridge extends BridgeAbstract {
 		foreach_delete_element_containing_text_from_array($article, 'div.art_embed', array('Zobacz wideo'));
 		foreach_replace_outertext_with_subelement_innertext($article, 'DIV.bottom_section', 'SECTION.art_content');
 
-		insert_html($article, 'SPAN.article_data', '<BR>');
+		replace_tag_and_class($article, 'SPAN.article_data', 'single', 'DIV', NULL);
+		replace_tag_and_class($article, 'SPAN.article_date', 'single', 'DIV', NULL);
+		
+		$article = str_get_html($article->save());
+		move_element($article, 'DIV.author_and_date .article_date', '.author_and_date', 'outertext', 'after');
+		$article = str_get_html($article->save());
+		move_element($article, 'DIV.author_and_date', 'DIV#article_wrapper', 'outertext', 'after');
+		$article = str_get_html($article->save());
+		insert_html($article, 'DIV.author_and_date', '<HR>', '');
 		
 		$article = str_get_html($article->save());
 		foreach ($article->find('DIV.art_embed') as $embed)

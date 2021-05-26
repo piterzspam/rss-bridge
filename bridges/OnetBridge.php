@@ -192,6 +192,7 @@ class OnetBridge extends BridgeAbstract {
 				)
 		);
 		$article = str_get_html($article->save());
+		
 
 //https://wiadomosci-onet-pl.cdn.ampproject.org/v/s/wiadomosci.onet.pl/tylko-w-onecie/michal-cholewinski-krytykowal-orzeczenie-tk-ws-aborcji-zostal-zdjety-z-anteny/31zq2s2.amp?amp_js_v=0.1
 //https://wiadomosci-onet-pl.cdn.ampproject.org/v/s/wiadomosci.onet.pl/kraj/20-lecie-platformy-obywatelskiej-partia-oklejona-nekrologami-analiza/7cwsve3.amp?amp_js_v=0.1
@@ -217,12 +218,52 @@ class OnetBridge extends BridgeAbstract {
 			}
 		}
 		$article = str_get_html($article->save());
+		replace_tag_and_class($article, 'ARTICLE P.hyphenate', 'single', 'STRONG', 'lead');
+		$article = str_get_html($article->save());
 		convert_amp_frames_to_links($article);
 		$article = str_get_html($article->save());
 		format_article_photos($article, 'FIGURE.lead', TRUE, 'src', 'SPAN.source');
 		$article = str_get_html($article->save());
 		format_article_photos($article, 'FIGURE[!class]', FALSE, 'src', 'SPAN.source');
 		$article = str_get_html($article->save());
+		move_element($article, 'FIGURE.photoWrapper.mainPhoto', 'STRONG.lead', 'outertext', 'after');
+		$article = str_get_html($article->save());
+		move_element($article, 'DIV.dateAuthor', 'H1.headline', 'outertext', 'after');
+		$article = str_get_html($article->save());
+		foreach_delete_element_containing_elements_hierarchy($article, array('LI', 'A[href*="www.onet.pl/#utm_source"]'));
+		$article = str_get_html($article->save());
+		foreach_delete_element_containing_elements_hierarchy($article, array('LI', 'A[href="https://www.onet.pl/"]'));
+		$article = str_get_html($article->save());
+		$article_str = $article->save();
+		foreach($article->find('UL LI A[href*="onet.pl/"][target="_top"]') as $element)
+		{
+			$parent = $element->parent;
+			if (is_null($parent->prev_sibling()) && is_null($parent->next_sibling()))
+			{
+				$article_str = str_replace($parent->parent->outertext, '', $article_str);
+			}
+		}
+		if (FALSE === is_null($data_element = $article->find('DIV.dateAuthor', 0)))
+		{
+			$data_element_innertext = $data_element->innertext;
+			$span_string = "";
+			foreach($article->find('DIV.dateAuthor SPAN') as $element)
+			{
+				$span_string = $span_string.$element->outertext;
+			}
+			$article_str = str_replace($data_element_innertext, $span_string, $article_str);
+		}
+		$article = str_get_html($article_str);
+		move_element($article, 'DIV.dateAuthor SPAN.date', 'DIV.dateAuthor', 'outertext', 'before');
+		$article = str_get_html($article->save());
+		replace_tag_and_class($article, 'SPAN.date', 'single', 'DIV', NULL);
+		replace_tag_and_class($article, 'SPAN.author', 'multiple', 'DIV', NULL);
+		$article = str_get_html($article->save());
+		move_element($article, 'DIV.dateAuthor', 'ARTICLE', 'innertext', 'after');
+		$article = str_get_html($article->save());
+		insert_html($article, 'DIV.dateAuthor', '<HR>', '');
+		$article = str_get_html($article->save());
+
 		//https://opinie.wp.pl/kataryna-zyjemy-w-okrutnym-swiecie-ale-aborcja-embriopatologiczna-musi-pozostac-opinia-6567085945505921a?amp=1&_js_v=0.1
 		add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
 		add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
