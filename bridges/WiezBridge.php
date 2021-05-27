@@ -78,14 +78,14 @@ class WiezBridge extends FeedExpander {
 		$selectors_array[] = 'IMG.post__author__image';
 		$selectors_array[] = 'DIV.single__post__category';
 		$selectors_array[] = 'DIV.post__tags';
-		foreach_delete_element_array($article, $selectors_array);
+		$article = foreach_delete_element_array($article, $selectors_array);
 
 
 		//https://wiez.pl/2021/02/04/od-gomulki-do-jana-pawla-ii-warsztaty-kanonu-wolnych-polakow-w-krosnie/
-		add_style($article, 'FIGURE', getStylePhotoParent());
-		add_style($article, 'IMG.single__post__img-thumbnail, IMG[class^="wp-image-"]', getStylePhotoImg());
-		add_style($article, 'FIGCAPTION', getStylePhotoCaption());
-		add_style($article, 'BLOCKQUOTE', getStyleQuote());
+		$article = add_style($article, 'FIGURE', getStylePhotoParent());
+		$article = add_style($article, 'IMG.single__post__img-thumbnail, IMG[class^="wp-image-"]', getStylePhotoImg());
+		$article = add_style($article, 'FIGCAPTION', getStylePhotoCaption());
+		$article = add_style($article, 'BLOCKQUOTE', getStyleQuote());
 
 		$item['content'] = $article;
 		$item['categories'] = $tags;

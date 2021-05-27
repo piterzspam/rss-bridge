@@ -95,21 +95,22 @@ class OkoPressBridge extends FeedExpander {
 		$tags[] = get_json_value($article_html, 'SCRIPT', 'pageCategory');
 		$tags_links = return_tags_array($article_html, 'DIV.entry-content DIV.tags A[rel="tag"]');
 		$tags = array_unique(array_merge($tags, $tags_links));
-		set_biggest_photo_size_from_attribute($article_html, 'IMG.lazy[data-srcset]', 'data-srcset');
-		$article_html = str_get_html($article_html->save());
-		set_biggest_photo_size_from_attribute($article_html, 'IMG.lazy[data-src]', 'data-src');
-		$article_html = str_get_html($article_html->save());
+//		set_biggest_photo_size_from_attribute($article_html, 'IMG.lazy[data-srcset]', 'data-srcset');
+//		$article_html = str_get_html($article_html->save());
+//		set_biggest_photo_size_from_attribute($article_html, 'IMG.lazy[data-src]', 'data-src');
+//		$article_html = str_get_html($article_html->save());
 		$header_photo = $article_html->find('DIV#main-image IMG.lazy[src]', 0);
 		if (FALSE === is_null($header_photo))
 		{
 			$src_header_image = $header_photo->getAttribute('src');
 		}
+		$article_html = str_get_html(prepare_article($article_html));
 		$article = $article_html->find('ARTICLE[id^="post-"] DIV.large-9', 0);
 		$selectors_array[] = 'DIV.cr-paragraph-additions[data-cookie="HasLogged"]';
 		$selectors_array[] = 'DIV.cr-login-block.oko-widget-frame';
 		$selectors_array[] = 'comment';
 		$selectors_array[] = 'SCRIPT';
-		foreach_replace_outertext_with_innertext($article, 'DIV.socialwall');
+		$article = foreach_replace_outertext_with_innertext($article, 'DIV.socialwall');
 		$article = str_get_html($article->save());
 		$selectors_array[] = 'DIV.related_image_open';
 		$selectors_array[] = 'DIV.row.js-display-random-element';
@@ -118,7 +119,7 @@ class OkoPressBridge extends FeedExpander {
 		$selectors_array[] = 'DIV#banner-after-excerpt';
 		$selectors_array[] = 'DIV#intertext-banners';
 		$selectors_array[] = 'DIV.powiazany-artykul-shortcode';
-		foreach_delete_element_array($article, $selectors_array);
+		$article = foreach_delete_element_array($article, $selectors_array);
 		$article->find('hr',-1)->outertext = '';
 		if (isset($src_header_image))
 		{
@@ -131,15 +132,11 @@ class OkoPressBridge extends FeedExpander {
 		$article = str_get_html($article->save());
 		
 		//https://oko.press/astra-zeneca-ema/
-		convert_iframes_to_links($article);
-		$article = str_get_html($article->save());
+		$article = convert_iframes_to_links($article);
 		//https://oko.press/stalo-sie-przemyslaw-radzik-symbol-dobrej-zmiany-w-sadach-dostal-awans-od-prezydenta/
 //		$this->format_article_photos_sources($article);
-		$article = str_get_html($article->save());
-		add_style($article, 'DIV.excerpt', array('font-weight: bold;'));
-		$article = str_get_html($article->save());
-		fix_all_photos_attributes($article);
-		$article = str_get_html($article->save());
+		$article = add_style($article, 'DIV.excerpt', array('font-weight: bold;'));
+		$article = fix_all_photos_attributes($article);
 		foreach($article->find('P') as $paragraph)
 		{
 			$paragraph_photo = $paragraph->find('IMG[src]', 0);
@@ -155,18 +152,14 @@ class OkoPressBridge extends FeedExpander {
 			}
 		}
 		$article = str_get_html($article->save());
-		format_article_photos($article, 'FIGURE.photoWrapper.mainPhoto', TRUE, 'src');
-		$article = str_get_html($article->save());
-		format_article_photos($article, 'DIV.photo', FALSE, 'src', 'EM');
-		$article = str_get_html($article->save());
-		format_article_photos($article, 'FIGURE[id^="attachment_"]', FALSE, 'src', 'FIGCAPTION');
-		$article = str_get_html($article->save());
+		$article = format_article_photos($article, 'FIGURE.photoWrapper.mainPhoto', TRUE, 'src');
+		$article = format_article_photos($article, 'DIV.photo', FALSE, 'src', 'EM');
+		$article = format_article_photos($article, 'FIGURE[id^="attachment_"]', FALSE, 'src', 'FIGCAPTION');
 		//https://opinie.wp.pl/kataryna-zyjemy-w-okrutnym-swiecie-ale-aborcja-embriopatologiczna-musi-pozostac-opinia-6567085945505921a?amp=1&_js_v=0.1
-		add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
-		add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
-		add_style($article, 'FIGCAPTION', getStylePhotoCaption());
-		add_style($article, 'BLOCKQUOTE', getStyleQuote());
-		$article = str_get_html($article->save());
+		$article = add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
+		$article = add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
+		$article = add_style($article, 'FIGCAPTION', getStylePhotoCaption());
+		$article = add_style($article, 'BLOCKQUOTE', getStyleQuote());
 		
 		
 //		$item['title'] = $title;

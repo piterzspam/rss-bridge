@@ -95,56 +95,41 @@ class KrytykaPolitycznaBridge extends FeedExpander {
 		$selectors_array[] = 'DIV.single-post-tags';
 		$selectors_array[] = 'BLOCKQUOTE.wp-embedded-content[data-secret]';
 		$selectors_array[] = 'IMG.avatar[alt][!src]';
-		foreach_delete_element_array($article, $selectors_array);
+		$article = foreach_delete_element_array($article, $selectors_array);
 
-		combine_two_elements($article, 'IMG.pre-content.pre-content-image', 'DIV.mnky-featured-image-caption', 'DIV', 'super_photo');
-		combine_two_elements($article, 'DIV.post-preview IMG', 'DIV.mnky-featured-image-caption', 'DIV', 'super_photo');
-		move_element($article, 'DIV#container HEADER.entry-header.clearfix', 'DIV#content', 'innertext', 'before');
-		foreach_delete_element_containing_elements_hierarchy($article, array('BLOCKQUOTE', 'P', 'A[href^="https://krytykapolityczna.pl/"]'));
-		foreach_delete_element_containing_elements_hierarchy($article, array('DIV', 'A[href][rel="author"]'));
+		$article = combine_two_elements($article, 'IMG.pre-content.pre-content-image', 'DIV.mnky-featured-image-caption', 'DIV', 'super_photo');
+		$article = combine_two_elements($article, 'DIV.post-preview IMG', 'DIV.mnky-featured-image-caption', 'DIV', 'super_photo');
+		$article = move_element($article, 'DIV#container HEADER.entry-header.clearfix', 'DIV#content', 'innertext', 'before');
+		$article = foreach_delete_element_containing_elements_hierarchy($article, array('BLOCKQUOTE', 'P', 'A[href^="https://krytykapolityczna.pl/"]'));
+		$article = foreach_delete_element_containing_elements_hierarchy($article, array('DIV', 'A[href][rel="author"]'));
 		
-		$article = str_get_html($article->save());
-		insert_html($article, 'TIME.published', '', '', 'Publikacja: ', '');
-		$article = str_get_html($article->save());
-		insert_html($article, 'TIME.updated', '<br>', '<br><br>', '', '');
-		$article = str_get_html($article->save());
-		insert_html($article, 'TIME.updated', '', '', 'Aktualizacja: ', '');
-		$article = str_get_html($article->save());
-		insert_html($article, 'DIV.author-vcard-holder', '<hr>', '', '', '');
-		$article = str_get_html($article->save());
-		foreach_replace_outertext_with_innertext($article, 'HEADER.entry-header');
-		$article = str_get_html($article->save());
-		foreach_replace_outertext_with_innertext($article, 'ARTICLE[id^="post-"]');
-		$article = str_get_html($article->save());
-		foreach_replace_outertext_with_innertext($article, 'DIV.post-preview');
-		$article = str_get_html($article->save());
-		foreach_replace_outertext_with_innertext($article, 'DIV.entry-content');
-		$article = str_get_html($article->save());
-		foreach_replace_outertext_with_innertext($article, 'ARTICLE[id^="post-"]');
-		$article = str_get_html($article->save());
+		$article = insert_html($article, 'TIME.published', '', '', 'Publikacja: ', '');
+		$article = insert_html($article, 'TIME.updated', '<br>', '<br><br>', '', '');
+		$article = insert_html($article, 'TIME.updated', '', '', 'Aktualizacja: ', '');
+		$article = insert_html($article, 'DIV.author-vcard-holder', '<hr>', '', '', '');
+		$article = foreach_replace_outertext_with_innertext($article, 'HEADER.entry-header');
+		$article = foreach_replace_outertext_with_innertext($article, 'ARTICLE[id^="post-"]');
+		$article = foreach_replace_outertext_with_innertext($article, 'DIV.post-preview');
+		$article = foreach_replace_outertext_with_innertext($article, 'DIV.entry-content');
+		$article = foreach_replace_outertext_with_innertext($article, 'ARTICLE[id^="post-"]');
 		//START - https://krytykapolityczna.pl/swiat/jagpda-grondecka-afganistan-talibowie-chca-znow-rzadzic/
-		format_article_photos($article, 'DIV.content-image', FALSE, 'src', 'FIGCAPTION');
-		$article = str_get_html($article->save());
+		$article = format_article_photos($article, 'DIV.content-image', FALSE, 'src', 'FIGCAPTION');
 		//STOP - https://krytykapolityczna.pl/swiat/jagpda-grondecka-afganistan-talibowie-chca-znow-rzadzic/
 		//START - https://krytykapolityczna.pl/swiat/wielki-kapital-chcial-nas-zatruc-olowiem-nie-tylko-on/
-		format_article_photos($article, 'FIGURE[id^="attachment_"]', FALSE, 'src', 'FIGCAPTION');
-		$article = str_get_html($article->save());
+		$article = format_article_photos($article, 'FIGURE[id^="attachment_"]', FALSE, 'src', 'FIGCAPTION');
 		//STOP - https://krytykapolityczna.pl/swiat/wielki-kapital-chcial-nas-zatruc-olowiem-nie-tylko-on/
 		//START - https://krytykapolityczna.pl/nauka/jas-kapela-karolina-holda-dieta-weganska-wegetarianska-dla-psow-i-kot/
-		format_article_photos($article, 'DIV.super_photo', TRUE, 'src', 'DIV.mnky-featured-image-caption');
-		$article = str_get_html($article->save());
+		$article = format_article_photos($article, 'DIV.super_photo', TRUE, 'src', 'DIV.mnky-featured-image-caption');
 		//STOP - https://krytykapolityczna.pl/nauka/jas-kapela-karolina-holda-dieta-weganska-wegetarianska-dla-psow-i-kot/
 
-		foreach_replace_outertext_with_subelement_outertext($article, 'ASIDE.single-post-sidebar', 'SPAN.meta-date');
-		foreach_replace_outertext_with_subelement_outertext($article, 'DIV.single-post-content-holder', 'DIV.single-post-content');
-		$article = str_get_html($article->save());
+		$article = foreach_replace_outertext_with_subelement_outertext($article, 'ASIDE.single-post-sidebar', 'SPAN.meta-date');
+		$article = foreach_replace_outertext_with_subelement_outertext($article, 'DIV.single-post-content-holder', 'DIV.single-post-content');
 
-		add_style($article, 'P.post-lead', array('font-weight: bold;'));
-		add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
-		add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
-		add_style($article, 'FIGCAPTION', getStylePhotoCaption());
-		add_style($article, 'BLOCKQUOTE', getStyleQuote());
-		$article = str_get_html($article->save());
+		$article = add_style($article, 'P.post-lead', array('font-weight: bold;'));
+		$article = add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
+		$article = add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
+		$article = add_style($article, 'FIGCAPTION', getStylePhotoCaption());
+		$article = add_style($article, 'BLOCKQUOTE', getStyleQuote());
 
 		$item['content'] = $article;
 		$item['categories'] = $tags;

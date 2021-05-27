@@ -205,6 +205,7 @@
 				}
 			}
 		}
+		return str_get_html($main_element->save());
 	}
 	
 	function single_delete_element_containing_text($element, $subelement_search_textstring)
@@ -231,6 +232,7 @@
 				}
 			}
 		}
+		return str_get_html($main_element->save());
 	}
 
 	function foreach_delete_element_containing_elements_hierarchy($main_element, $subelements_hierarchy_array)
@@ -249,6 +251,7 @@
 				$subelement->outertext = '';
 			}
 		}
+		return str_get_html($main_element->save());
 	}
 
 	function single_delete_element_containing_subelement($element, $subelement_search_string)
@@ -284,6 +287,7 @@
 				$element->outertext = '';
 			}
 		}
+		return str_get_html($main_element->save());
 	}
 
 	function foreach_replace_outertext_with_subelement_innertext($main_element, $element_search_string, $subelement_search_string)
@@ -295,6 +299,7 @@
 				$element->outertext = $subelement->innertext;
 			}
 		}
+		return str_get_html($main_element->save());
 	}
 
 	function foreach_replace_outertext_with_subelement_outertext($main_element, $element_search_string, $subelement_search_string)
@@ -306,6 +311,7 @@
 				$element->outertext = $subelement->outertext;
 			}
 		}
+		return str_get_html($main_element->save());
 	}
 
 	function foreach_replace_outertext_with_innertext($main_element, $element_search_string)
@@ -314,6 +320,7 @@
 		{
 			$element->outertext = $element->innertext;
 		}
+		return str_get_html($main_element->save());
 	}
 
 	function foreach_replace_outertext_with_plaintext($main_element, $element_search_string)
@@ -388,6 +395,7 @@
 			else
 				$element->style = $element->style.$styleString;
 		}
+		return str_get_html($main_element->save());
 	}
 	
 	function hex_dump($data, $newline='<br>')
@@ -513,6 +521,7 @@
 				$element->removeAttribute($attribute_to_replace_with);
 			}
 		}
+		return str_get_html($main_element->save());
 	}
 
 	function remove_multiple_attributes($main_element, $attributes_array)
@@ -554,6 +563,7 @@
 			$img_new_element = $img_new_element.'>';
 			$photo_element->outertext = $img_new_element;
 		}
+		return str_get_html($main_element->save());
 	}
 
 	function format_article_photos($main_element, $element_search_string, $is_main = FALSE, $str_photo_url_attribute = 'src', $str_selectror_photo_caption = '')
@@ -633,6 +643,7 @@
 				$old_photo_wrapper->outertext = $new_photo_wrapper;
 			}
 		}
+		return str_get_html($main_element->save());
 	}
 
 	function convert_iframes_to_links($main_element)
@@ -663,6 +674,7 @@
 				$frame_element->outertext = get_frame_outertext($url);
 			}
 		}
+		return str_get_html($main_element->save());
 	}
 	
 	function get_Twitter_element($twitter_url)
@@ -1114,6 +1126,7 @@ function getArray($array, $index) {
 				}
 			}
 		}
+		return str_get_html($main_element->save());
 	}
 
 	function iterator($copy_counter)
@@ -1169,6 +1182,7 @@ function getArray($array, $index) {
 			}
 		}
 //		$article = str_get_html($main_element->save());
+		return str_get_html($main_element->save());
 	}
 
 	function replace_part_of_class($main_element, $element_selector, $count = 'single', $part_to_replace, $part_to_insert)
@@ -1196,6 +1210,7 @@ function getArray($array, $index) {
 				}
 			}
 		}
+		return str_get_html($main_element->save());
 	}
 
 	function insert_text($main_element, $element_selector, $count = 'single', $where_to_put = 'after', $text_to_insert)
@@ -1229,6 +1244,7 @@ function getArray($array, $index) {
 				}
 			}
 		}
+		return str_get_html($main_element->save());
 	}
 
 	function combine_two_elements($main_element, $first_element_selector, $second_element_selector, $parent_tag = NULL, $parent_class = NULL)
@@ -1318,7 +1334,7 @@ function getArray($array, $index) {
 		}
 //		print_element($element_to_stay, 'element_to_stay po');
 //		print_html($element_to_stay, 'element_to_stay po');
-		
+		return str_get_html($main_element->save());
 	}
 
 	function foreach_delete_element_array($main_element, $selectors_array)
@@ -1329,6 +1345,7 @@ function getArray($array, $index) {
 		{
 			$element->outertext = '';
 		}
+		return str_get_html($main_element->save());
 	}
 
 	function check_string_contains_needle_from_array($string, $needles)
@@ -1412,6 +1429,7 @@ function getArray($array, $index) {
 				$element->innertext = $element->outertext.$innertext_after;
 			}
 		}
+		return str_get_html($main_element->save());
 	}
 
 	
@@ -1586,8 +1604,7 @@ function getArray($array, $index) {
 		$main_element = str_get_html($main_element->save());
 		convert_amp_frames_to_links($main_element);
 		$main_element = str_get_html($main_element->save());
-		convert_iframes_to_links($main_element);
-		$main_element = str_get_html($main_element->save());
+		$main_element = convert_iframes_to_links($main_element);
 		if (isset($page_url))
 		{
 			foreach ($main_element->find('IMG[src^="//"]') as $image_with_bad_source)

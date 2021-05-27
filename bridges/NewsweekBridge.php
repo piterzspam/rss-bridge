@@ -144,14 +144,12 @@ class NewsweekBridge extends BridgeAbstract {
 			$empty_class_element->class = NULL;
 			$empty_class_element->setAttribute('data-scroll', NULL);
 		}
-		foreach_replace_outertext_with_innertext($article, '.contentPremium');
+		$article = foreach_replace_outertext_with_innertext($article, '.contentPremium');
 		
 		//paragrafy, czytaj inne artykuly
 		//https://www.newsweek.pl/polska/polityka/nowa-odslona-konfliktu-w-porozumieniu/d18e6y6
 		//https://www.newsweek.pl/polska/polityka/paulina-hennig-kloska-w-szeregach-polska-2050-nowa-poslanka-szymona-holowni/5cj9tqx
-		$article = str_get_html($article->save());
-		foreach_delete_element_containing_text_from_array($article, 'P', array('Czytaj także:', 'Czytaj też:', 'Czytaj więcej:', 'Zobacz:', 'Zobacz także:', 'Zobacz też:', 'Zobacz więcej:'));
-		$article = str_get_html($article->save());
+		$article = foreach_delete_element_containing_text_from_array($article, 'P', array('Czytaj także:', 'Czytaj też:', 'Czytaj więcej:', 'Zobacz:', 'Zobacz także:', 'Zobacz też:', 'Zobacz więcej:'));
 
 		//Przenoszenie tresci premium poziom wyzej
 
@@ -167,29 +165,21 @@ class NewsweekBridge extends BridgeAbstract {
 		$selectors_array[] = 'UL.breadCrumb';
 		$selectors_array[] = 'DIV.tags';
 		$selectors_array[] = 'DIV.placeholder';
-		foreach_delete_element_array($article, $selectors_array);
+		$article = foreach_delete_element_array($article, $selectors_array);
 
 		 
-//		$article = str_get_html($article->save());
 
-		format_article_photos($article, 'DIV.artPhoto', FALSE, 'src', 'SPAN');
-		$article = str_get_html($article->save());
-		move_element($article, 'DIV.authorBox', 'ARTICLE', 'innertext', 'after');
-		$article = str_get_html($article->save());
-		insert_html($article, 'DIV.authorBox', '<HR>', '');
-		$article = str_get_html($article->save());
-		replace_tag_and_class($article, 'SPAN.label', 'single', 'DIV', NULL);
-		$article = str_get_html($article->save());
-		replace_tag_and_class($article, 'P.lead', 'single', 'STRONG', NULL);
-		$article = str_get_html($article->save());
+		$article = format_article_photos($article, 'DIV.artPhoto', FALSE, 'src', 'SPAN');
+		$article = move_element($article, 'DIV.authorBox', 'ARTICLE', 'innertext', 'after');
+		$article = insert_html($article, 'DIV.authorBox', '<HR>', '');
+		$article = replace_tag_and_class($article, 'SPAN.label', 'single', 'DIV', NULL);
+		$article = replace_tag_and_class($article, 'P.lead', 'single', 'STRONG', NULL);
 		 
 
-//		add_style($article, 'P.lead', array('font-weight: bold;'));
-		add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
-		add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
-		add_style($article, 'FIGCAPTION', getStylePhotoCaption());
-		add_style($article, 'BLOCKQUOTE', getStyleQuote());
-//		$article = str_get_html($article->save());
+		$article = add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
+		$article = add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
+		$article = add_style($article, 'FIGCAPTION', getStylePhotoCaption());
+		$article = add_style($article, 'BLOCKQUOTE', getStyleQuote());
 	
 		$title = getChangedTitle($title);
 		$title = str_replace("[SŁUCHAJ PODCASTU]", "[PODCAST]", $title);

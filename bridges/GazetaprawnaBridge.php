@@ -148,10 +148,8 @@ class GazetaprawnaBridge extends BridgeAbstract {
 		$selectors_array[] = 'qqqqqqqqqqqqq';
 		$selectors_array[] = 'qqqqqqqqqqqqq';
 		$selectors_array[] = 'qqqqqqqqqqqqq';
-		foreach_delete_element_array($article, $selectors_array);
-		$article = str_get_html($article->save());
-		replace_tag_and_class($article, 'DIV.frameArea', 'multiple', 'P', 'frameArea');
-		$article = str_get_html($article->save());
+		$article = foreach_delete_element_array($article, $selectors_array);
+		$article = replace_tag_and_class($article, 'DIV.frameArea', 'multiple', 'P', 'frameArea');
 
 		//https://prawo.gazetaprawna.pl/artykuly/8054640,nowelizacja-ustawy-o-wlasnosci-lokali-eksmisja-utrata-mieszkania.html.amp?amp_js_v=0.1
 		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8094787,chinski-blad-europy-opinia-piotr-arak.html
@@ -160,14 +158,13 @@ class GazetaprawnaBridge extends BridgeAbstract {
 		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8080209,paszport-covidowy-przywileje-podroze-szczepionka-covid.html
 		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8123606,marek-kajs-wilki-jak-sie-zachowac-odstrzal-gdos.html
 		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8123578,problemy-z-astrazeneca-o-co-chodzi.html
-		clear_paragraphs_from_taglinks($article, 'P.hyphenate, DIV.frameArea', array(
+		$article = clear_paragraphs_from_taglinks($article, 'P.hyphenate, DIV.frameArea', array(
 			'/gazetaprawna\.pl\/tagi\//',
 			'/gazetaprawna\.pl\/$/',
 			'/gazetaprawna\.pl$/',
 			'/serwisy\.gazetaprawna\.pl\/.*\/tematy\//',
 			'/gazetaprawna\.pl\/[a-z]*$/',
 		));
-		$article = str_get_html($article->save());
 
 		$this->items[] = array(
 			'uri' => $amp_project_url,
@@ -199,7 +196,7 @@ class GazetaprawnaBridge extends BridgeAbstract {
 		}
 		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8118990,lowcy-przygod-w-dalekich-krainach-raimund-schulz-rok-1000-valerie-hansen.html
 		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8123606,marek-kajs-wilki-jak-sie-zachowac-odstrzal-gdos.html
-		replace_attribute($article_html, 'IMG[data-original^="http"][src^="data:image/"]', 'src', 'data-original');
+		$article_html = replace_attribute($article_html, 'IMG[data-original^="http"][src^="data:image/"]', 'src', 'data-original');
 		$article_html = str_get_html(prepare_article($article_html));
 
 		$article = $article_html->find('SECTION.detailSection', 0);
@@ -235,18 +232,14 @@ class GazetaprawnaBridge extends BridgeAbstract {
 		$selectors_array[] = 'qqqqqqqqqqqqq';
 		$selectors_array[] = 'qqqqqqqqqqqqq';
 //		$selectors_array[] = '.articleImageDescription';
-		foreach_delete_element_array($article, $selectors_array);
+		$article = foreach_delete_element_array($article, $selectors_array);
 		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8118990,lowcy-przygod-w-dalekich-krainach-raimund-schulz-rok-1000-valerie-hansen.html
-		replace_attribute($article, '[data-item-uuid]', 'data-item-uuid', NULL);
-		$article = str_get_html($article->save());
+		$article = replace_attribute($article, '[data-item-uuid]', 'data-item-uuid', NULL);
 //Przeniesienie zdjęcia autora na koniec, żeby się ładnie pobierało pierwsze zdjęcie główne widoczne na liście artykułów
-		move_element($article, 'DIV.articleHeading DIV.dateWrapper', 'DIV.articleHeading', 'innertext', 'before');
-		$article = str_get_html($article->save());
-		move_element($article, 'DIV.articleHeading DIV.author', 'DIV#articleFooterAuthorSource', 'outertext', 'after');
-		$article = str_get_html($article->save());
-		insert_html($article, 'DIV.author', '<hr>', '', '', '');
-		$article = str_get_html($article->save());
-//Usuwanie linków do słów kluczowych		
+		$article = move_element($article, 'DIV.articleHeading DIV.dateWrapper', 'DIV.articleHeading', 'innertext', 'before');
+		$article = move_element($article, 'DIV.articleHeading DIV.author', 'DIV#articleFooterAuthorSource', 'outertext', 'after');
+		$article = insert_html($article, 'DIV.author', '<hr>', '', '', '');
+		//Usuwanie linków do słów kluczowych		
 		//https://prawo.gazetaprawna.pl/artykuly/8054640,nowelizacja-ustawy-o-wlasnosci-lokali-eksmisja-utrata-mieszkania.html.amp?amp_js_v=0.1
 		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8094787,chinski-blad-europy-opinia-piotr-arak.html
 		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8094155,economicus-2020-oto-nominowani-w-kategorii-najlepszy-poradnik-biznesowy.html
@@ -254,20 +247,18 @@ class GazetaprawnaBridge extends BridgeAbstract {
 		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8080209,paszport-covidowy-przywileje-podroze-szczepionka-covid.html
 		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8123606,marek-kajs-wilki-jak-sie-zachowac-odstrzal-gdos.html
 		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8123578,problemy-z-astrazeneca-o-co-chodzi.html
-		clear_paragraphs_from_taglinks($article, 'P.hyphenate, DIV.frameArea', array(
+		$article = clear_paragraphs_from_taglinks($article, 'P.hyphenate, DIV.frameArea', array(
 			'/gazetaprawna\.pl\/tagi\//',
 			'/gazetaprawna\.pl\/$/',
 			'/gazetaprawna\.pl$/',
 			'/serwisy\.gazetaprawna\.pl\/.*\/tematy\//',
 			'/gazetaprawna\.pl\/[a-z]*$/',
 		));
-		$article = str_get_html($article->save());
 //Przenoszenie podpisów zdjęć do jednego elementu
 		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8094155,economicus-2020-oto-nominowani-w-kategorii-najlepszy-poradnik-biznesowy.html
 		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8123606,marek-kajs-wilki-jak-sie-zachowac-odstrzal-gdos.html
-		foreach_combine_two_elements($article, 'DIV.frameWrap DIV.articleImageAuthor', 1, 1, 'DIV', 'frameWrap', 'DIV.articleImageDescription', 'innertext', 'innertext', 'DIV', 'frameWrap');
-		foreach_combine_two_elements($article, 'DIV.image DIV.imageCaptionWrapper', 1, 1, 'DIV', 'frameWrap', 'DIV.articleImageAuthor, DIV.articleImageDescription', 'outertext', 'outertext', 'DIV', 'intext_photo');
-		$article = str_get_html($article->save());
+		$article = foreach_combine_two_elements($article, 'DIV.frameWrap DIV.articleImageAuthor', 1, 1, 'DIV', 'frameWrap', 'DIV.articleImageDescription', 'innertext', 'innertext', 'DIV', 'frameWrap');
+		$article = foreach_combine_two_elements($article, 'DIV.image DIV.imageCaptionWrapper', 1, 1, 'DIV', 'frameWrap', 'DIV.articleImageAuthor, DIV.articleImageDescription', 'outertext', 'outertext', 'DIV', 'intext_photo');
 		foreach($article->find('DIV.intext_photo DIV.frameWrap') as $element_frameWrap)
 		{
 			$next_element = $element_frameWrap->find('.frameArea', 0);
@@ -284,27 +275,24 @@ class GazetaprawnaBridge extends BridgeAbstract {
 		}
 //Poprawienie formatowania zdjęć
 		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8094155,economicus-2020-oto-nominowani-w-kategorii-najlepszy-poradnik-biznesowy.html
-		format_article_photos($article, 'FIGURE.mainPhoto', TRUE, 'src', 'SPAN.imageDescription');
-		format_article_photos($article, 'DIV.intext_photo', FALSE, 'src', 'DIV.frameWrap');
-		format_article_photos($article, 'DIV.image', FALSE);//jeżeli było zdjęcie bez podpisu, to nie zostało zamienione na intext_photo
-		$article = str_get_html($article->save());
+		$article = format_article_photos($article, 'FIGURE.mainPhoto', TRUE, 'src', 'SPAN.imageDescription');
+		$article = format_article_photos($article, 'DIV.intext_photo', FALSE, 'src', 'DIV.frameWrap');
+		$article = format_article_photos($article, 'DIV.image', FALSE);//jeżeli było zdjęcie bez podpisu, to nie zostało zamienione na intext_photo
 //Poprawienie formatowanie treści artykułu		
 		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8137260,granica-usa-meksyk-jak-rozwiazac-kwestie-migracji.html
-		foreach_replace_outertext_with_innertext($article, 'DIV.frameWrap');
-		$article = str_get_html($article->save());
+		$article = foreach_replace_outertext_with_innertext($article, 'DIV.frameWrap');
 		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8137260,granica-usa-meksyk-jak-rozwiazac-kwestie-migracji.html
-		replace_tag_and_class($article, 'DIV.frameArea.srodtytul', 'multiple', 'H2', NULL);
+		$article = replace_tag_and_class($article, 'DIV.frameArea.srodtytul', 'multiple', 'H2', NULL);
 		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8137260,granica-usa-meksyk-jak-rozwiazac-kwestie-migracji.html
-		replace_tag_and_class($article, 'DIV#lead', 'single', 'STRONG', NULL);
+		$article = replace_tag_and_class($article, 'DIV#lead', 'single', 'STRONG', NULL);
 		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8137260,granica-usa-meksyk-jak-rozwiazac-kwestie-migracji.html
-		replace_tag_and_class($article, 'DIV.frameArea.wazne', 'multiple', 'BLOCKQUOTE', NULL);
+		$article = replace_tag_and_class($article, 'DIV.frameArea.wazne', 'multiple', 'BLOCKQUOTE', NULL);
 		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8123557,zycie-w-pandemii-lockdown-wplyw-na-czlowieka.html
-		replace_tag_and_class($article, 'DIV.frameArea.wyroznienie', 'multiple', 'BLOCKQUOTE', NULL);
+		$article = replace_tag_and_class($article, 'DIV.frameArea.wyroznienie', 'multiple', 'BLOCKQUOTE', NULL);
 		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8094785,sekularyzacja-przyspiesza-takze-w-polsce-wywiad.html
-		replace_tag_and_class($article, 'DIV.frameArea.pytanie', 'multiple', 'STRONG', NULL);
-		replace_tag_and_class($article, 'DIV.frameArea.tresc', 'multiple', 'P', NULL);
-		replace_part_of_class($article, '.frameArea', 'multiple', 'frameArea ', '');
-		$article = str_get_html($article->save());
+		$article = replace_tag_and_class($article, 'DIV.frameArea.pytanie', 'multiple', 'STRONG', NULL);
+		$article = replace_tag_and_class($article, 'DIV.frameArea.tresc', 'multiple', 'P', NULL);
+		$article = replace_part_of_class($article, '.frameArea', 'multiple', 'frameArea ', '');
 /////////////////////////////////////////////////////////////////
 /*
 		TODO To DO
@@ -317,22 +305,22 @@ class GazetaprawnaBridge extends BridgeAbstract {
 		//https://www.gazetaprawna.pl/firma-i-prawo/artykuly/8077582,konkurs-na-facebooku-polubienie-posta-kara-od-skarbowki.html
 		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8094785,sekularyzacja-przyspiesza-takze-w-polsce-wywiad.html
 		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8123557,zycie-w-pandemii-lockdown-wplyw-na-czlowieka.html
-//		add_style($article, '.srodtytul, .pytanie, .wyroznienie, DIV#lead', array('font-weight: bold;'));
+//		$article = add_style($article, '.srodtytul, .pytanie, .wyroznienie, DIV#lead', array('font-weight: bold;'));
 
 		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8079800,sztuczna-inteligencja-rezolucja-ue-azja-usa-slowik.html
 		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8094315,rzad-uslugi-publiczne-transfery-likwidacja-nierownosci-opinia.html
-//		add_style($article, 'DIV#lead', array('margin-bottom: 18px;'));
+//		$article = add_style($article, 'DIV#lead', array('margin-bottom: 18px;'));
 
 
-		add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
-		add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
-		add_style($article, 'FIGCAPTION', getStylePhotoCaption());
-		add_style($article, 'BLOCKQUOTE', getStyleQuote());
+		$article = add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
+		$article = add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
+		$article = add_style($article, 'FIGCAPTION', getStylePhotoCaption());
+		$article = add_style($article, 'BLOCKQUOTE', getStyleQuote());
 
 		//Splaszczenie struktury
-		foreach_replace_outertext_with_subelement_innertext($article, 'DIV.detailContentWrapper', 'DIV.detailContent');
-		foreach_replace_outertext_with_subelement_innertext($article, 'ARTICLE#leftColumnBox', 'DIV.whitelistPremium');
-		foreach_replace_outertext_with_innertext($article, 'SECTION.detailSection');
+		$article = foreach_replace_outertext_with_subelement_innertext($article, 'DIV.detailContentWrapper', 'DIV.detailContent');
+		$article = foreach_replace_outertext_with_subelement_innertext($article, 'ARTICLE#leftColumnBox', 'DIV.whitelistPremium');
+		$article = foreach_replace_outertext_with_innertext($article, 'SECTION.detailSection');
 
 
 		$amp_project_url = $this->getCustomizedLink($url_article_link);
@@ -448,52 +436,6 @@ class GazetaprawnaBridge extends BridgeAbstract {
 		return $article_html;
 	}
 
-	
-	private function my_get_html($url, $get_premium = FALSE)
-	{
-		if (TRUE === $get_premium)
-		{
-			$context = stream_context_create(
-				array(
-					'http' => array(
-						'ignore_errors' => true,
-					    'header'=>"User-Agent:Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)\r\n"
-					)
-				)
-			);
-		}
-		else
-		{
-			$context = stream_context_create(
-				array(
-					'http' => array(
-						'ignore_errors' => true
-					)
-				)
-			);
-		}
-		$page_content = file_get_contents($url, false, $context);
-		$code = getHttpCode($http_response_header);
-		if (200 !== $code)
-		{
-			$html_error = createErrorContent($http_response_header);
-			$date = new DateTime("now", new DateTimeZone('Europe/Warsaw'));
-			$date_string = date_format($date, 'Y-m-d H:i:s');
-			$this->items[] = array(
-				'uri' => $url,
-				'title' => "Error ".$code.": ".$url,
-				'timestamp' => $date_string,
-				'content' => $html_error
-			);
-		}
-		$page_html = str_get_html($page_content);
-
-		$return_array = array(
-			'code' => $code,
-			'html' => $page_html,
-		);
-		return $return_array;
-	}
 
 	private function setGlobalArticlesParams()
 	{

@@ -64,7 +64,7 @@ class InformatykZakladowyBridge extends FeedExpander {
 
 
 		$article = $article_html->find('MAIN#site-content', 0);
-		foreach_delete_element_containing_subelement($article, 'DIV.section-inner', 'LI.post-tags.meta-wrapper');
+		$article = foreach_delete_element_containing_subelement($article, 'DIV.section-inner', 'LI.post-tags.meta-wrapper');
 
 		
 		$selectors_array[] = 'DIV.comments-wrapper';
@@ -73,19 +73,17 @@ class InformatykZakladowyBridge extends FeedExpander {
 		$selectors_array[] = 'script';
 		$selectors_array[] = 'NAV.pagination-single';
 		$selectors_array[] = 'DIV.post-meta-single-top';
-		foreach_delete_element_array($article, $selectors_array);
+		$article = foreach_delete_element_array($article, $selectors_array);
 		
 
 		$tags = return_tags_array($article, 'LI.post-tags A[href*="informatykzakladowy.pl/tag/"][rel="tag"]');
-		format_article_photos($article, 'DIV.wp-block-image', FALSE, 'src', 'FIGCAPTION');
+		$article = format_article_photos($article, 'DIV.wp-block-image', FALSE, 'src', 'FIGCAPTION');
 
 
-		$article = str_get_html($article->save());
-		add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
-		add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
-		add_style($article, 'FIGCAPTION', getStylePhotoCaption());
-		add_style($article, 'BLOCKQUOTE', getStyleQuote());
-		$article = str_get_html($article->save());
+		$article = add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
+		$article = add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
+		$article = add_style($article, 'FIGCAPTION', getStylePhotoCaption());
+		$article = add_style($article, 'BLOCKQUOTE', getStyleQuote());
 
 		$item['content'] = $article;
 		$item['categories'] = $tags;

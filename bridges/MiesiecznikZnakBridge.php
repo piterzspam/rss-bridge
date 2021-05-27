@@ -84,7 +84,7 @@ class MiesiecznikZnakBridge extends FeedExpander {
 			$selectors_array[] = 'DIV.share-panel';
 			$selectors_array[] = 'DIV.article-col-33';
 			$selectors_array[] = 'DIV.read-others-content';
-			foreach_delete_element_array($article, $selectors_array);
+			$article = foreach_delete_element_array($article, $selectors_array);
 
 	
 			//Fix szerokości artykulu
@@ -114,15 +114,15 @@ class MiesiecznikZnakBridge extends FeedExpander {
 
 			//https://www.miesiecznik.znak.com.pl/oswiadczenie-ws-tygodnika-powszechnego-na-ul-wislnej/
 			$author = return_authors_as_string($article, 'SPAN.author');
-			add_style($article, 'BLOCKQUOTE', getStyleQuote());
-			add_style($article, 'DIV[id^="attachment_"]', getStylePhotoParent());
-			add_style($article, 'IMG[class*="wp-image-"]', getStylePhotoImg());
-			add_style($article, 'P.wp-caption-text', getStylePhotoCaption());
+			$article = add_style($article, 'BLOCKQUOTE', getStyleQuote());
+			$article = add_style($article, 'DIV[id^="attachment_"]', getStylePhotoParent());
+			$article = add_style($article, 'IMG[class*="wp-image-"]', getStylePhotoImg());
+			$article = add_style($article, 'P.wp-caption-text', getStylePhotoCaption());
 			//lead
 			$lead_style = array(
 				'font-weight: bold;'
 			);
-			add_style($article, 'DIV.lead[itemprop="description"]', $lead_style);
+			$article = add_style($article, 'DIV.lead[itemprop="description"]', $lead_style);
 			$item['author'] = $author;
 			$item['content'] = $article;
 		}

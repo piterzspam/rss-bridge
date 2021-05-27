@@ -169,8 +169,7 @@ class OutridersBridge extends FeedExpander {
 
 		$article_html = $returned_array['html'];
 		$article = $article_html->find('ARTICLE[id].post', 0);
-		insert_html($article, "HEADER", NULL, $cover_code);
-		$article = str_get_html($article->save());
+		$article = insert_html($article, "HEADER", NULL, $cover_code);
 
 		//tytuł
 		$title = get_text_plaintext($article, 'H1.post__title', $url);
@@ -242,14 +241,10 @@ class OutridersBridge extends FeedExpander {
 		//	echo "Artykul bez js: ".$item['uri']."<br>";
 		}
 		$article = $article_html->find('BODY.single-post ARTICLE', 0);
-		move_element($article, 'H1.article__title', 'DIV.article__thumbnail', 'outertext', 'before');
-		$article = str_get_html($article->save());
-		move_element($article, 'DIV.article-date', 'DIV.article__thumbnail', 'outertext', 'after');
-		$article = str_get_html($article->save());
-		move_element($article, 'DIV.article-author', 'DIV.article__text', 'outertext', 'after');
-		$article = str_get_html($article->save());
-		insert_html($article, "DIV.article-author", "<HR>");
-		$article = str_get_html($article->save());
+		$article = move_element($article, 'H1.article__title', 'DIV.article__thumbnail', 'outertext', 'before');
+		$article = move_element($article, 'DIV.article-date', 'DIV.article__thumbnail', 'outertext', 'after');
+		$article = move_element($article, 'DIV.article-author', 'DIV.article__text', 'outertext', 'after');
+		$article = insert_html($article, "DIV.article-author", "<HR>");
 		
 
 		$selectors_array[] = 'SCRIPT';
@@ -260,19 +255,17 @@ class OutridersBridge extends FeedExpander {
 		$selectors_array[] = 'qqqqqqqq';
 		$selectors_array[] = 'qqqqqqqq';
 		$selectors_array[] = 'qqqqqqqq';
-		foreach_delete_element_array($article, $selectors_array);
+		$article = foreach_delete_element_array($article, $selectors_array);
 		//FIGCAPTION
-		format_article_photos($article, 'DIV.article__thumbnail', TRUE);
-		format_article_photos($article, 'FIGURE.wp-block-image', FALSE, 'src', 'FIGCAPTION');
+		$article = format_article_photos($article, 'DIV.article__thumbnail', TRUE);
+		$article = format_article_photos($article, 'FIGURE.wp-block-image', FALSE, 'src', 'FIGCAPTION');
 		//https://outride.rs/pl/konflikt-w-gorskim-karabachu/
-		format_article_photos($article, 'DIV.gallery-photo', FALSE, 'src', 'DIV.gallery-photo__text.text-under');
+		$article = format_article_photos($article, 'DIV.gallery-photo', FALSE, 'src', 'DIV.gallery-photo__text.text-under');
 
-		$article = str_get_html($article->save());
-		add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
-		add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
-		add_style($article, 'FIGCAPTION', getStylePhotoCaption());
-		add_style($article, 'BLOCKQUOTE', getStyleQuote());
-		$article = str_get_html($article->save());
+		$article = add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
+		$article = add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
+		$article = add_style($article, 'FIGCAPTION', getStylePhotoCaption());
+		$article = add_style($article, 'BLOCKQUOTE', getStyleQuote());
 
 		$item['content'] = $article;
 		return $item;

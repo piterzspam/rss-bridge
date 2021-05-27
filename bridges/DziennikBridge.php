@@ -229,7 +229,7 @@ class DziennikBridge extends BridgeAbstract {
 	{
 //		$article_html = str_get_html(prepare_article($article_html));
 		//https://film.dziennik.pl/recenzje/artykuly/8137058,wytepic-cale-to-bydlo-czego-nauczyla-mnie-osmiornica-maggie-vod-piec-smakow-netflix-hbo-dobrycynk.html
-		replace_attribute($article_html, 'IMG[data-original^="http"][src^="data:image/"]', 'src', 'data-original');
+		$article_html = replace_attribute($article_html, 'IMG[data-original^="http"][src^="data:image/"]', 'src', 'data-original');
 		$article_html = str_get_html(prepare_article($article_html));
 		$article = $article_html->find('ARTICLE.articleDetail', 0);
 		$price_param = $this->getArticlePriceParam($article);
@@ -245,15 +245,12 @@ class DziennikBridge extends BridgeAbstract {
 		$date = get_text_from_attribute($article_html, 'META[property="article:published_time"][content]', 'content', "");
 
 
-//		$article = str_get_html($article->save());
-		foreach_delete_element_containing_subelement($article, 'DIV.frameWrap', 'DIV.promoFrame.pulse2PromoFrame.withDescription.article');
-//		$article = str_get_html($article->save());
+		$article = foreach_delete_element_containing_subelement($article, 'DIV.frameWrap', 'DIV.promoFrame.pulse2PromoFrame.withDescription.article');
 
-		clear_paragraphs_from_taglinks($article, 'P.hyphenate, DIV.frameArea', array(
+		$article = clear_paragraphs_from_taglinks($article, 'P.hyphenate, DIV.frameArea', array(
 			'/dziennik\.pl\/tagi\//',
 			'/dziennik\.pl\/[a-z]*$/',
 		));
-		$article = str_get_html($article->save());
 		$attributes_array[] = "data-text-len";
 		$attributes_array[] = "data-scroll";
 		$attributes_array[] = "data-async-ad-slot";
@@ -261,17 +258,15 @@ class DziennikBridge extends BridgeAbstract {
 //		$article = str_get_html($this->remove_empty_elements($article->save(), "DIV"));
 //		$article = str_get_html($this->remove_empty_elements($article->save(), "SPAN"));
 //		$article = str_get_html($article_str);
-		replace_part_of_class($article, '.adSlotSibling', 'multiple', ' adSlotSibling', '');
-		replace_tag_and_class($article, 'DIV#lead', 'single', 'STRONG', NULL);
-		replace_tag_and_class($article, 'P.hyphenate', 'multiple', 'P', "");
-		$article = str_get_html($article->save());
+		$article = replace_part_of_class($article, '.adSlotSibling', 'multiple', ' adSlotSibling', '');
+		$article = replace_tag_and_class($article, 'DIV#lead', 'single', 'STRONG', NULL);
+		$article = replace_tag_and_class($article, 'P.hyphenate', 'multiple', 'P', "");
 //POCZĄTEK kopiowania z gazety prawnej
 //Przenoszenie podpisów zdjęć do jednego elementu
 		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8094155,economicus-2020-oto-nominowani-w-kategorii-najlepszy-poradnik-biznesowy.html
 		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8123606,marek-kajs-wilki-jak-sie-zachowac-odstrzal-gdos.html
-		foreach_combine_two_elements($article, 'DIV.frameWrap DIV.articleImageAuthor', 1, 1, 'DIV', 'frameWrap', 'DIV.articleImageDescription', 'innertext', 'innertext', 'DIV', 'frameWrap');
-		foreach_combine_two_elements($article, 'DIV.image DIV.imageCaptionWrapper', 1, 1, 'DIV', 'frameWrap', 'DIV.articleImageAuthor, DIV.articleImageDescription', 'outertext', 'outertext', 'DIV', 'intext_photo');
-		$article = str_get_html($article->save());
+		$article = foreach_combine_two_elements($article, 'DIV.frameWrap DIV.articleImageAuthor', 1, 1, 'DIV', 'frameWrap', 'DIV.articleImageDescription', 'innertext', 'innertext', 'DIV', 'frameWrap');
+		$article = foreach_combine_two_elements($article, 'DIV.image DIV.imageCaptionWrapper', 1, 1, 'DIV', 'frameWrap', 'DIV.articleImageAuthor, DIV.articleImageDescription', 'outertext', 'outertext', 'DIV', 'intext_photo');
 		foreach($article->find('DIV.intext_photo DIV.frameWrap') as $element_frameWrap)
 		{
 			$next_element = $element_frameWrap->find('.frameArea', 0);
@@ -287,30 +282,26 @@ class DziennikBridge extends BridgeAbstract {
 			$element_frameWrap->innertext = $new_html;
 		}
 //Poprawienie formatowania zdjęć		
-		$article = str_get_html($article->save());
 		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8094155,economicus-2020-oto-nominowani-w-kategorii-najlepszy-poradnik-biznesowy.html
-		format_article_photos($article, 'FIGURE.mainPhoto', TRUE, 'src', 'SPAN.imageDescription');
-		format_article_photos($article, 'DIV.intext_photo', FALSE, 'src', 'DIV.frameWrap');
-		format_article_photos($article, 'DIV.image', FALSE);//jeżeli było zdjęcie bez podpisu, to nie zostało zamienione na intext_photo
-		$article = str_get_html($article->save());
+		$article = format_article_photos($article, 'FIGURE.mainPhoto', TRUE, 'src', 'SPAN.imageDescription');
+		$article = format_article_photos($article, 'DIV.intext_photo', FALSE, 'src', 'DIV.frameWrap');
+		$article = format_article_photos($article, 'DIV.image', FALSE);//jeżeli było zdjęcie bez podpisu, to nie zostało zamienione na intext_photo
 //Poprawienie formatowanie treści artykułu		
 		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8137260,granica-usa-meksyk-jak-rozwiazac-kwestie-migracji.html
-		foreach_replace_outertext_with_innertext($article, 'DIV.frameWrap');
-		$article = str_get_html($article->save());
+		$article = foreach_replace_outertext_with_innertext($article, 'DIV.frameWrap');
 		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8137260,granica-usa-meksyk-jak-rozwiazac-kwestie-migracji.html
-		replace_tag_and_class($article, 'DIV.frameArea.srodtytul', 'multiple', 'H2', NULL);
+		$article = replace_tag_and_class($article, 'DIV.frameArea.srodtytul', 'multiple', 'H2', NULL);
 		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8137260,granica-usa-meksyk-jak-rozwiazac-kwestie-migracji.html
-		replace_tag_and_class($article, 'DIV#lead', 'single', 'STRONG', NULL);
+		$article = replace_tag_and_class($article, 'DIV#lead', 'single', 'STRONG', NULL);
 		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8137260,granica-usa-meksyk-jak-rozwiazac-kwestie-migracji.html
-		replace_tag_and_class($article, 'DIV.frameArea.wazne', 'multiple', 'BLOCKQUOTE', NULL);
+		$article = replace_tag_and_class($article, 'DIV.frameArea.wazne', 'multiple', 'BLOCKQUOTE', NULL);
 		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8123557,zycie-w-pandemii-lockdown-wplyw-na-czlowieka.html
-		replace_tag_and_class($article, 'DIV.frameArea.wyroznienie', 'multiple', 'BLOCKQUOTE', NULL);
+		$article = replace_tag_and_class($article, 'DIV.frameArea.wyroznienie', 'multiple', 'BLOCKQUOTE', NULL);
 		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8094785,sekularyzacja-przyspiesza-takze-w-polsce-wywiad.html
-		replace_tag_and_class($article, 'DIV.frameArea.pytanie', 'multiple', 'STRONG', NULL);
-		replace_tag_and_class($article, 'DIV.frameArea.tresc', 'multiple', 'P', NULL);
-		replace_part_of_class($article, '.frameArea', 'multiple', 'frameArea ', '');
+		$article = replace_tag_and_class($article, 'DIV.frameArea.pytanie', 'multiple', 'STRONG', NULL);
+		$article = replace_tag_and_class($article, 'DIV.frameArea.tresc', 'multiple', 'P', NULL);
+		$article = replace_part_of_class($article, '.frameArea', 'multiple', 'frameArea ', '');
 //KONIEC kopiowania z gazety prawnej		
-		$article = str_get_html($article->save());
 		foreach($article->find('DIV.embeddedApp') as $embeddedApp)
 		{
 			if (!is_null($params_element = $embeddedApp->find("DIV[data-params]", 0)))
@@ -321,17 +312,14 @@ class DziennikBridge extends BridgeAbstract {
 				$embeddedApp->outertext = $frame_outertext;
 			}
 		}
-		format_article_photos($article, 'FIGURE.mainPhoto', TRUE, 'src', 'FIGCAPTION');
-		$article = str_get_html($article->save());
-		add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
-		add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
-		add_style($article, 'FIGCAPTION', getStylePhotoCaption());
-		add_style($article, 'BLOCKQUOTE', getStyleQuote());
-		insert_html($article, 'DIV#detail', '', '<HR>');
+		$article = format_article_photos($article, 'FIGURE.mainPhoto', TRUE, 'src', 'FIGCAPTION');
+		$article = add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
+		$article = add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
+		$article = add_style($article, 'FIGCAPTION', getStylePhotoCaption());
+		$article = add_style($article, 'BLOCKQUOTE', getStyleQuote());
+		$article = insert_html($article, 'DIV#detail', '', '<HR>');
 		
-		$article = str_get_html($article->save());
-//		replace_tag_and_class($article, '[class]', 'multiple', NULL, "");
-//		$article = str_get_html($article->save());
+//		$article = replace_tag_and_class($article, '[class]', 'multiple', NULL, "");
 //		foreach 
 //		get_json_value_from_given_text($string, $variable_name);
 
@@ -403,7 +391,7 @@ class DziennikBridge extends BridgeAbstract {
 //		$selectors_array[] = 'comment';
 //		$selectors_array[] = 'SCRIPT';
 //		$selectors_array[] = 'NOSCRIPT';
-//		foreach_delete_element_array($article_html, $selectors_array);
+//		$article = foreach_delete_element_array($article_html, $selectors_array);
 		//Link nie będący premium (nie jest ostatni) CZYTAJ WIĘCEJ TUTAJ>>>
 		//https://wiadomosci.dziennik.pl/opinie/artykuly/8137333,transplciowe-dziecko-krystyna-pawlowicz-titanic-dzieci-kody-kulturowe-iii-rp-pis-po-donald-tusk-zbigniew-ziobro.html
 		//Link będący premium CZYTAJ WIĘCEJ w MAGAZYNIE DGP >>>

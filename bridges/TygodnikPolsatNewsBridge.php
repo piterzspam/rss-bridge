@@ -167,8 +167,8 @@ class TygodnikPolsatNewsBridge extends BridgeAbstract {
 		$selectors_array[] = 'DIV.article__related';
 		$selectors_array[] = 'DIV.article__share';
 		$selectors_array[] = 'DIV#fb-root';
-		foreach_delete_element_array($article, $selectors_array);
-		foreach_delete_element_containing_elements_hierarchy($article, array('A', 'STRONG', 'SPAN.article__more'));
+		$article = foreach_delete_element_array($article, $selectors_array);
+		$article = foreach_delete_element_containing_elements_hierarchy($article, array('A', 'STRONG', 'SPAN.article__more'));
 
 		foreach($article->find('amp-img, img') as $photo_element)
 		{
@@ -209,14 +209,14 @@ class TygodnikPolsatNewsBridge extends BridgeAbstract {
 		$lead_style = array(
 			'font-weight: bold;'
 		);
-		add_style($article, 'DIV.article__preview', $lead_style);
+		$article = add_style($article, 'DIV.article__preview', $lead_style);
 		//https://tygodnik.polsatnews.pl/news/2021-01-23/kiedys-bano-sie-zbydlecenia-dzis-mikroczipow/
-		add_style($article, 'FIGURE.article__figure, FIGURE.article-image', getStylePhotoParent());
-		add_style($article, 'IMG.article__img, DIV.article-image-wrap', getStylePhotoImg());
+		$article = add_style($article, 'FIGURE.article__figure, FIGURE.article-image', getStylePhotoParent());
+		$article = add_style($article, 'IMG.article__img, DIV.article-image-wrap', getStylePhotoImg());
 		//https://tygodnik.polsatnews.pl/news/2021-01-30/sladami-maurow-na-polwyspie-iberyjskim/
-		add_style($article, 'DIV.article__source, FIGCAPTION.article-image-capition, SPAN.article-image-src', getStylePhotoCaption());
+		$article = add_style($article, 'DIV.article__source, FIGCAPTION.article-image-capition, SPAN.article-image-src', getStylePhotoCaption());
 		//https://tygodnik.polsatnews.pl/news/2021-01-30/sladami-maurow-na-polwyspie-iberyjskim/
-		add_style($article, 'BLOCKQUOTE', getStyleQuote());
+		$article = add_style($article, 'BLOCKQUOTE', getStyleQuote());
 
 		$this->items[] = array(
 			'uri' => $url_article,

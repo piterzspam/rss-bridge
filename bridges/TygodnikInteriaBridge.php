@@ -211,9 +211,7 @@ class TygodnikInteriaBridge extends BridgeAbstract {
 		$selectors_array[] = 'DIV#adBox625';
 		$selectors_array[] = 'FOOTER.article-footer';
 		$selectors_array[] = 'HEADER.article-header';
-		foreach_delete_element_array($article, $selectors_array);
-		$str = $article->save();
-		$article = str_get_html($str);
+		$article = foreach_delete_element_array($article, $selectors_array);
 		foreach_delete_element($article, 'script');
 
 		//Przesunięcie artykułu wyżej w drzewie
@@ -223,17 +221,13 @@ class TygodnikInteriaBridge extends BridgeAbstract {
 		}
 
 
-		$lead_style = array(
-			'font-weight: bold;'
-		);
-		$str = $article->save();
-		$article = str_get_html($str);
-		add_style($article, 'P.article-lead', $lead_style);
-		add_style($article, 'ASIDE[id^="embed-photo"]', getStylePhotoParent());
-		add_style($article, 'DIV.embed-thumbnail', getStylePhotoImg());
-		add_style($article, 'DIV.embed-work-detail', getStylePhotoCaption());
+		
+		$article = replace_tag_and_class($article, 'P.article-lead', 'single', 'STRONG', NULL);
+		$article = add_style($article, 'ASIDE[id^="embed-photo"]', getStylePhotoParent());
+		$article = add_style($article, 'DIV.embed-thumbnail', getStylePhotoImg());
+		$article = add_style($article, 'DIV.embed-work-detail', getStylePhotoCaption());
 		//https://tygodnik.interia.pl/news-kolejowy-efekt-motyla-jedna-zmiana-wplywa-na-cala-polske,nId,5029602
-		add_style($article, 'BLOCKQUOTE', getStyleQuote());
+		$article = add_style($article, 'BLOCKQUOTE', getStyleQuote());
 		//Ramka IG
 		//https://tygodnik.interia.pl/news-mowili-ze-boli-przez-stres-lata-blednych-diagnoz,nId,5029594
 		//https://tygodnik.interia.pl/news-z-bolu-nie-wiedzialam-co-robic-gryzlam-sciany-dominika-strac,nId,4984520

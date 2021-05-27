@@ -82,34 +82,26 @@ class TygodnikPowszechnyBridge extends FeedExpander {
 		}
 
 		$article = $article_html->find('DIV.view-full-article', 0);
-		replace_part_of_class($article, 'DIV.views-field', 'multiple', 'views-field ', '');
-		$article = str_get_html($article->save());
-		foreach_replace_outertext_with_innertext($article, 'DIV.views-field-title');
-		foreach_replace_outertext_with_innertext($article, 'DIV.media-element-container');
-		$article = str_get_html($article->save());
-		replace_tag_and_class($article, 'DIV.views-field-field-summary DIV.field-content', 'single', 'STRONG', NULL);
-		$article = str_get_html($article->save());
+		$article = replace_part_of_class($article, 'DIV.views-field', 'multiple', 'views-field ', '');
+		$article = foreach_replace_outertext_with_innertext($article, 'DIV.views-field-title');
+		$article = foreach_replace_outertext_with_innertext($article, 'DIV.media-element-container');
+		$article = replace_tag_and_class($article, 'DIV.views-field-field-summary DIV.field-content', 'single', 'STRONG', NULL);
 
 		$selectors_array = array();
 		$selectors_array[] = 'DIV.views-field-body-1';
 		$selectors_array[] = 'comment';
-		foreach_delete_element_array($article, $selectors_array);
-		combine_two_elements($article, 'DIV.views-field-field-zdjecia', 'DIV.views-field-field-zdjecia-2', 'DIV', 'super_photo');
-		$article = str_get_html($article->save());
+		$article = foreach_delete_element_array($article, $selectors_array);
+		$article = combine_two_elements($article, 'DIV.views-field-field-zdjecia', 'DIV.views-field-field-zdjecia-2', 'DIV', 'super_photo');
 
-		foreach_replace_outertext_with_innertext($article, 'qqqqqqqqqqqqqqqqq');
-		format_article_photos($article, 'DIV.super_photo', TRUE, 'src', 'DIV.views-field-field-zdjecia-2 DIV.field-content');
-		format_article_photos($article, 'DIV.file-image', FALSE, 'src', 'DIV.field-item');
-		$article = str_get_html($article->save());
-		add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
-		add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
-		add_style($article, 'FIGCAPTION', getStylePhotoCaption());
-		add_style($article, 'BLOCKQUOTE', getStyleQuote());
-		$article = str_get_html($article->save());
-		replace_part_of_class($article, 'DIV[class*="views-field-field-"]', 'multiple', 'views-field-field-', '');
-		$article = str_get_html($article->save());
-		replace_part_of_class($article, 'DIV[class*="views-field-"]', 'multiple', 'views-field-', '');
-		$article = str_get_html($article->save());
+		$article = foreach_replace_outertext_with_innertext($article, 'qqqqqqqqqqqqqqqqq');
+		$article = format_article_photos($article, 'DIV.super_photo', TRUE, 'src', 'DIV.views-field-field-zdjecia-2 DIV.field-content');
+		$article = format_article_photos($article, 'DIV.file-image', FALSE, 'src', 'DIV.field-item');
+		$article = add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
+		$article = add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
+		$article = add_style($article, 'FIGCAPTION', getStylePhotoCaption());
+		$article = add_style($article, 'BLOCKQUOTE', getStyleQuote());
+		$article = replace_part_of_class($article, 'DIV[class*="views-field-field-"]', 'multiple', 'views-field-field-', '');
+		$article = replace_part_of_class($article, 'DIV[class*="views-field-"]', 'multiple', 'views-field-', '');
 
 		$item['content'] = $article;
 		$item['categories'] = $tags;

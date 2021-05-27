@@ -62,14 +62,14 @@ class OSWBridge extends FeedExpander {
 		$selectors_array[] = 'comment';
 		$selectors_array[] = 'script';
 		$selectors_array[] = 'NOSCRIPT';
-		foreach_delete_element_array($article, $selectors_array);
+		$article = foreach_delete_element_array($article, $selectors_array);
 
 
 		//https://www.osw.waw.pl/pl/publikacje/komentarze-osw/2021-03-02/przeciaganie-grenlandii-dania-usa-i-chiny-na-lodowej-wyspie
 		$this->format_article_photos_sources($article);
-		format_article_photos($article, 'IMG.inline-image', FALSE);
-//		format_article_photos($article, 'IMG.img-responsive', TRUE);
-		format_article_photos($article, 'IMG.img-responsive', FALSE);
+		$article = format_article_photos($article, 'IMG.inline-image', FALSE);
+//		$article = format_article_photos($article, 'IMG.img-responsive', TRUE);
+		$article = format_article_photos($article, 'IMG.img-responsive', FALSE);
 
 		$tags = array();
 		if (FALSE === is_null($tags_element = $article_page->find('DIV.field.field--name-taxonomy-vocabulary-9', 0)))

@@ -152,12 +152,10 @@ class MagazynWPBridge extends BridgeAbstract {
 		$selectors_array[] = 'DIV.wpsocial-shareBox';
 		$selectors_array[] = 'UL.teasers';
 		$selectors_array[] = 'DIV.center-content';
-		foreach_delete_element_array($article, $selectors_array);
-		$article = str_get_html($article->save());
+		$article = foreach_delete_element_array($article, $selectors_array);
 		//https://opinie.wp.pl/zakazac-demonstracji-onr-kataryna-problemy-z-demokracja-6119008400492673a?amp=1&_js_v=0.1
 		//https://opinie.wp.pl/apel-o-zawieszenie-stosunkow-dyplomatycznych-z-polska-kataryna-jestem-wsciekla-6222729167030401a?amp=1&_js_v=0.1
 		//https://opinie.wp.pl/kataryna-kaczynski-stawia-na-dude-6213466100516481a?amp=1&_js_v=0.1
-		$article = str_get_html($article->save());
 		foreach ($article->find("P") as $paragraph)
 		{
 			if (check_string_contains_needle_from_array($paragraph->plaintext, array("ZOBACZ WIDEO:")))
@@ -174,17 +172,15 @@ class MagazynWPBridge extends BridgeAbstract {
 		}
 		$article = str_get_html($article->save());
 		//https://sportowefakty-wp-pl.cdn.ampproject.org/c/s/sportowefakty.wp.pl/amp/kolarstwo/926408/43-lata-temu-polscy-kolarze-zgineli-w-katastrofie-lotniczej-po-otwarciu-trumny-o
-		format_article_photos($article, 'DIV.image.top-image', TRUE, 'src', 'SMALL');
-		format_article_photos($article, 'DIV.image', FALSE, 'src', 'SMALL');
-		format_article_photos($article, 'DIV.header-image-container', TRUE, 'src', 'DIV.header-author');
-		format_article_photos($article, 'DIV.photo.from.amp', FALSE, 'src', 'FIGCAPTION');
-		$article = str_get_html($article->save());
+		$article = format_article_photos($article, 'DIV.image.top-image', TRUE, 'src', 'SMALL');
+		$article = format_article_photos($article, 'DIV.image', FALSE, 'src', 'SMALL');
+		$article = format_article_photos($article, 'DIV.header-image-container', TRUE, 'src', 'DIV.header-author');
+		$article = format_article_photos($article, 'DIV.photo.from.amp', FALSE, 'src', 'FIGCAPTION');
 		//https://opinie.wp.pl/kataryna-zyjemy-w-okrutnym-swiecie-ale-aborcja-embriopatologiczna-musi-pozostac-opinia-6567085945505921a?amp=1&_js_v=0.1
-		add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
-		add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
-		add_style($article, 'FIGCAPTION', getStylePhotoCaption());
-		add_style($article, 'BLOCKQUOTE', getStyleQuote());
-		$article = str_get_html($article->save());
+		$article = add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
+		$article = add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
+		$article = add_style($article, 'FIGCAPTION', getStylePhotoCaption());
+		$article = add_style($article, 'BLOCKQUOTE', getStyleQuote());
 		$this->items[] = array(
 			//Fix &amp z linku
 			'uri' => htmlentities($url_article, ENT_QUOTES, 'UTF-8'),
@@ -312,7 +308,7 @@ private function getAmpLink($url)
 		$selectors_array[] = 'DIV[data-st-area="article-header"]';
 		//usuniecie niepotrzebnego elementu w leadzaie
 		$selectors_array[] = 'DIV.premium--full FIGURE SPAN DIV';
-		foreach_delete_element_array($article_html, $selectors_array);
+		$article_html = foreach_delete_element_array($article_html, $selectors_array);
 		//usunięcie ostatniego elementu z linkiem do dziejesie.wp.pl
 		foreach($article_html->find('DIV.article--text') as $article_text_element)
 		{
@@ -365,13 +361,13 @@ private function getAmpLink($url)
 		$lead_style = array(
 			'font-weight: bold;'
 		);
-		add_style($article_html, 'DIV.article--lead', $lead_style);
+		$article_html = add_style($article_html, 'DIV.article--lead', $lead_style);
 		//styl cytatu
-		add_style($article_html, 'blockquote', getStyleQuote());
+		$article_html = add_style($article_html, 'blockquote', getStyleQuote());
 		//styl holdera zdjęcia w treści i leadzie
-		add_style($article_html, 'DIV.premium--wide.photo, DIV.premium--full FIGURE', getStylePhotoParent());
+		$article_html = add_style($article_html, 'DIV.premium--wide.photo, DIV.premium--full FIGURE', getStylePhotoParent());
 		//styl zdjecia a treści i leadzie
-		add_style($article_html, 'DIV.photo-holder, DIV.premium--full FIGURE SPAN[class]', getStylePhotoImg());
+		$article_html = add_style($article_html, 'DIV.photo-holder, DIV.premium--full FIGURE SPAN[class]', getStylePhotoImg());
 		//podpis zdjęcia w jednym elemencie
 		foreach($article_html->find('SMALL.article--mainPhotoSource') as $small)
 		{
@@ -385,7 +381,7 @@ private function getAmpLink($url)
 			$span_text = remove_substring_if_exists_first($span_text, '; ');
 			$small->innertext = '<span>'.$span_text.'</span>';
 		}
-		add_style($article_html, 'SMALL.article--mainPhotoSource', getStylePhotoCaption());
+		$article_html = add_style($article_html, 'SMALL.article--mainPhotoSource', getStylePhotoCaption());
 		//tytul
 		if (FALSE === is_null($title_element = $article_html->find('H1.article--title', 0)))
 			$title = trim($title_element->plaintext);
@@ -431,25 +427,21 @@ private function getAmpLink($url)
 		$selectors_array[] = 'qqqqqqqq';
 		$selectors_array[] = 'qqqqqqqq';
 		$selectors_array[] = 'qqqqqqqq';
-		foreach_delete_element_array($article, $selectors_array);
-		$article = str_get_html($article->save());
+		$article = foreach_delete_element_array($article, $selectors_array);
 		//Zamiana elementu z perwszą literą na tekst
 		foreach_replace_outertext_with_plaintext($article, "SPAN.first-letter");
 		//lead
-		replace_tag_and_class($article, 'DIV.article--lead.fb-quote', 'single', 'STRONG', 'lead');
-		move_element($article, 'HEADER.fullPage--teaser DIV.teaser--row', 'HEADER.fullPage--teaser', 'outertext', 'after');
-		$article = str_get_html($article->save());
+		$article = replace_tag_and_class($article, 'DIV.article--lead.fb-quote', 'single', 'STRONG', 'lead');
+		$article = move_element($article, 'HEADER.fullPage--teaser DIV.teaser--row', 'HEADER.fullPage--teaser', 'outertext', 'after');
 		//zdjęcia w treści
-		format_article_photos($article, 'FIGURE', FALSE, 'src', 'FIGCAPTION');
-		$article = str_get_html($article->save());
+		$article = format_article_photos($article, 'FIGURE', FALSE, 'src', 'FIGCAPTION');
 		//Zdjęcie główne
 		if (!is_null($header_element = $article->find('HEADER[data-bg]', 0)) && !is_null($center_element = $article->find('HEADER[data-bg] DIV.center', 0)))
 		{
 			$photo_url = $header_element->getAttribute('data-bg');
 			$center_element->outertext = $center_element->outertext.'<img src="'.$photo_url.'">';
 			$article = str_get_html($article->save());
-			format_article_photos($article, 'HEADER.fullPage--teaser', TRUE, 'src', 'DIV.foto-desc');
-			$article = str_get_html($article->save());
+			$article = format_article_photos($article, 'HEADER.fullPage--teaser', TRUE, 'src', 'DIV.foto-desc');
 		}
 		//niepotrzebna spacja
 		if (!is_null($teaser_element = $article->find('DIV.teaser--row', 0)))
@@ -460,7 +452,7 @@ private function getAmpLink($url)
 				$new_innertext = $new_innertext.$child->outertext;
 			}
 			$teaser_element->innertext = $new_innertext;
-		$article = str_get_html($article->save());
+			$article = str_get_html($article->save());
 		}
 		//Fix podpisów pod zdjęciami
 		foreach($article->find('FIGCAPTION') as $caption)
@@ -473,13 +465,11 @@ private function getAmpLink($url)
 			$caption_text = remove_substring_if_exists_first($caption_text, "; ");
 			$caption->innertext = $caption_text;
 		}
-		$article = str_get_html($article->save());
-		add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
-		add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
-		add_style($article, 'FIGCAPTION', getStylePhotoCaption());
+		$article = add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
+		$article = add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
+		$article = add_style($article, 'FIGCAPTION', getStylePhotoCaption());
 		//https://magazyn.wp.pl/ksiazki/artykul/zapomniana-epidemia
-		add_style($article, 'BLOCKQUOTE', getStyleQuote());
-		$article = str_get_html($article->save());
+		$article = add_style($article, 'BLOCKQUOTE', getStyleQuote());
 		$this->items[] = array(
 			'uri' => $url,
 			'title' => getChangedTitle($title),

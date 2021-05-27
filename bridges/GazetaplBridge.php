@@ -129,7 +129,7 @@ class GazetaplBridge extends BridgeAbstract {
 		}
 		$article_html = $returned_array['html'];
 		$url = $returned_array['url'];
-		replace_attribute($article_html, 'IMG[src$="/image_placeholder_small.svg"][data-src]', 'src', 'data-src');
+		$article_html = replace_attribute($article_html, 'IMG[src$="/image_placeholder_small.svg"][data-src]', 'src', 'data-src');
 		$article_html = str_get_html(prepare_article($article_html));
 /*
 		$article_html_str = $article_html->save();
@@ -166,23 +166,19 @@ class GazetaplBridge extends BridgeAbstract {
 		$selectors_array[] = 'SECTION.tags';
 		//https://next.gazeta.pl/next/7,151003,26558939,europa-nam-to-zapamieta-wsciekli-nie-beda-eurokraci-tylko.html
 		$selectors_array[] = 'P.art_embed.relatedBox';
-		foreach_delete_element_array($article, $selectors_array);
+		$article = foreach_delete_element_array($article, $selectors_array);
 
-		clear_paragraphs_from_taglinks($article, 'P.art_paragraph', array('/\?tag=/'));
-		foreach_delete_element_containing_text_from_array($article, 'div.art_embed', array('Zobacz wideo'));
-		foreach_replace_outertext_with_subelement_innertext($article, 'DIV.bottom_section', 'SECTION.art_content');
+		$article = clear_paragraphs_from_taglinks($article, 'P.art_paragraph', array('/\?tag=/'));
+		$article = foreach_delete_element_containing_text_from_array($article, 'div.art_embed', array('Zobacz wideo'));
+		$article = foreach_replace_outertext_with_subelement_innertext($article, 'DIV.bottom_section', 'SECTION.art_content');
 
-		replace_tag_and_class($article, 'SPAN.article_data', 'single', 'DIV', NULL);
-		replace_tag_and_class($article, 'SPAN.article_date', 'single', 'DIV', NULL);
+		$article = replace_tag_and_class($article, 'SPAN.article_data', 'single', 'DIV', NULL);
+		$article = replace_tag_and_class($article, 'SPAN.article_date', 'single', 'DIV', NULL);
 		
-		$article = str_get_html($article->save());
-		move_element($article, 'DIV.author_and_date .article_date', '.author_and_date', 'outertext', 'after');
-		$article = str_get_html($article->save());
-		move_element($article, 'DIV.author_and_date', 'DIV#article_wrapper', 'outertext', 'after');
-		$article = str_get_html($article->save());
-		insert_html($article, 'DIV.author_and_date', '<HR>', '');
+		$article = move_element($article, 'DIV.author_and_date .article_date', '.author_and_date', 'outertext', 'after');
+		$article = move_element($article, 'DIV.author_and_date', 'DIV#article_wrapper', 'outertext', 'after');
+		$article = insert_html($article, 'DIV.author_and_date', '<HR>', '');
 		
-		$article = str_get_html($article->save());
 		foreach ($article->find('DIV.art_embed') as $embed)
 		{
 			$url = "";
@@ -224,19 +220,17 @@ class GazetaplBridge extends BridgeAbstract {
 			}
 		}
 		$article = str_get_html($article->save());
-		format_article_photos($article, 'DIV.related_images', TRUE, 'src', 'P.desc');
+		$article = format_article_photos($article, 'DIV.related_images', TRUE, 'src', 'P.desc');
 		//https://wiadomosci.gazeta.pl/wiadomosci/7,114884,26873712,sondazowe-eldorado-polski-2050-i-szymona-holowni-trwa-to-oni.html
-		format_article_photos($article, 'DIV.art_embed', FALSE, 'src', 'P.desc');
+		$article = format_article_photos($article, 'DIV.art_embed', FALSE, 'src', 'P.desc');
 
-//		add_style($article, 'H4.art_interview_question, DIV#gazeta_article_lead', array('font-weight: bold;'));
-		replace_tag_and_class($article, 'DIV#gazeta_article_lead', 'single', 'STRONG', 'lead');
-		replace_tag_and_class($article, 'H4', 'multiple', 'H3');
-		$article = str_get_html($article->save());
-		add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
-		add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
-		add_style($article, 'FIGCAPTION', getStylePhotoCaption());
-		add_style($article, 'BLOCKQUOTE', getStyleQuote());
-		$article = str_get_html($article->save());
+//		$article = add_style($article, 'H4.art_interview_question, DIV#gazeta_article_lead', array('font-weight: bold;'));
+		$article = replace_tag_and_class($article, 'DIV#gazeta_article_lead', 'single', 'STRONG', 'lead');
+		$article = replace_tag_and_class($article, 'H4', 'multiple', 'H3');
+		$article = add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
+		$article = add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
+		$article = add_style($article, 'FIGCAPTION', getStylePhotoCaption());
+		$article = add_style($article, 'BLOCKQUOTE', getStyleQuote());
 
 		$this->items[] = array(
 			'uri' => $url_article,

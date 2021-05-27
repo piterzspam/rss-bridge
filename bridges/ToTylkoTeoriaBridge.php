@@ -74,7 +74,7 @@
 		$selectors_array[] = 'DIV#related-posts';
 		$selectors_array[] = 'A[href="https://www.totylkoteoria.pl/2015/06/kim-jestem.html"]';
 		$selectors_array[] = 'DIV.author-avatar';
-		foreach_delete_element_array($article, $selectors_array);
+		$article = foreach_delete_element_array($article, $selectors_array);
 		//date
 		$date = $article->find('ABBR.published', 0)->getAttribute('title');
 		//title
@@ -134,26 +134,6 @@
 	{
 		foreach($ancestor->find($descendant_string) as $descendant)
 			$descendant->outertext = '';
-	}
-
-	private function foreach_delete_element_containing_elements_hierarchy($element, $hierarchy)
-	{
-		$last = count($hierarchy)-1;
-		$counter = 0;
-		foreach($element->find($hierarchy[$last]) as $found)
-		{
-			$counter++;
-			$iterator = $last-1;
-			while ($iterator >= 0 && $found->parent->tag === $hierarchy[$iterator])
-			{
-				$found = $found->parent;
-				$iterator--;
-			}
-			if ($iterator === -1)
-			{
-				$found->outertext = '';
-			}
-		}
 	}
 
 	private function get_proxy_url($social_url)

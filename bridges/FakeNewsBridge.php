@@ -86,12 +86,12 @@ class FakeNewsBridge extends FeedExpander {
 		$selectors_array[] = 'UL.nav.nav-tabs.clickable';
 		$selectors_array[] = 'DIV.autor-box IMG.avatar.avatar-96.photo';
 		$selectors_array[] = 'DIV.autor-box DIV.autor-title H1 A';
-		foreach_delete_element_array($article, $selectors_array);
+		$article = foreach_delete_element_array($article, $selectors_array);
 
-		format_article_photos($article, 'DIV.post-gallery', TRUE, 'src', 'SPAN.image-caption');
-		format_article_photos($article, 'FIGURE[id^="attachment_"]', FALSE, 'src', 'FIGCAPTION');
-		replace_tag_and_class($article, 'DIV.post-content P', 'single', 'STRONG', 'lead');
-		insert_html($article, 'DIV.about-more-autor', '<hr>', '', '', '');
+		$article = format_article_photos($article, 'DIV.post-gallery', TRUE, 'src', 'SPAN.image-caption');
+		$article = format_article_photos($article, 'FIGURE[id^="attachment_"]', FALSE, 'src', 'FIGCAPTION');
+		$article = replace_tag_and_class($article, 'DIV.post-content P', 'single', 'STRONG', 'lead');
+		$article = insert_html($article, 'DIV.about-more-autor', '<hr>', '', '', '');
 
 		$rating = get_text_plaintext($article, 'DIV.verdict H2', NULL);
 		if (isset($rating))
@@ -100,12 +100,10 @@ class FakeNewsBridge extends FeedExpander {
 			$item['title'] = $prefix.$item['title'];
 		}
 		$item['title'] = getChangedTitle($item['title']);
-		$article = str_get_html($article->save());
-		add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
-		add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
-		add_style($article, 'FIGCAPTION', getStylePhotoCaption());
-		add_style($article, 'BLOCKQUOTE', getStyleQuote());
-		$article = str_get_html($article->save());
+		$article = add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
+		$article = add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
+		$article = add_style($article, 'FIGCAPTION', getStylePhotoCaption());
+		$article = add_style($article, 'BLOCKQUOTE', getStyleQuote());
 
 		$item['content'] = $article;
 		$item['categories'] = $tags;

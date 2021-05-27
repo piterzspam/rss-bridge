@@ -79,27 +79,25 @@ class KlubJagiellonskiBridge extends FeedExpander {
 		$selectors_array[] = 'DIV.meta_mobile.desktop-hide';
 		$selectors_array[] = 'DIV.block-wyimki DIV.col.c1';
 		$selectors_array[] = 'DIV.inject_placeholder.shortcode[data-source="ramka-publikacje"]';
-		foreach_delete_element_array($article, $selectors_array);
-		foreach_delete_element_containing_subelement($article, 'DIV.block-content_breaker.block-content_breaker_ramka', 'A[href*="/temat/"]');
+		$article = foreach_delete_element_array($article, $selectors_array);
+		$article = foreach_delete_element_containing_subelement($article, 'DIV.block-content_breaker.block-content_breaker_ramka', 'A[href*="/temat/"]');
 		//https://klubjagiellonski.pl/2021/03/12/egzotyczny-sojusz-przeciwko-500-najbardziej-krytyczni-zwolennicy-konfederacji-lewica-i-najbogatsi/
-		foreach_delete_element_containing_subelement($article, 'DIV.block-content_breaker.block-content_breaker_ramka', 'IMG[src*="1-procent"]');
-		foreach_delete_element_containing_subelement($article, 'SPAN.colored', 'I.fa.fa-clock-o');
-		$article = str_get_html($article->save());
+		$article = foreach_delete_element_containing_subelement($article, 'DIV.block-content_breaker.block-content_breaker_ramka', 'IMG[src*="1-procent"]');
+		$article = foreach_delete_element_containing_subelement($article, 'SPAN.colored', 'I.fa.fa-clock-o');
  
 
 		$tags = return_tags_array($article, 'A.block-catbox SPAN.catboxfg');
 		$author = return_authors_as_string($article, 'A.block-author_bio P.imienazwisko');
 
 		//Wyimki - streszczenie
-		foreach_replace_outertext_with_innertext($article, 'DIV.col.c2');
-		$article = str_get_html($article->save());
+		$article = foreach_replace_outertext_with_innertext($article, 'DIV.col.c2');
 		foreach($article->find('DIV.block-wyimki DIV.row') as $row)
 		{
 			$row->outertext = '<strong>'.'- '.$row->plaintext.'</strong><br><br>';
 		}
 		$article = str_get_html($article->save());
 
-		format_article_photos($article, 'DIV.pix', TRUE, 'src', 'SPAN.pix_source');
+		$article = format_article_photos($article, 'DIV.pix', TRUE, 'src', 'SPAN.pix_source');
 		//Zdjęcia w treści
 		//https://klubjagiellonski.pl/2021/03/19/polacy-nie-chca-wegla-a-co-trzeci-jest-gotow-placic-wiecej-za-transformacje-energetyczna/
 
@@ -127,12 +125,10 @@ class KlubJagiellonskiBridge extends FeedExpander {
 			$meta_element->outertext = $new_metadata_outertext;
 		}
 
-		$article = str_get_html($article->save());
-		add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
-		add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
-		add_style($article, 'FIGCAPTION', getStylePhotoCaption());
-		add_style($article, 'BLOCKQUOTE', getStyleQuote());
-		$article = str_get_html($article->save());
+		$article = add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
+		$article = add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
+		$article = add_style($article, 'FIGCAPTION', getStylePhotoCaption());
+		$article = add_style($article, 'BLOCKQUOTE', getStyleQuote());
 		
 		$item['categories'] = $tags;
 		$item['author'] = $author;

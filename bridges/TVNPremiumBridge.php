@@ -93,7 +93,7 @@ class TVNPremiumBridge extends FeedExpander {
 				$selectors_array[] = 'IMG.premium-lock__picture';
 				$selectors_array[] = 'DIV.account-buttons--article';
 				$selectors_array[] = 'FIGURE.media-content';
-				foreach_delete_element_array($article, $selectors_array);
+				$article = foreach_delete_element_array($article, $selectors_array);
 
 
 				$item['content'] = $article;

@@ -210,12 +210,10 @@ class WPplBridge extends BridgeAbstract {
 		$selectors_array[] = 'DIV.wpsocial-shareBox';
 		$selectors_array[] = 'UL.teasers';
 		$selectors_array[] = 'DIV.center-content';
-		foreach_delete_element_array($article, $selectors_array);
-		$article = str_get_html($article->save());
+		$article = foreach_delete_element_array($article, $selectors_array);
 		//https://opinie.wp.pl/zakazac-demonstracji-onr-kataryna-problemy-z-demokracja-6119008400492673a?amp=1&_js_v=0.1
 		//https://opinie.wp.pl/apel-o-zawieszenie-stosunkow-dyplomatycznych-z-polska-kataryna-jestem-wsciekla-6222729167030401a?amp=1&_js_v=0.1
 		//https://opinie.wp.pl/kataryna-kaczynski-stawia-na-dude-6213466100516481a?amp=1&_js_v=0.1
-		$article = str_get_html($article->save());
 		foreach ($article->find("P") as $paragraph)
 		{
 			if (check_string_contains_needle_from_array($paragraph->plaintext, array("ZOBACZ WIDEO:")))
@@ -232,17 +230,15 @@ class WPplBridge extends BridgeAbstract {
 		}
 		$article = str_get_html($article->save());
 		//https://sportowefakty-wp-pl.cdn.ampproject.org/c/s/sportowefakty.wp.pl/amp/kolarstwo/926408/43-lata-temu-polscy-kolarze-zgineli-w-katastrofie-lotniczej-po-otwarciu-trumny-o
-		format_article_photos($article, 'DIV.image.top-image', TRUE, 'src', 'SMALL');
-		format_article_photos($article, 'DIV.image', FALSE, 'src', 'SMALL');
-		format_article_photos($article, 'DIV.header-image-container', TRUE, 'src', 'DIV.header-author');
-		format_article_photos($article, 'DIV.photo.from.amp', FALSE, 'src', 'FIGCAPTION');
-		$article = str_get_html($article->save());
+		$article = format_article_photos($article, 'DIV.image.top-image', TRUE, 'src', 'SMALL');
+		$article = format_article_photos($article, 'DIV.image', FALSE, 'src', 'SMALL');
+		$article = format_article_photos($article, 'DIV.header-image-container', TRUE, 'src', 'DIV.header-author');
+		$article = format_article_photos($article, 'DIV.photo.from.amp', FALSE, 'src', 'FIGCAPTION');
 		//https://opinie.wp.pl/kataryna-zyjemy-w-okrutnym-swiecie-ale-aborcja-embriopatologiczna-musi-pozostac-opinia-6567085945505921a?amp=1&_js_v=0.1
-		add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
-		add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
-		add_style($article, 'FIGCAPTION', getStylePhotoCaption());
-		add_style($article, 'BLOCKQUOTE', getStyleQuote());
-		$article = str_get_html($article->save());
+		$article = add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
+		$article = add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
+		$article = add_style($article, 'FIGCAPTION', getStylePhotoCaption());
+		$article = add_style($article, 'BLOCKQUOTE', getStyleQuote());
 		$this->items[] = array(
 			//Fix &amp z linku
 			'uri' => htmlentities($url_article, ENT_QUOTES, 'UTF-8'),

@@ -217,19 +217,13 @@ class LiberteBridge extends BridgeAbstract {
 		//data
 		$date = get_text_from_attribute($article_html, 'META[property="article:published_time"][content]', 'content', '');
 
-		move_element($article, 'DIV.row.entry-autor', 'DIV#anchor-link', 'outertext', 'before');
-		$article = str_get_html($article->save());
-		foreach_replace_outertext_with_innertext($article, 'P[class^="s"] SPAN[class^="s"]');
-		$article = str_get_html($article->save());
-		replace_tag_and_class($article, 'P', 'single', 'P', 'lead');
-		$article = str_get_html($article->save());
+		$article = move_element($article, 'DIV.row.entry-autor', 'DIV#anchor-link', 'outertext', 'before');
+		$article = foreach_replace_outertext_with_innertext($article, 'P[class^="s"] SPAN[class^="s"]');
+		$article = replace_tag_and_class($article, 'P', 'single', 'P', 'lead');
 		//https://liberte.pl/labedzi-spiew-alfy/
-		replace_tag_and_class($article, 'H4', 'multiple', 'H3');
-		$article = str_get_html($article->save());
-		foreach_delete_element_containing_subelement($article, 'SECTION.single-top DIV.large-8.medium-12.small-12.columns', 'A.share-icon');
-		$article = str_get_html($article->save());
-		replace_part_of_class($article, 'SECTION.single-top DIV.row, DIV.margin-bottom30 DIV.row', 'multiple', 'row', 'row_v2');
-		$article = str_get_html($article->save());
+		$article = replace_tag_and_class($article, 'H4', 'multiple', 'H3');
+		$article = foreach_delete_element_containing_subelement($article, 'SECTION.single-top DIV.large-8.medium-12.small-12.columns', 'A.share-icon');
+		$article = replace_part_of_class($article, 'SECTION.single-top DIV.row, DIV.margin-bottom30 DIV.row', 'multiple', 'row', 'row_v2');
 
 		$selectors_array = array();
 		$selectors_array[] = 'DIV.single-bottom.border-top.padding-top30';
@@ -237,26 +231,20 @@ class LiberteBridge extends BridgeAbstract {
 		$selectors_array[] = 'FOOTER#footer';
 		$selectors_array[] = 'DIV.row';
 		$selectors_array[] = 'comment';
-		foreach_delete_element_array($article, $selectors_array);
-		$article = str_get_html($article->save());
-		foreach_replace_outertext_with_subelement_outertext($article, 'SECTION.single-top', 'H1');
-		foreach_delete_element_containing_subelement($article, 'DIV#anchor-link DIV.row_v2', 'DIV#disqus_thread');
-		$article = str_get_html($article->save());
-		format_article_photos($article, 'DIV.large-12.medium-12.small-12.columns', TRUE);
-		//format_article_photos($main_element, $element_search_string, $is_main = FALSE, $str_photo_url_attribute = 'src', $str_selectror_photo_caption = '');
-		format_article_photos($article, 'FIGURE[id^="attachment_"]', FALSE, 'src', 'FIGCAPTION');
+		$article = foreach_delete_element_array($article, $selectors_array);
+		$article = foreach_replace_outertext_with_subelement_outertext($article, 'SECTION.single-top', 'H1');
+		$article = foreach_delete_element_containing_subelement($article, 'DIV#anchor-link DIV.row_v2', 'DIV#disqus_thread');
+		$article = format_article_photos($article, 'DIV.large-12.medium-12.small-12.columns', TRUE);
+		$article = format_article_photos($article, 'FIGURE[id^="attachment_"]', FALSE, 'src', 'FIGCAPTION');
 		//https://liberte.pl/co-w-ttrawie-piszczy-13/
-		format_article_photos($article, 'P', FALSE);
-		replace_part_of_class($article, 'DIV.row_v2.entry-autor', 'single', 'row_v2', '');
-		$article = str_get_html($article->save());
-		foreach_replace_outertext_with_innertext($article, 'DIV.row_v2');
-		$article = str_get_html($article->save());
-		foreach_replace_outertext_with_innertext($article, 'DIV.flexible');
-		foreach_replace_outertext_with_innertext($article, 'DIV.text-content');
-		foreach_replace_outertext_with_innertext($article, 'DIV#anchor-link');
-		foreach_replace_outertext_with_innertext($article, 'DIV.margin-bottom30');
-		foreach_replace_outertext_with_innertext($article, 'ARTICLE.blog-single.margin-bottom30');
-		$article = str_get_html($article->save());
+		$article = format_article_photos($article, 'P', FALSE);
+		$article = replace_part_of_class($article, 'DIV.row_v2.entry-autor', 'single', 'row_v2', '');
+		$article = foreach_replace_outertext_with_innertext($article, 'DIV.row_v2');
+		$article = foreach_replace_outertext_with_innertext($article, 'DIV.flexible');
+		$article = foreach_replace_outertext_with_innertext($article, 'DIV.text-content');
+		$article = foreach_replace_outertext_with_innertext($article, 'DIV#anchor-link');
+		$article = foreach_replace_outertext_with_innertext($article, 'DIV.margin-bottom30');
+		$article = foreach_replace_outertext_with_innertext($article, 'ARTICLE.blog-single.margin-bottom30');
 		
 		
 
@@ -270,14 +258,12 @@ class LiberteBridge extends BridgeAbstract {
 		}
 */
 
-		$article = str_get_html($article->save());
 		//https://liberte.pl/rozmowy-z-bogami-z-katarzyna-gorewicz-rozmawia-alicja-mysliwiec/
-		add_style($article, 'P.lead', array('font-weight: bold;'));
-		add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
-		add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
-		add_style($article, 'FIGCAPTION', getStylePhotoCaption());
-		add_style($article, 'BLOCKQUOTE', getStyleQuote());
-		$article = str_get_html($article->save());
+		$article = add_style($article, 'P.lead', array('font-weight: bold;'));
+		$article = add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
+		$article = add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
+		$article = add_style($article, 'FIGCAPTION', getStylePhotoCaption());
+		$article = add_style($article, 'BLOCKQUOTE', getStyleQuote());
 
 		$this->items[] = array(
 			'uri' => $url,

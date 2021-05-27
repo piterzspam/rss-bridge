@@ -86,7 +86,7 @@ class SprawdzamAFPBridge extends BridgeAbstract {
 		$next_data_subarrays = get_subarrays_by_key($next_data_array, "output", NULL);
 		$detail_data_flattened = flatten_array($next_data_subarrays, "output");
 		$main_image_code = str_replace('<img', '<img class="photoWrapper mainPhoto" ', $detail_data_flattened[0]["output"]);
-		insert_html($article_html, 'H1.content-title', '', $main_image_code, '', '');
+		$article_html = insert_html($article_html, 'H1.content-title', '', $main_image_code, '', '');
 
 		$article_html = str_get_html(prepare_article($article_html, 'https://sprawdzam.afp.com'));
 		$article = $article_html->find('ARTICLE[role="article"]', 0);
@@ -105,25 +105,23 @@ class SprawdzamAFPBridge extends BridgeAbstract {
 			$tags[$key] = ucwords(strtolower($tag));
 		}
 
-		$article = str_get_html($article->save());
 		$selectors_array[] = 'comment';
 		$selectors_array[] = 'script';
 		$selectors_array[] = 'SPAN.meta-share.addtoany';
 		$selectors_array[] = 'SPAN.meta-separator';
-		foreach_delete_element_array($article, $selectors_array);
-//		move_element($article, 'DIV#container HEADER.entry-header.clearfix', 'DIV#content', 'innertext', 'before');
-		format_article_photos($article, 'IMG.photoWrapper.mainPhoto', TRUE);
-		format_article_photos($article, 'DIV.ww-item.image', FALSE, 'src', 'SPAN.legend');
-		$article = str_get_html($article->save());
+		$article = foreach_delete_element_array($article, $selectors_array);
+//		$article = move_element($article, 'DIV#container HEADER.entry-header.clearfix', 'DIV#content', 'innertext', 'before');
+		$article = format_article_photos($article, 'IMG.photoWrapper.mainPhoto', TRUE);
+		$article = format_article_photos($article, 'DIV.ww-item.image', FALSE, 'src', 'SPAN.legend');
 		foreach($article->find('DIV.content-meta SPAN[class^="meta-"]') as $separator)
 		{
 			$separator->outertext = $separator->outertext.'<br>';
 		}
 		$article = str_get_html($article->save());
-		add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
-		add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
-		add_style($article, 'FIGCAPTION', getStylePhotoCaption());
-		add_style($article, 'BLOCKQUOTE', getStyleQuote());	
+		$article = add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
+		$article = add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
+		$article = add_style($article, 'FIGCAPTION', getStylePhotoCaption());
+		$article = add_style($article, 'BLOCKQUOTE', getStyleQuote());	
 		$this->items[] = array(
 			'uri' => $url,
 			'title' => $title,

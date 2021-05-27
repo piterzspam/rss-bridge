@@ -240,28 +240,24 @@ class DemagogBridge extends BridgeAbstract {
 		$selectors_array[] = 'NOSCRIPT';
 		$selectors_array[] = 'DIV.newsletter-post';
 		$selectors_array[] = 'comment';
-		foreach_delete_element_array($article, $selectors_array);
+		$article = foreach_delete_element_array($article, $selectors_array);
 
-		foreach_replace_outertext_with_innertext($article, 'DIV.row-custom.blue.mb-3.pb-2');
-		foreach_replace_outertext_with_innertext($article, 'DIV.mb-5.pb-3.count-text');
+		$article = foreach_replace_outertext_with_innertext($article, 'DIV.row-custom.blue.mb-3.pb-2');
+		$article = foreach_replace_outertext_with_innertext($article, 'DIV.mb-5.pb-3.count-text');
 		//https://demagog.org.pl/fake_news/nagrania-ze-szpitali-nie-neguja-istnienia-pandemii-zestawienie-zdarzen/
-		foreach_replace_outertext_with_subelement_innertext($article, 'DIV.lead.target-blank', 'P');
+		$article = foreach_replace_outertext_with_subelement_innertext($article, 'DIV.lead.target-blank', 'P');
 		//https://demagog.org.pl/fake_news/pawel-kukiz-przeszedl-do-prawa-i-sprawiedliwosci-fake-news/
-		foreach_replace_outertext_with_subelement_innertext($article, 'DIV.lead.target-blank', 'DIV.p-rich_text_section');
+		$article = foreach_replace_outertext_with_subelement_innertext($article, 'DIV.lead.target-blank', 'DIV.p-rich_text_section');
 		
-		$article = str_get_html($article->save());
-		replace_tag_and_class($article, 'DIV.important-text, DIV.summary-text', 'multiple', 'BLOCKQUOTE', NULL);
-		replace_tag_and_class($article, 'DIV.lead.target-blank', 'single', 'STRONG', 'lead');
-		$article = str_get_html($article->save());
+		$article = replace_tag_and_class($article, 'DIV.important-text, DIV.summary-text', 'multiple', 'BLOCKQUOTE', NULL);
+		$article = replace_tag_and_class($article, 'DIV.lead.target-blank', 'single', 'STRONG', 'lead');
 		//https://demagog.org.pl/wypowiedzi/ilu-wnioskow-o-skargi-nadzwyczajne-wciaz-nie-rozpatrzono/
-		format_article_photos($article, 'DIV.col-12.mb-4.px-0.w-img-100', TRUE);
-		format_article_photos($article, 'DIV[id^="attachment_"], IMG.alignnone', FALSE, 'src', 'P.wp-caption-text');
-		$article = str_get_html($article->save());
-		add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
-		add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
-		add_style($article, 'FIGCAPTION', getStylePhotoCaption());
-		add_style($article, 'BLOCKQUOTE', getStyleQuote());
-		$article = str_get_html($article->save());
+		$article = format_article_photos($article, 'DIV.col-12.mb-4.px-0.w-img-100', TRUE);
+		$article = format_article_photos($article, 'DIV[id^="attachment_"], IMG.alignnone', FALSE, 'src', 'P.wp-caption-text');
+		$article = add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
+		$article = add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
+		$article = add_style($article, 'FIGCAPTION', getStylePhotoCaption());
+		$article = add_style($article, 'BLOCKQUOTE', getStyleQuote());
 
 		$this->items[] = array(
 			'uri' => $url,

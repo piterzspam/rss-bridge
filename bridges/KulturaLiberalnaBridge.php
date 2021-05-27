@@ -68,7 +68,7 @@ class KulturaLiberalnaBridge extends FeedExpander {
 		$selectors_array[] = 'P.section-name.mobile-section-name';
 		//https://kulturaliberalna.pl/2021/01/12/cena-osobnosci-nie-jest-wysoka-na-razie/
 		$selectors_array[] = 'DIV.promobox';
-		foreach_delete_element_array($article_post, $selectors_array);
+		$article = foreach_delete_element_array($article_post, $selectors_array);
 		$tags = return_tags_array($article_post, 'DIV.post-tags A');
 		$author = return_authors_as_string($article_post, 'DIV.article-footer H2');
 
@@ -85,10 +85,10 @@ class KulturaLiberalnaBridge extends FeedExpander {
 			if(isset($photo_element->sizes)) $photo_element->sizes = NULL;
 		}
 //https://kulturaliberalna.pl/2021/01/26/dlaczego-maly-sklepik-jest-otwarty-a-duza-restauracja-zamknieta-latwiej-zarazic-sie-w-sklepiku/
-		add_style($article_post, 'blockquote', getStyleQuote());
-		add_style($article_post, 'DIV[id^="attachment_"]', getStylePhotoParent());
-		add_style($article_post, 'IMG[class^="wp-image-"]', getStylePhotoImg());
-		add_style($article_post, 'P.wp-caption-text', getStylePhotoCaption());
+		$article_post = add_style($article_post, 'blockquote', getStyleQuote());
+		$article_post = add_style($article_post, 'DIV[id^="attachment_"]', getStylePhotoParent());
+		$article_post = add_style($article_post, 'IMG[class^="wp-image-"]', getStylePhotoImg());
+		$article_post = add_style($article_post, 'P.wp-caption-text', getStylePhotoCaption());
 		$str = $article_post->save();
 		$article_post = str_get_html($str);
 

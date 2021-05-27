@@ -145,7 +145,7 @@ class KonkretTVN24Bridge extends BridgeAbstract {
 
 		$date = get_json_value($article_html, 'SCRIPT', 'date');
 		
-		move_element($article_html, 'HEADER.article-main-photo', 'DIV.article-content__metadata', 'outertext', 'after');
+		$article= $article = move_element($article,  'HEADER.article-main-photo', 'DIV.article-content__metadata', 'outertext', 'after');
 
 		$article = $article_html->find('DIV.page-article DIV.article-content', 0);
 		$title = get_text_plaintext($article, 'H2.article-content__title', $url);
@@ -163,25 +163,23 @@ class KonkretTVN24Bridge extends BridgeAbstract {
 		else if (FALSE !== strpos($url, 'tvn24.pl/tech')) $tags[] = 'Tech';
 		else if (FALSE !== strpos($url, 'tvn24.pl/zdrowie')) $tags[] = 'Zdrowie';
 
-		format_article_photos($article, 'HEADER.article-main-photo', TRUE);
+		$article = format_article_photos($article, 'HEADER.article-main-photo', TRUE);
 		//https://konkret24.tvn24.pl/polska,108/dlaczego-prezes-orlenu-nie-sklada-oswiadczenia-majatkowego-a-prezes-uzdrowiska-w-rabce-musi-wyjasniamy,1053560.html
 		//konkret24.tvn24.pl##DIV.article-content__inner-texts.article-content__inner-texts--photo
 		//konkret24.tvn24.pl##DIV.article-content__inner-texts.article-content__inner-texts--video.article-content__inner-texts--video--false
-		format_article_photos($article, 'DIV.article-content__inner-texts--video', FALSE, 'src', 'DIV.article-content__inner-texts--video__metadata');
-		format_article_photos($article, 'DIV.article-content__inner-texts--photo', FALSE, 'src', 'FIGCAPTION.photo-figure__caption');
-		replace_tag_and_class($article, 'DIV.article-content__lead', 'single', 'STRONG', NULL);
+		$article = format_article_photos($article, 'DIV.article-content__inner-texts--video', FALSE, 'src', 'DIV.article-content__inner-texts--video__metadata');
+		$article = format_article_photos($article, 'DIV.article-content__inner-texts--photo', FALSE, 'src', 'FIGCAPTION.photo-figure__caption');
+		$article = replace_tag_and_class($article, 'DIV.article-content__lead', 'single', 'STRONG', NULL);
 		//konkret24.tvn24.pl##DIV.article-content__inner-texts.article-content__inner-texts--text
-		foreach_replace_outertext_with_innertext($article, 'DIV.article-content__inner-texts');
+		$article = foreach_replace_outertext_with_innertext($article, 'DIV.article-content__inner-texts');
 
 		$selectors_array = array();
 		$selectors_array[] = 'SCRIPT';
 		$selectors_array[] = 'comment';
 		$selectors_array[] = 'DIV.adoSlot';
 		$selectors_array[] = 'DIV.share-container__position';
-		foreach_delete_element_array($article, $selectors_array);
-		$article = str_get_html($article->save());
-		foreach_replace_outertext_with_innertext($article, 'DIV.article-content__inner-texts');
-		$article = str_get_html($article->save());
+		$article = foreach_delete_element_array($article, $selectors_array);
+		$article = foreach_replace_outertext_with_innertext($article, 'DIV.article-content__inner-texts');
 
 		$next_data_array = get_json_variable_as_array($article_html, '__NEXT_DATA__', 'SCRIPT');
 		$next_data_subarrays = get_subarrays_by_key($next_data_array, "detail", NULL);
@@ -194,11 +192,10 @@ class KonkretTVN24Bridge extends BridgeAbstract {
 				$title = '[PRAWDA] '.$title;
 		}
 
-		add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
-		add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
-		add_style($article, 'FIGCAPTION', getStylePhotoCaption());
-		add_style($article, 'BLOCKQUOTE', getStyleQuote());
-		$article = str_get_html($article->save());
+		$article = add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
+		$article = add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
+		$article = add_style($article, 'FIGCAPTION', getStylePhotoCaption());
+		$article = add_style($article, 'BLOCKQUOTE', getStyleQuote());
 	
 		$this->items[] = array(
 			'uri' => $url,

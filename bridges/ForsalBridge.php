@@ -145,8 +145,8 @@ class ForsalBridge extends BridgeAbstract {
 		$selectors_array[] = 'DIV.adBoxTop';
 		$selectors_array[] = 'DIV.adBox';
 		$selectors_array[] = 'DIV.widget.video';
-		foreach_delete_element_array($article, $selectors_array);
-		clear_paragraphs_from_taglinks($article, 'P.hyphenate', array('/forsal\.pl\/tagi\//'));
+		$article = foreach_delete_element_array($article, $selectors_array);
+		$article = clear_paragraphs_from_taglinks($article, 'P.hyphenate', array('/forsal\.pl\/tagi\//'));
 
 
 		$this->items[] = array(
@@ -157,15 +157,6 @@ class ForsalBridge extends BridgeAbstract {
 			'content' => $article
 		);
 	}
-	private function clear_paragraphs_from_taglinks($article, $paragrapghSearchString, $regexArray)
-	{
-		foreach($article->find($paragrapghSearchString) as $paragraph)
-			foreach($paragraph->find('A') as $a_element)
-				foreach($regexArray as $regex)
-					if(1 === preg_match($regex, $a_element->href))
-						$a_element->outertext = $a_element->plaintext;
-	}
-
 	
 	private function parse_article_data($article_data)
 	{
@@ -248,26 +239,6 @@ class ForsalBridge extends BridgeAbstract {
 	{
 		foreach($ancestor->find($descendant_string) as $descendant)
 			$descendant->outertext = '';
-	}
-
-	private function foreach_delete_element_containing_elements_hierarchy($element, $hierarchy)
-	{
-		$last = count($hierarchy)-1;
-		$counter = 0;
-		foreach($element->find($hierarchy[$last]) as $found)
-		{
-			$counter++;
-			$iterator = $last-1;
-			while ($iterator >= 0 && $found->parent->tag === $hierarchy[$iterator])
-			{
-				$found = $found->parent;
-				$iterator--;
-			}
-			if ($iterator === -1)
-			{
-				$found->outertext = '';
-			}
-		}
 	}
 
 	private function get_proxy_url($url)

@@ -125,21 +125,16 @@ class RespublicaBridge extends FeedExpander {
 		$selectors_array[] = 'qqqqqqqqqq';
 		$selectors_array[] = 'qqqqqqqqqq';
 		$selectors_array[] = 'qqqqqqqqqq';
-		foreach_delete_element_array($article, $selectors_array);
-		$article = str_get_html(remove_empty_elements($article, "DIV, P"));
-		replace_tag_and_class($article, 'P.lead', 'single', 'STRONG', NULL);
-		$article = str_get_html($article->save());
-		foreach_replace_outertext_with_innertext($article, 'DIV.small-12');
-		foreach_replace_outertext_with_innertext($article, 'ARTICLE[id]');
-		foreach_replace_outertext_with_innertext($article, 'DIV#content');
-		$article = str_get_html($article->save());
-		format_article_photos($article, 'DIV.main-image', TRUE);
-		$article = str_get_html($article->save());
-		add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
-		add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
-		add_style($article, 'FIGCAPTION', getStylePhotoCaption());
-		add_style($article, 'BLOCKQUOTE', getStyleQuote());
-		$article = str_get_html($article->save());
+		$article = foreach_delete_element_array($article, $selectors_array);
+		$article = replace_tag_and_class($article, 'P.lead', 'single', 'STRONG', NULL);
+		$article = foreach_replace_outertext_with_innertext($article, 'DIV.small-12');
+		$article = foreach_replace_outertext_with_innertext($article, 'ARTICLE[id]');
+		$article = foreach_replace_outertext_with_innertext($article, 'DIV#content');
+		$article = format_article_photos($article, 'DIV.main-image', TRUE);
+		$article = add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
+		$article = add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
+		$article = add_style($article, 'FIGCAPTION', getStylePhotoCaption());
+		$article = add_style($article, 'BLOCKQUOTE', getStyleQuote());
 
 
 		$this->items[] = array(
@@ -197,10 +192,10 @@ class RespublicaBridge extends FeedExpander {
 		$selectors_array[] = 'DIV.social_bottom_container';
 		$selectors_array[] = 'ARTICLE[id^="post-"] DIV[style="clear:both;"]';
 		$selectors_array[] = 'DL.komentarze-w-akordeonie';
-		foreach_delete_element_array($article, $selectors_array);
+		$article = foreach_delete_element_array($article, $selectors_array);
 		//https://publica.pl/teksty/ue-zawiodla-w-sprawie-szczepionek-68348.html
-		foreach_delete_element_containing_subelement($article, 'FIGURE.figure', 'A[href*="publica.pl/produkt"]');
-		foreach_delete_element_containing_subelement($article, 'FIGURE.figure', 'IMG[title^="Zadeklaruj 1%"]');
+		$article = foreach_delete_element_containing_subelement($article, 'FIGURE.figure', 'A[href*="publica.pl/produkt"]');
+		$article = foreach_delete_element_containing_subelement($article, 'FIGURE.figure', 'IMG[title^="Zadeklaruj 1%"]');
 		
 		$tags = array();
 		if (FALSE === is_null($tags_element = $article_page->find('META[name="keywords"][content]', 0)))

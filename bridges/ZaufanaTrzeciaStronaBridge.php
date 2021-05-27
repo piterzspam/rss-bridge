@@ -69,14 +69,10 @@ class ZaufanaTrzeciaStronaBridge extends FeedExpander {
 		$selectors_array[] = 'comment';
 		$selectors_array[] = 'script';
 		$selectors_array[] = 'DIV.thumbnail-wrap P';
-		foreach_delete_element_array($article, $selectors_array);
+		$article = foreach_delete_element_array($article, $selectors_array);
 
-//		format_article_photos($article, 'DIV.wp-block-image', FALSE, 'src', 'FIGCAPTION');
-//		format_article_photos($article, 'FIGURE.wp-block-image', FALSE, 'src', 'FIGCAPTION');
-		format_article_photos($article, '.wp-block-image', FALSE, 'src', 'FIGCAPTION');
-		$article = str_get_html($article->save());
-		replace_tag_and_class($article, 'P', 'single', 'STRONG', 'lead');
-		$article = str_get_html($article->save());
+		$article = format_article_photos($article, '.wp-block-image', FALSE, 'src', 'FIGCAPTION');
+		$article = replace_tag_and_class($article, 'P', 'single', 'STRONG', 'lead');
 
 /*
 		foreach($article->find('DIV.wp-block-embed__wrapper') as $embed)
@@ -94,13 +90,11 @@ class ZaufanaTrzeciaStronaBridge extends FeedExpander {
 				.'<br></strong>';
 		}
 */	
-		add_style($article, 'DIV.thumbnail-wrap', array('float: left;', 'margin-right: 15px;'));
-		$article = str_get_html($article->save());
-		add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
-		add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
-		add_style($article, 'FIGCAPTION', getStylePhotoCaption());
-		add_style($article, 'BLOCKQUOTE', getStyleQuote());
-		$article = str_get_html($article->save());
+		$article = add_style($article, 'DIV.thumbnail-wrap', array('float: left;', 'margin-right: 15px;'));
+		$article = add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
+		$article = add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
+		$article = add_style($article, 'FIGCAPTION', getStylePhotoCaption());
+		$article = add_style($article, 'BLOCKQUOTE', getStyleQuote());
 		$item['content'] = $article;
 		$item['categories'] = $tags;
 		if (FALSE === in_array("konferencja", $item['categories']))

@@ -67,22 +67,17 @@ class MagazynSWPlusBridge extends FeedExpander {
 		$item = parent::parseItem($newsItem);
 		preg_match('/\(([^\)]*)/', $item['author'], $output_array);
 		$item['author'] = $output_array[1];
-		$article_string = $item['content'];
-		$article = str_get_html($article_string);
-		convert_iframes_to_links($article);
-		$article = str_get_html($article->save());
-		fix_all_photos_attributes($article);
-		$article = str_get_html($article->save());
+		$article = str_get_html($item['content']);
+		$article = convert_iframes_to_links($article);
+		$article = fix_all_photos_attributes($article);
 		$primary_photo = $article->find('P IMG[class$="primaryImage"]', 0);
 		if (FALSE === is_null($primary_photo))
 		{
 			$primary_photo->parent->outertext = $primary_photo->outertext;
 		}
 		$article = str_get_html($article->save());
-		format_article_photos($article, 'IMG[class$="primaryImage"]', TRUE);
-		$article = str_get_html($article->save());
-		format_article_photos($article, 'FIGURE.wp-block-image', FALSE, 'src', 'FIGCAPTION');
-		$article = str_get_html($article->save());
+		$article = format_article_photos($article, 'IMG[class$="primaryImage"]', TRUE);
+		$article = format_article_photos($article, 'FIGURE.wp-block-image', FALSE, 'src', 'FIGCAPTION');
 		if (FALSE === is_null($last_link = $article->find('A[href*="spidersweb.pl/plus/"]', -1)))
 			$last_link->outertext = '';
 		$article = str_get_html($article->save());
@@ -92,11 +87,10 @@ class MagazynSWPlusBridge extends FeedExpander {
 		if (FALSE === is_null($br = $article->find('BR', -1)))
 			$br->outertext = '';
 		$article = str_get_html($article->save());
-		add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
-		add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
-		add_style($article, 'FIGCAPTION', getStylePhotoCaption());
-		add_style($article, 'BLOCKQUOTE', getStyleQuote());
-		$article = str_get_html($article->save());
+		$article = add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
+		$article = add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
+		$article = add_style($article, 'FIGCAPTION', getStylePhotoCaption());
+		$article = add_style($article, 'BLOCKQUOTE', getStyleQuote());
 		$item['content'] = $article;
 		return $item;
 	}

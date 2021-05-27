@@ -140,7 +140,7 @@ class PolitykaBlogiBridge extends BridgeAbstract {
 		convert_amp_frames_to_links($article);
 //https://bezprawnik.pl/korwin-mikke-wyrzucony-z-facebooka/amp/
 //https://bezprawnik.pl/rzad-zmienil-ustroj-polski/amp/
-		foreach_delete_element_containing_elements_hierarchy($article, array('ul', 'li', 'h3', 'a'));
+		$article = foreach_delete_element_containing_elements_hierarchy($article, array('ul', 'li', 'h3', 'a'));
 		$selectors_array[] = 'comment';
 		//może pomoże na drugie zdjęcie pod zdjęciem głównynm w czytniku
 		$selectors_array[] = 'script';
@@ -148,8 +148,8 @@ class PolitykaBlogiBridge extends BridgeAbstract {
 		$selectors_array[] = 'NOSCRIPT';
 		$selectors_array[] = 'DIV.amp-autor';
 		$selectors_array[] = 'FOOTER';
-		foreach_delete_element_array($article, $selectors_array);
-		clear_paragraphs_from_taglinks($article, 'P', array('/bezprawnik.pl\/tag\//'));
+		$article = foreach_delete_element_array($article, $selectors_array);
+		$article = clear_paragraphs_from_taglinks($article, 'P', array('/bezprawnik.pl\/tag\//'));
 
 		//zdjęcie autora
 		$author_photo = $article->find('FIGURE[id^="attachment_"][class^="wp-caption alignright amp-wp-"]', 0);
@@ -158,7 +158,7 @@ class PolitykaBlogiBridge extends BridgeAbstract {
 			$author_photo = $author_photo->outertext = '';
 		}
 		
-		format_article_photos($article, 'FIGURE.amp-wp-article-featured-image.wp-caption', TRUE);
+		$article = format_article_photos($article, 'FIGURE.amp-wp-article-featured-image.wp-caption', TRUE);
 		
 /*
 		foreach($article->find('amp-img, img') as $photo_element)

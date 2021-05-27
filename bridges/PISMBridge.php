@@ -155,25 +155,23 @@ class PISMBridge extends BridgeAbstract {
 		$selectors_array[] = 'FOOTER#footer';
 		$selectors_array[] = 'amp-video-iframe';
 		$selectors_array[] = 'qqqqqqqqqqqqq';
-		foreach_delete_element_array($article, $selectors_array);
+		$article = foreach_delete_element_array($article, $selectors_array);
 		//https://opinie.wp.pl/zakazac-demonstracji-onr-kataryna-problemy-z-demokracja-6119008400492673a?amp=1&_js_v=0.1
 		//https://opinie.wp.pl/apel-o-zawieszenie-stosunkow-dyplomatycznych-z-polska-kataryna-jestem-wsciekla-6222729167030401a?amp=1&_js_v=0.1
 		//https://opinie.wp.pl/kataryna-kaczynski-stawia-na-dude-6213466100516481a?amp=1&_js_v=0.1
-		foreach_delete_element_containing_text_from_array($article, 'P, H2', array( 'Masz newsa, zdjęcie lub filmik? Prześlij nam przez', 'dla WP Opinie', 'Zobacz też: ', 'Zobacz też - ', 'Źródło: opinie.wp.pl', 'Czytaj także:', 'Zobacz także:'));
+		$article = foreach_delete_element_containing_text_from_array($article, 'P, H2', array( 'Masz newsa, zdjęcie lub filmik? Prześlij nam przez', 'dla WP Opinie', 'Zobacz też: ', 'Zobacz też - ', 'Źródło: opinie.wp.pl', 'Czytaj także:', 'Zobacz także:'));
 		$this->removeVideoTitles($article);
 
 
 
-		format_article_photos($article, 'DIV.header-image-container', TRUE, 'src', 'DIV.header-author');
-		format_article_photos($article, 'DIV.photo.from.amp', FALSE, 'src', 'FIGCAPTION');
+		$article = format_article_photos($article, 'DIV.header-image-container', TRUE, 'src', 'DIV.header-author');
+		$article = format_article_photos($article, 'DIV.photo.from.amp', FALSE, 'src', 'FIGCAPTION');
 
-		$article = str_get_html($article->save());
 		//https://opinie.wp.pl/kataryna-zyjemy-w-okrutnym-swiecie-ale-aborcja-embriopatologiczna-musi-pozostac-opinia-6567085945505921a?amp=1&_js_v=0.1
-		add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
-		add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
-		add_style($article, 'FIGCAPTION', getStylePhotoCaption());
-		add_style($article, 'BLOCKQUOTE', getStyleQuote());
-		$article = str_get_html($article->save());
+		$article = add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
+		$article = add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
+		$article = add_style($article, 'FIGCAPTION', getStylePhotoCaption());
+		$article = add_style($article, 'BLOCKQUOTE', getStyleQuote());
 
 //		$url_article = str_replace('https://opinie-wp-pl.cdn.ampproject.org/v/s/', 'https://', $url_article);
 		$this->items[] = array(

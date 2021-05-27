@@ -145,7 +145,7 @@ class BezprawnikBridge extends BridgeAbstract {
 		$article = $article_html->find('article', 0);
 //https://bezprawnik.pl/korwin-mikke-wyrzucony-z-facebooka/amp/
 //https://bezprawnik.pl/rzad-zmienil-ustroj-polski/amp/
-		foreach_delete_element_containing_elements_hierarchy($article, array('ul', 'li', 'h3', 'a'));
+		$article = foreach_delete_element_containing_elements_hierarchy($article, array('ul', 'li', 'h3', 'a'));
 
 		$selectors_array[] = 'comment';
 		//może pomoże na drugie zdjęcie pod zdjęciem głównynm w czytniku
@@ -154,24 +154,22 @@ class BezprawnikBridge extends BridgeAbstract {
 		$selectors_array[] = 'NOSCRIPT';
 		$selectors_array[] = 'DIV.amp-autor';
 		$selectors_array[] = 'FOOTER';
-		foreach_delete_element_array($article, $selectors_array);
-		clear_paragraphs_from_taglinks($article, 'P', array('/bezprawnik.pl\/tag\//'));
+		$article = foreach_delete_element_array($article, $selectors_array);
+		$article = clear_paragraphs_from_taglinks($article, 'P', array('/bezprawnik.pl\/tag\//'));
 
 		//zdjęcie autora
 		if (FALSE === is_null($author_photo = $article->find('FIGURE[id^="attachment_"][class^="wp-caption alignright amp-wp-"]', 0))) $author_photo = $author_photo->outertext = '';
 
 		
-		format_article_photos($article, 'FIGURE.amp-wp-article-featured-image.wp-caption', TRUE);
+		$article = format_article_photos($article, 'FIGURE.amp-wp-article-featured-image.wp-caption', TRUE);
 
 
-		$article = str_get_html($article->save());
-		add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
-		add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
-		add_style($article, 'FIGCAPTION', getStylePhotoCaption());
+		$article = add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
+		$article = add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
+		$article = add_style($article, 'FIGCAPTION', getStylePhotoCaption());
 		//https://bezprawnik.pl/z-kamera-wsrod-notariuszy/amp/
 		//https://bezprawnik.pl/ludzie-umra-po-szczepionkach/amp/
-		add_style($article, 'BLOCKQUOTE', getStyleQuote());
-		$article = str_get_html($article->save());
+		$article = add_style($article, 'BLOCKQUOTE', getStyleQuote());
 
 
 		$this->items[] = array(

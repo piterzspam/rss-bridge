@@ -80,7 +80,7 @@ class MagazynKontaktBridge extends FeedExpander {
 			$selectors_array[] = 'DIV[data-source="block-magazynpromo"]';
 			$selectors_array[] = 'DIV[data-source="ramka-polecane-1"]';
 			$selectors_array[] = 'DIV.block-content_breaker_ramka';
-			foreach_delete_element_array($article, $selectors_array);
+			$article = foreach_delete_element_array($article, $selectors_array);
 
 
 			$tags = return_tags_array($article, 'DIV.catbox A.block-catbox');
@@ -89,11 +89,11 @@ class MagazynKontaktBridge extends FeedExpander {
 			$lead_style = array(
 				'font-weight: bold;'
 			);
-			add_style($article, 'DIV.lead', $lead_style);
+			$article = add_style($article, 'DIV.lead', $lead_style);
 
-			add_style($article, 'DIV.pixwrap', getStylePhotoParent());
-			add_style($article, 'IMG[src][alt]', getStylePhotoImg());
-			add_style($article, 'DIV.pix_source', getStylePhotoCaption());
+			$article = add_style($article, 'DIV.pixwrap', getStylePhotoParent());
+			$article = add_style($article, 'IMG[src][alt]', getStylePhotoImg());
+			$article = add_style($article, 'DIV.pix_source', getStylePhotoCaption());
 	
 			$item['content'] = $article;
 			$item['author'] = $author;

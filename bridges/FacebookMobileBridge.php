@@ -164,8 +164,7 @@ class FacebookMobileBridge extends BridgeAbstract {
 		//jeżeli jest post cytowany, to trzeba usunąć miniaturkę tamterj strony
 		//, IMG.img[src^="https://lookaside.fbsbx.com/lookaside/crawler/media/?media_id="]
 		$article_html = str_get_html($article_html->save());
-		foreach_delete_element_array($article_html, array('SCRIPT, A.lfloat[href^="https://www.facebook.com/"] IMG.img[src^="https://lookaside.fbsbx.com/lookaside/crawler/media/?media_id="]'));
-		$article_html = str_get_html($article_html->save());
+		$article_html = foreach_delete_element_array($article_html, array('SCRIPT, A.lfloat[href^="https://www.facebook.com/"] IMG.img[src^="https://lookaside.fbsbx.com/lookaside/crawler/media/?media_id="]'));
 
 		foreach($article_html->find('DIV#pagelet_timeline_main_column DIV.userContentWrapper, DIV#pages_msite_body_contents ARTICLE[id]') as $fb_post)
 		{
@@ -254,8 +253,8 @@ class FacebookMobileBridge extends BridgeAbstract {
 		//Wideo
 		$selectors_array[] = 'DIV[style="height:282px;width:500px;"]';
 		$selectors_array[] = 'FORM.commentable_item';
-		foreach_delete_element_array($article_html, $selectors_array);
-		foreach_replace_outertext_with_subelement_outertext($article_html, 'A[rel="theater"]', 'IMG.scaledImageFitWidth.img, IMG.scaledImageFitHeight.img');
+		$article_html = foreach_delete_element_array($article_html, $selectors_array);
+		$article_html = foreach_replace_outertext_with_subelement_outertext($article_html, 'A[rel="theater"]', 'IMG.scaledImageFitWidth.img, IMG.scaledImageFitHeight.img');
 		$article_html = str_get_html($this->remove_useless_classes($article_html->save()));
 		$article_html = str_get_html($this->remove_useless_classes($article_html->save()));
 		$article_html = str_get_html(remove_empty_elements($article_html->save(), "DIV"));
@@ -303,9 +302,6 @@ class FacebookMobileBridge extends BridgeAbstract {
 				}
 			}
 		}
-//		$article_html = str_get_html($article_html->save());
-//		$selectors_array[] = 'DIV[data-gt]';
-//		foreach_delete_element_array($article_html, $selectors_array);
 		$article_html = str_get_html($article_html->save());
 		return $article_html;
 	}

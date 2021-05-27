@@ -66,7 +66,7 @@ class MyEconomistBridge extends BridgeAbstract {
 		$selectors_array[] = 'DIV._podcast-promo';
 		$selectors_array[] = 'DIV.advert';
 		$selectors_array[] = 'SCRIPT';
-		foreach_delete_element_array($article, $selectors_array);
+		$article = foreach_delete_element_array($article, $selectors_array);
 
 		if (!is_null($main_image = $article->find('SECTION DIV._image svg', 0)))
 			$main_image->outertext = '<img src="https://www.economist.com/engassets/Espresso-OG-image.ff47695fd8.png">';
@@ -80,23 +80,18 @@ class MyEconomistBridge extends BridgeAbstract {
 		if (!is_null($section3 = $article->find('SECTION', 3)))
 			$section3->class = 'section_quote';
 
-		foreach_replace_outertext_with_innertext($article, 'DIV._gobbet DIV[class^="css-"]');
-		foreach_replace_outertext_with_innertext($article, 'DIV._content DIV[class^="css-"]');
-		foreach_replace_outertext_with_innertext($article, 'DIV._quote-container DIV[class^="css-"]');
-		insert_html($article, 'DIV._gobbet, DIV._article', '<br><hr>');
-		$article = str_get_html($article->save());
-		move_element($article, 'SECTION.section_title DIV._image', 'SECTION.section_title H1._title', 'outertext', 'after');
-		$article = str_get_html($article->save());
-		format_article_photos($article, 'DIV._image', TRUE, 'src');
-		format_article_photos($article, 'FIGURE._main-image, IMG', FALSE, 'src', 'FIGCAPTION');
-		$article = str_get_html($article->save());
-		insert_html($article, 'FIGURE.photoWrapper.photo', '', '<br>');
-		$article = str_get_html($article->save());
-		add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
-		add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
-		add_style($article, 'FIGCAPTION', getStylePhotoCaption());
-		add_style($article, 'BLOCKQUOTE', getStyleQuote());
-		$article = str_get_html($article->save());
+		$article = foreach_replace_outertext_with_innertext($article, 'DIV._gobbet DIV[class^="css-"]');
+		$article = foreach_replace_outertext_with_innertext($article, 'DIV._content DIV[class^="css-"]');
+		$article = foreach_replace_outertext_with_innertext($article, 'DIV._quote-container DIV[class^="css-"]');
+		$article = insert_html($article, 'DIV._gobbet, DIV._article', '<br><hr>');
+		$article = move_element($article, 'SECTION.section_title DIV._image', 'SECTION.section_title H1._title', 'outertext', 'after');
+		$article = format_article_photos($article, 'DIV._image', TRUE, 'src');
+		$article = format_article_photos($article, 'FIGURE._main-image, IMG', FALSE, 'src', 'FIGCAPTION');
+		$article = insert_html($article, 'FIGURE.photoWrapper.photo', '', '<br>');
+		$article = add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
+		$article = add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
+		$article = add_style($article, 'FIGCAPTION', getStylePhotoCaption());
+		$article = add_style($article, 'BLOCKQUOTE', getStyleQuote());
 
 //		$title = self::NAME;
 //		$date = "";

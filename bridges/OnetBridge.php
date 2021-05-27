@@ -158,15 +158,16 @@ class OnetBridge extends BridgeAbstract {
 		$article_data = $article_html->find('SCRIPT[type="application/ld+json"]', 0)->innertext;
 		$article_data_parsed = parse_article_data(json_decode($article_data));
 		$date = trim($article_data_parsed["datePublished"]);
-
+		
+		$article_html = str_get_html(prepare_article($article_html));
 		$article = $article_html->find('article', 0);
+/*
 //		foreach_delete_element($article, 'AMP-IMG[src] IMG');
-		convert_iframes_to_links($article);
-		$article = str_get_html($article->save());
+		$article = convert_iframes_to_links($article);
 		convert_amp_photos($article);
 		$article = str_get_html($article->save());
-		fix_all_photos_attributes($article);
-		$article = str_get_html($article->save());
+		$article = fix_all_photos_attributes($article);*/
+		$article_html = str_get_html(prepare_article($article_html));
 		
 //		print_element($article, 'article');
 
@@ -178,21 +179,18 @@ class OnetBridge extends BridgeAbstract {
 		$selectors_array[] = 'script';
 		$selectors_array[] = 'DIV.social-box';
 		$selectors_array[] = 'DIV[style="margin:auto;width:300px;"]';
-		foreach_delete_element_array($article, $selectors_array);
+		$article = foreach_delete_element_array($article, $selectors_array);
 //https://wiadomosci-onet-pl.cdn.ampproject.org/v/s/wiadomosci.onet.pl/tylko-w-onecie/wybory-w-usa-2020-andrzej-stankiewicz-dzis-jest-czas-wielkiej-smuty-w-pis/fcktclw.amp?amp_js_v=0.1
 //https://wiadomosci-onet-pl.cdn.ampproject.org/v/s/wiadomosci.onet.pl/kraj/koronawirus-piotr-glinski-komentuje-milionowe-dofinansowania-dla-artystow/bv013rl.amp?amp_js_v=0.1
 //Glińskłumaczy się kryteriami obiektywnymi.
-//		clear_paragraphs_from_taglinks($article, 'P.hyphenate', array('/onet\.pl\/[^\/]*$/'));
-		$article = str_get_html($article->save());
-//		foreach_delete_element_containing_elements_hierarchy($article, array('ul', 'li', 'A[href*="onet.pl"][target="_top"]'));
-		foreach_delete_element_containing_text_from_array($article, 'LI', array('Więcej informacji i podcastów znajdziesz na stronie głównej Onet.pl'));
-		foreach_delete_element_containing_text_from_array($article, 'P.hyphenate', 
+//		$article = clear_paragraphs_from_taglinks($article, 'P.hyphenate', array('/onet\.pl\/[^\/]*$/'));
+		$article = foreach_delete_element_containing_text_from_array($article, 'LI', array('Więcej informacji i podcastów znajdziesz na stronie głównej Onet.pl'));
+		$article = foreach_delete_element_containing_text_from_array($article, 'P.hyphenate', 
 			array(
 				'Poniżej lista wszystkich dotychczasowych odcinków podcastu',
 				'Cieszymy się, że jesteś z nami. Zapisz się na newsletter Onetu, aby otrzymywać od nas najbardziej wartościowe treści'
 				)
 		);
-		$article = str_get_html($article->save());
 		
 
 //https://wiadomosci-onet-pl.cdn.ampproject.org/v/s/wiadomosci.onet.pl/tylko-w-onecie/michal-cholewinski-krytykowal-orzeczenie-tk-ws-aborcji-zostal-zdjety-z-anteny/31zq2s2.amp?amp_js_v=0.1
@@ -219,22 +217,14 @@ class OnetBridge extends BridgeAbstract {
 			}
 		}
 		$article = str_get_html($article->save());
-		replace_tag_and_class($article, 'ARTICLE P.hyphenate', 'single', 'STRONG', 'lead');
-		$article = str_get_html($article->save());
+		$article = replace_tag_and_class($article, 'ARTICLE P.hyphenate', 'single', 'STRONG', 'lead');
 		convert_amp_frames_to_links($article);
-		$article = str_get_html($article->save());
-		format_article_photos($article, 'FIGURE.lead', TRUE, 'src', 'SPAN.source');
-		$article = str_get_html($article->save());
-		format_article_photos($article, 'FIGURE[!class]', FALSE, 'src', 'SPAN.source');
-		$article = str_get_html($article->save());
-		move_element($article, 'FIGURE.photoWrapper.mainPhoto', 'STRONG.lead', 'outertext', 'after');
-		$article = str_get_html($article->save());
-		move_element($article, 'DIV.dateAuthor', 'H1.headline', 'outertext', 'after');
-		$article = str_get_html($article->save());
-		foreach_delete_element_containing_elements_hierarchy($article, array('LI', 'A[href*="www.onet.pl/#utm_source"]'));
-		$article = str_get_html($article->save());
-		foreach_delete_element_containing_elements_hierarchy($article, array('LI', 'A[href="https://www.onet.pl/"]'));
-		$article = str_get_html($article->save());
+		$article = format_article_photos($article, 'FIGURE.lead', TRUE, 'src', 'SPAN.source');
+		$article = format_article_photos($article, 'FIGURE[!class]', FALSE, 'src', 'SPAN.source');
+		$article = move_element($article, 'FIGURE.photoWrapper.mainPhoto', 'STRONG.lead', 'outertext', 'after');
+		$article = move_element($article, 'DIV.dateAuthor', 'H1.headline', 'outertext', 'after');
+		$article = foreach_delete_element_containing_elements_hierarchy($article, array('LI', 'A[href*="www.onet.pl/#utm_source"]'));
+		$article = foreach_delete_element_containing_elements_hierarchy($article, array('LI', 'A[href="https://www.onet.pl/"]'));
 		$article_str = $article->save();
 		foreach($article->find('UL LI A[href*="onet.pl/"][target="_top"]') as $element)
 		{
@@ -255,22 +245,17 @@ class OnetBridge extends BridgeAbstract {
 			$article_str = str_replace($data_element_innertext, $span_string, $article_str);
 		}
 		$article = str_get_html($article_str);
-		move_element($article, 'DIV.dateAuthor SPAN.date', 'DIV.dateAuthor', 'outertext', 'before');
-		$article = str_get_html($article->save());
-		replace_tag_and_class($article, 'SPAN.date', 'single', 'DIV', NULL);
-		replace_tag_and_class($article, 'SPAN.author', 'multiple', 'DIV', NULL);
-		$article = str_get_html($article->save());
-		move_element($article, 'DIV.dateAuthor', 'ARTICLE', 'innertext', 'after');
-		$article = str_get_html($article->save());
-		insert_html($article, 'DIV.dateAuthor', '<HR>', '');
-		$article = str_get_html($article->save());
+		$article = move_element($article, 'DIV.dateAuthor SPAN.date', 'DIV.dateAuthor', 'outertext', 'before');
+		$article = replace_tag_and_class($article, 'SPAN.date', 'single', 'DIV', NULL);
+		$article = replace_tag_and_class($article, 'SPAN.author', 'multiple', 'DIV', NULL);
+		$article = move_element($article, 'DIV.dateAuthor', 'ARTICLE', 'innertext', 'after');
+		$article = insert_html($article, 'DIV.dateAuthor', '<HR>', '');
 
 		//https://opinie.wp.pl/kataryna-zyjemy-w-okrutnym-swiecie-ale-aborcja-embriopatologiczna-musi-pozostac-opinia-6567085945505921a?amp=1&_js_v=0.1
-		add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
-		add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
-		add_style($article, 'FIGCAPTION', getStylePhotoCaption());
-		add_style($article, 'BLOCKQUOTE', getStyleQuote());
-		$article = str_get_html($article->save());
+		$article = add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
+		$article = add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
+		$article = add_style($article, 'FIGCAPTION', getStylePhotoCaption());
+		$article = add_style($article, 'BLOCKQUOTE', getStyleQuote());
 
 		$this->items[] = array(
 			'uri' => $amp_url,
