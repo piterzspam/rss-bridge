@@ -43,6 +43,7 @@ class TygodnikPolsatNewsBridge extends BridgeAbstract {
 	public function collectData()
 	{
 		include 'myFunctions.php';
+		$GLOBALS['my_debug'] = FALSE;
 		$GLOBALS['limit'] = $this->getInput('limit');
 //		Ramka FB: https://tygodnik.polsatnews.pl/news/2020-05-08/jan-komasa-bohater-jest-zly-bo-z-biednej-rodziny-wywiad/
 //		Ramka YT: https://tygodnik.polsatnews.pl/news/2020-05-08/jan-komasa-bohater-jest-zly-bo-z-biednej-rodziny-wywiad/

@@ -33,6 +33,7 @@ class NewsweekBridge extends BridgeAbstract {
 	public function collectData()
 	{
 		include 'myFunctions.php';
+		$GLOBALS['my_debug'] = FALSE;
 		$GLOBALS['limit'] = intval($this->getInput('limit'));
 		
 		$urls = $this->getArticlesUrls();

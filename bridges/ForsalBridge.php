@@ -14,14 +14,14 @@ class ForsalBridge extends BridgeAbstract {
 			(
 				'name' => 'URL',
 				'type' => 'text',
-				'required' => true,
-				'defaultValue' => 3,
+				'required' => true
 			),
 			'limit' => array
 			(
 				'name' => 'Liczba artykułów',
 				'type' => 'number',
-				'required' => true
+				'required' => true,
+				'defaultValue' => 3,
 			),
 			'tylko_opinie' => array
 			(
@@ -47,6 +47,8 @@ class ForsalBridge extends BridgeAbstract {
 */
 	public function collectData()
 	{
+		include 'myFunctions.php';
+		$GLOBALS['my_debug'] = FALSE;
 		$GLOBALS['limit'] = $this->getInput('limit');
 		$url_articles_list = $this->getInput('url');
 		$url_articles_list = preg_replace('/(.*\/autor\/[0-9]+,([a-z]+)-([a-z]+)).*/', '$1', $url_articles_list);
@@ -84,34 +86,7 @@ class ForsalBridge extends BridgeAbstract {
 		}
 	}
 
-	private function hex_dump($data, $newline="\n")
-	{
-		static $from = '';
-		static $to = '';
-	
-		static $width = 16; # number of bytes per line
 
-		static $pad = '.'; # padding for non-visible characters
-
-		if ($from==='')
-		{
-			for ($i=0; $i<=0xFF; $i++)
-			{
-				$from .= chr($i);
-				$to .= ($i >= 0x20 && $i <= 0x7E) ? chr($i) : $pad;
-			}
-		}
-
-		$hex = str_split(bin2hex($data), $width*2);
-		$chars = str_split(strtr($data, $from, $to), $width);
-
-		$offset = 0;
-		foreach ($hex as $i => $line)
-		{
-			echo sprintf('%6X',$offset).' : '.implode(' ', str_split($line,2)) . ' [' . $chars[$i] . ']' . $newline;
-			$offset += $width;
-		}
-	}
 	private function addArticle($url_article_link, $article_html)
 	{
 		$article = $article_html->find('article', 0);
@@ -157,25 +132,7 @@ class ForsalBridge extends BridgeAbstract {
 			'content' => $article
 		);
 	}
-	
-	private function parse_article_data($article_data)
-	{
-		if (TRUE === is_object($article_data))
-		{
-			$article_data = (array)$article_data;
-			foreach ($article_data as $key => $value)
-				$article_data[$key] = $this->parse_article_data($value);
-			return $article_data;
-		}
-		else if (TRUE === is_array($article_data))
-		{
-			foreach ($article_data as $key => $value)
-				$article_data[$key] = $this->parse_article_data($value);
-			return $article_data;
-		}
-		else
-			return $article_data;
-	}
+
 
 	private function meetsConditions($article_html)
 	{
@@ -214,41 +171,5 @@ class ForsalBridge extends BridgeAbstract {
 			return TRUE;
 		else
 			return FALSE;
-	}
-
-	private function single_delete_element_containing_subelement($ancestor, $descendant_string)
-	{
-		if (FALSE === is_null($descendant = $ancestor->find($descendant_string, 0)))
-			$descendant->outertext = '';
-	}
-
-	private function single_delete_subelement($ancestor, $descendant_string)
-	{
-		if (FALSE === is_null($descendant = $ancestor->find($descendant_string, 0)))
-			$ancestor->outertext = '';
-	}
-
-	private function single_delete_element_containing_text($ancestor, $descendant_string)
-	{
-		if (FALSE === is_null($ancestor))
-			if (FALSE !== strpos($ancestor->plaintext, $descendant_string))
-				$ancestor->outertext = '';
-	}
-
-	private function foreach_delete_element($ancestor, $descendant_string)
-	{
-		foreach($ancestor->find($descendant_string) as $descendant)
-			$descendant->outertext = '';
-	}
-
-	private function get_proxy_url($url)
-	{
-		$twitter_proxy = 'nitter.net';
-		$instagram_proxy = 'bibliogram.art';
-		$facebook_proxy = 'mbasic.facebook.com';
-		$url = preg_replace('/.*[\.\/]twitter\.com(.*)/', 'https://'.$twitter_proxy.'${1}', $url);
-		$url = preg_replace('/.*[\.\/]instagram\.com(.*)/', 'https://'.$instagram_proxy.'${1}', $url);
-		$url = preg_replace('/.*[\.\/]facebook\.com(.*)/', 'https://'.$facebook_proxy.'${1}', $url);
-		return $url;
 	}
 }

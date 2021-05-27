@@ -203,9 +203,17 @@ class GazetaWeekendBridge extends BridgeAbstract {
 		$article = foreach_delete_element_array($article, $selectors_array);
 		//https://weekend.gazeta.pl/weekend/7,177333,26878416,mam-33-lata-i-troje-dzieci-to-nie-pora-by-umierac-malgorzata.html
 		
+		
+		$article = replace_tag_and_class($article, 'SPAN.article_data', 'single', 'DIV', NULL);
+		$article = replace_tag_and_class($article, 'SPAN.article_date', 'single', 'DIV', NULL);
+		
+		$article = move_element($article, 'DIV.author_and_date .article_date', '.author_and_date', 'outertext', 'after');
+		$article = move_element($article, 'DIV.author_and_date', 'DIV.article__content', 'innertext', 'after');
+		$article = insert_html($article, 'DIV.author_and_date', '<HR>', '');
+
 		$article = replace_tag_and_class($article, 'H4', 'multiple', 'H3');
 //		$article = add_style($article, 'H4.art_interview_question, DIV.article__lead', array('font-weight: bold;'));
-		$article = add_style($article, 'DIV.article__lead', array('font-weight: bold;'));
+		$article = replace_tag_and_class($article, 'DIV.article__lead', 'single', 'STRONG', 'lead');
 		$article = add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
 		$article = add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
 		$article = add_style($article, 'FIGCAPTION', getStylePhotoCaption());

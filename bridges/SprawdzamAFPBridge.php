@@ -118,6 +118,15 @@ class SprawdzamAFPBridge extends BridgeAbstract {
 			$separator->outertext = $separator->outertext.'<br>';
 		}
 		$article = str_get_html($article->save());
+		$article_str = $article->save();
+		foreach($article->find('IMG[src^=" /"]') as $image)
+		{
+			$old_src = $image->src;
+			$new_src = "https://sprawdzam.afp.com".trim($old_src);
+			$article_str = str_replace($old_src, $new_src, $article_str);
+		}
+		$article = str_get_html($article_str);
+		
 		$article = add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
 		$article = add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
 		$article = add_style($article, 'FIGCAPTION', getStylePhotoCaption());

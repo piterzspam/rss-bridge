@@ -1264,6 +1264,7 @@ function getArray($array, $index) {
 				$second_element->outertext = '';
 			}
 		}
+		return str_get_html($main_element->save());
 	}
 
 	function fix_background_image($main_element, $where_to_move_children = 1)
@@ -1460,7 +1461,7 @@ function getArray($array, $index) {
 
 		$code = 0;
 		$counter301 = 0;
-		while ($code !== 200 && 5 > $counter301)
+		while ($code !== 200 && 2 > $counter301)
 		{
 			if (TRUE === $GLOBALS['my_debug'])
 			{
@@ -1496,6 +1497,10 @@ function getArray($array, $index) {
 			if (301 == $code)
 			{
 				$counter301++;
+			}
+			else
+			{
+				break;
 			}
 		}
 		$page_html = str_get_html($page_content);

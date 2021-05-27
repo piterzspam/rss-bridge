@@ -84,7 +84,7 @@ class TygodnikInteriaBridge extends BridgeAbstract {
 	private function getArticlesUrls()
 	{
 		$articles_urls = array();
-		$articles_urls[] = 'https://tygodnik.interia.pl/news-kolejowy-efekt-motyla-jedna-zmiana-wplywa-na-cala-polske,nId,5029602';
+//		$articles_urls[] = 'https://tygodnik.interia.pl/news-kolejowy-efekt-motyla-jedna-zmiana-wplywa-na-cala-polske,nId,5029602';
 		$url_articles_list = 'https://tygodnik.interia.pl/frontpage-mixer-ajax-elements,nPack,1';
 		$if_next_page_exists = TRUE;
 

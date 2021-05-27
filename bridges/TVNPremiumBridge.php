@@ -63,6 +63,8 @@ class TVNPremiumBridge extends FeedExpander {
 		}
 		else
 		{
+			$url_parts = explode("?source=", $item['uri']);
+			$item['uri'] = $url_parts[0];
 			$articlePage = getSimpleHTMLDOMCached($item['uri'], 86400 * 14);
 
 			if (FALSE === is_null($article = $articlePage->find('DIV.article-story-content__elements-wrapper', 0)))

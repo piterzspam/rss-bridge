@@ -85,11 +85,13 @@
 		$author = str_replace('. ', '', $author);
 		$author = trim($author);
 		//tags
+		$tags = return_tags_array($article, 'A[rel="tag"]');
+/*
 		$tags = array();
 		foreach($article->find('SPAN.label-info', 0)->find('A[rel="tag"]') as $tag_element)
 		{
 			$tags[] = trim($tag_element->plaintext);
-		}
+		}*/
 
 		foreach($article->find('P') as $paragraph)
 		{

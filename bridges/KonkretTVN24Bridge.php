@@ -145,7 +145,7 @@ class KonkretTVN24Bridge extends BridgeAbstract {
 
 		$date = get_json_value($article_html, 'SCRIPT', 'date');
 		
-		$article= $article = move_element($article,  'HEADER.article-main-photo', 'DIV.article-content__metadata', 'outertext', 'after');
+		$article_html = move_element($article_html,  'HEADER.article-main-photo', 'DIV.article-content__metadata', 'outertext', 'after');
 
 		$article = $article_html->find('DIV.page-article DIV.article-content', 0);
 		$title = get_text_plaintext($article, 'H2.article-content__title', $url);
