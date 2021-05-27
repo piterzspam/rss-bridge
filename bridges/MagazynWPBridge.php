@@ -197,7 +197,7 @@ class MagazynWPBridge extends BridgeAbstract {
 	}
 
 
-	private function getAmpLink($url)
+private function getAmpLink($url)
 	{
 		if (FALSE !== strpos($url, 'opinie.wp.pl/'))
 		{
@@ -305,13 +305,14 @@ class MagazynWPBridge extends BridgeAbstract {
 			if ($lead_element->nextSibling() === $first_text->previousSibling())
 				$lead_element->nextSibling()->outertext = '';
 		}
-		foreach_delete_element($article_html, 'comment');
+		$selectors_array[] = 'comment';
 		//usuniecie elementu z reklamami w tresci
-		foreach_delete_element($article_html, '//div/div/div[count(*)=3][img[@class][@src]][*[count(*)=1]/*[count(*)=1]/*[count(*)=1]/*[count(*)=1]/*[count(*)=0]]');
+		$selectors_array[] = '//div/div/div[count(*)=3][img[@class][@src]][*[count(*)=1]/*[count(*)=1]/*[count(*)=1]/*[count(*)=1]/*[count(*)=0]]';
 		//usuniecie pustego elementu
-		foreach_delete_element($article_html, 'DIV[data-st-area="article-header"]');
+		$selectors_array[] = 'DIV[data-st-area="article-header"]';
 		//usuniecie niepotrzebnego elementu w leadzaie
-		foreach_delete_element($article_html, 'DIV.premium--full FIGURE SPAN DIV');
+		$selectors_array[] = 'DIV.premium--full FIGURE SPAN DIV';
+		foreach_delete_element_array($article_html, $selectors_array);
 		//usunięcie ostatniego elementu z linkiem do dziejesie.wp.pl
 		foreach($article_html->find('DIV.article--text') as $article_text_element)
 		{

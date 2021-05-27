@@ -84,15 +84,17 @@ class TVNPremiumBridge extends FeedExpander {
 					}
 				}
 				$author = return_authors_as_string($article, 'DIV.main-asset-detail-info__author');
-				foreach_delete_element($article, 'SCRIPT');
-				foreach_delete_element($article, 'NOSCRIPT');
-				foreach_delete_element($article, 'LINK');
-				foreach_delete_element($article, 'ASIDE.article-share-socials');
-				foreach_delete_element($article, 'DIV.image-component--author');
-				foreach_delete_element($article, 'SPAN.main-asset-premium__label');
-				foreach_delete_element($article, 'IMG.premium-lock__picture');
-				foreach_delete_element($article, 'DIV.account-buttons--article');
-				foreach_delete_element($article, 'FIGURE.media-content');
+				$selectors_array[] = 'SCRIPT';
+				$selectors_array[] = 'NOSCRIPT';
+				$selectors_array[] = 'LINK';
+				$selectors_array[] = 'ASIDE.article-share-socials';
+				$selectors_array[] = 'DIV.image-component--author';
+				$selectors_array[] = 'SPAN.main-asset-premium__label';
+				$selectors_array[] = 'IMG.premium-lock__picture';
+				$selectors_array[] = 'DIV.account-buttons--article';
+				$selectors_array[] = 'FIGURE.media-content';
+				foreach_delete_element_array($article, $selectors_array);
+
 
 				$item['content'] = $article;
 				$item['author'] = $author;

@@ -84,7 +84,7 @@ class LiberteBridge extends BridgeAbstract {
 		$url_articles_list = $GLOBALS['chosen_category_url'];
 		while (count($articles_urls) < $GLOBALS['limit'] && "empty" != $url_articles_list)
 		{
-			$returned_array = $this->my_get_html($url_articles_list);
+			$returned_array = my_get_html($url_articles_list);
 			$html_articles_list = $returned_array['html'];
 			if (200 !== $returned_array['code'] || 0 === count($found_hrefs = $html_articles_list->find('DIV#wrapper DIV.row H3 A[href]')))
 			{
@@ -126,7 +126,7 @@ class LiberteBridge extends BridgeAbstract {
 		$articles_urls = array();
 		$GLOBALS['limit'] = $this->getInput('limit');
 
-		$returned_array = $this->my_get_html('https://liberte.pl/');
+		$returned_array = my_get_html('https://liberte.pl/');
 		$html_articles_list = $returned_array['html'];
 		if (200 !== $returned_array['code'] || 0 === count($found_hrefs = $html_articles_list->find('SECTION[!class] DIV#anchor-link-2 ARTICLE.entry.box-white H2 A[href], SECTION[!class] DIV#anchor-link-2 ARTICLE.entry.box-white H3 A[href]')))
 		{
@@ -155,7 +155,7 @@ class LiberteBridge extends BridgeAbstract {
 	private function getArticlesUrlsIssues()
 	{
 		$articles_urls = array();
-		$returned_array = $this->my_get_html('https://liberte.pl/miesiecznik/');
+		$returned_array = my_get_html('https://liberte.pl/miesiecznik/');
 		$html_issues_list = $returned_array['html'];
 		if (200 !== $returned_array['code'] || 0 === count($found_issues_hrefs = $html_issues_list->find('DIV#wrapper SECTION DIV.row ARTICLE.entry.box-white H2 A[href]')))
 		{
@@ -173,7 +173,7 @@ class LiberteBridge extends BridgeAbstract {
 
 		foreach($issues_urls as $issue_url)
 		{
-			$returned_array = $this->my_get_html($issue_url);
+			$returned_array = my_get_html($issue_url);
 			$html_articles_list = $returned_array['html'];
 //			if (200 === $returned_array['code'] || 0 !== count($found_articles_hrefs = $html_articles_list->find('H3.title-spistresci A[href]')))
 			if (200 === $returned_array['code'] && 0 !== count($found_articles_hrefs = $html_articles_list->find('H3.title-spistresci A[href]')))
@@ -193,7 +193,7 @@ class LiberteBridge extends BridgeAbstract {
 
 	private function addArticle($url)
 	{
-		$returned_array = $this->my_get_html($url);
+		$returned_array = my_get_html($url);
 		if (200 !== $returned_array['code'])
 		{
 			return;
@@ -287,43 +287,5 @@ class LiberteBridge extends BridgeAbstract {
 			'categories' => $tags,
 			'content' => $article
 		);
-	}
-
-	private function my_get_html($url)
-	{
-		$context = stream_context_create(array('http' => array('ignore_errors' => true)));
-
-		if (TRUE === $GLOBALS['my_debug'])
-		{
-			$start_request = microtime(TRUE);
-			$page_content = file_get_contents($url, false, $context);
-			$end_request = microtime(TRUE);
-			echo "<br>Article  took " . ($end_request - $start_request) . " seconds to complete - url: $url.";
-			$GLOBALS['all_articles_counter']++;
-			$GLOBALS['all_articles_time'] = $GLOBALS['all_articles_time'] + $end_request - $start_request;
-		}
-		else
-			$page_content = file_get_contents($url, false, $context);
-
-		$code = getHttpCode($http_response_header);
-		if (200 !== $code)
-		{
-			$html_error = createErrorContent($http_response_header);
-			$date = new DateTime("now", new DateTimeZone('Europe/Warsaw'));
-			$date_string = date_format($date, 'Y-m-d H:i:s');
-			$this->items[] = array(
-				'uri' => $url,
-				'title' => "Error ".$code.": ".$url,
-				'timestamp' => $date_string,
-				'content' => $html_error
-			);
-		}
-		$page_html = str_get_html($page_content);
-
-		$return_array = array(
-			'code' => $code,
-			'html' => $page_html,
-		);
-		return $return_array;
 	}
 }

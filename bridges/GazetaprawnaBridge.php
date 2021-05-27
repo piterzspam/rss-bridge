@@ -119,7 +119,7 @@ class GazetaprawnaBridge extends BridgeAbstract {
 //		return;
 		if ("premium" === $price_param)
 		{
-			$returned_array = $this->my_get_html($amp_project_url);
+			$returned_array = my_get_html($amp_project_url);
 			if (200 !== $returned_array['code'])
 			{
 				return;
@@ -187,7 +187,7 @@ class GazetaprawnaBridge extends BridgeAbstract {
 		$price_param = $this->getArticlePriceParam($article_html);
 		if ("premium" === $price_param)
 		{
-			$returned_array = $this->my_get_html($url_article_link, TRUE);
+			$returned_array = my_get_html($url_article_link, TRUE);
 			if (200 !== $returned_array['code'])
 			{
 				return;
@@ -356,7 +356,7 @@ class GazetaprawnaBridge extends BridgeAbstract {
 //		$ignored_counter = 0;
 		while (count($articles_data) < $GLOBALS['limit'] && "empty" != $url_articles_list)
 		{
-			$returned_array = $this->my_get_html($url_articles_list);
+			$returned_array = my_get_html($url_articles_list);
 			$html_articles_list = $returned_array['html'];
 			if (200 !== $returned_array['code'] || 0 === count($found_leads = $html_articles_list->find('DIV.itarticle')))
 			{
@@ -391,7 +391,7 @@ class GazetaprawnaBridge extends BridgeAbstract {
 							if ($ignored_counter > $GLOBALS['ignore_number'])
 							{
 								$GLOBALS['ignore_number'] = 20;*/
-								$returned_array = $this->my_get_html($url, FALSE);
+								$returned_array = my_get_html($url, FALSE);
 								if (200 === $returned_array['code'] && TRUE === $this->meetsConditions($returned_array['html']))
 								{
 									$articles_urls[] = $url;

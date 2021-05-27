@@ -61,23 +61,25 @@ class WiezBridge extends FeedExpander {
 		$tags = return_tags_array($article, 'LI.post-categories__item A.post-categories__item__link');
 
 
-		foreach_delete_element($article, 'SCRIPT');
-		foreach_delete_element($article, 'NOSCRIPT');
-		foreach_delete_element($article, 'LINK');
-		foreach_delete_element($article, 'DIV.single-post-sidebar-wrapper');
-		foreach_delete_element($article, 'DIV.latest-articles-section');
-		foreach_delete_element($article, 'DIV.single__post__socials-top');
-		foreach_delete_element($article, 'DIV.single-post-sidebar-wrapper');
-		foreach_delete_element($article, 'DIV.post__socials-box');
-		foreach_delete_element($article, 'A.link-more');
-		foreach_delete_element($article, 'DIV[id^="advads-"]');
-		foreach_delete_element($article, 'ASIDE.book__box');
-		foreach_delete_element($article, 'DIV.quote-socials');
-		foreach_delete_element($article, 'SPAN[id^="more-"]');
-		foreach_delete_element($article, 'IMG.quote-image');
-		foreach_delete_element($article, 'IMG.post__author__image');
-		foreach_delete_element($article, 'DIV.single__post__category');
-		foreach_delete_element($article, 'DIV.post__tags');
+		$selectors_array[] = 'SCRIPT';
+		$selectors_array[] = 'NOSCRIPT';
+		$selectors_array[] = 'LINK';
+		$selectors_array[] = 'DIV.single-post-sidebar-wrapper';
+		$selectors_array[] = 'DIV.latest-articles-section';
+		$selectors_array[] = 'DIV.single__post__socials-top';
+		$selectors_array[] = 'DIV.single-post-sidebar-wrapper';
+		$selectors_array[] = 'DIV.post__socials-box';
+		$selectors_array[] = 'A.link-more';
+		$selectors_array[] = 'DIV[id^="advads-"]';
+		$selectors_array[] = 'ASIDE.book__box';
+		$selectors_array[] = 'DIV.quote-socials';
+		$selectors_array[] = 'SPAN[id^="more-"]';
+		$selectors_array[] = 'IMG.quote-image';
+		$selectors_array[] = 'IMG.post__author__image';
+		$selectors_array[] = 'DIV.single__post__category';
+		$selectors_array[] = 'DIV.post__tags';
+		foreach_delete_element_array($article, $selectors_array);
+
 
 		//https://wiez.pl/2021/02/04/od-gomulki-do-jana-pawla-ii-warsztaty-kanonu-wolnych-polakow-w-krosnie/
 		add_style($article, 'FIGURE', getStylePhotoParent());

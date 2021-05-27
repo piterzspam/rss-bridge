@@ -133,7 +133,7 @@ class DziennikBridge extends BridgeAbstract {
 //		$ignored_counter = 0;
 		while (count($articles_data) < $GLOBALS['limit'] && "empty" != $url_articles_list)
 		{
-			$returned_array = $this->my_get_html($url_articles_list);
+			$returned_array = my_get_html($url_articles_list);
 			$html_articles_list = $returned_array['html'];
 			if (200 !== $returned_array['code'] || 0 === count($found_leads = $html_articles_list->find('DIV.boxArticleList DIV.itarticle')))
 			{
@@ -163,7 +163,7 @@ class DziennikBridge extends BridgeAbstract {
 							if ($ignored_counter > $GLOBALS['ignore_number'])
 							{
 								$GLOBALS['ignore_number'] = 20;*/
-								$returned_array = $this->my_get_html($url);
+								$returned_array = my_get_html($url);
 								if (200 === $returned_array['code'])
 								{
 									$article_html = $returned_array['html'];
@@ -346,28 +346,6 @@ class DziennikBridge extends BridgeAbstract {
 		);
 	}
 
-	private function remove_empty_elements($main_element_str, $tag)
-	{
-		$main_element = str_get_html($main_element_str);
-		foreach($main_element->find($tag) as $empty_element)
-		{
-/*			print_html($empty_element->outertext, "empty_element->outertext");
-			print_html($empty_element->innertext, "empty_element->innertext");
-			print_html($empty_element->plaintext, "empty_element->plaintext");
-			print_var_dump($empty_element->outertext, "empty_element->outertext");
-			print_var_dump($empty_element->innertext, "empty_element->innertext");
-			print_var_dump($empty_element->plaintext, "empty_element->plaintext");
-			hex_dump($empty_element->outertext);
-			hex_dump($empty_element->innertext);
-			hex_dump($empty_element->plaintext);*/
-			if (0 === strlen($empty_element->innertext) && 0 === strlen($empty_element->plaintext))
-			{
-				$main_element_str = str_replace($empty_element->outertext, "", $main_element_str);
-			}
-		}
-		return $main_element_str;
-	}
-
 	private function getCustomizedLink($url)
 	{
 		preg_match('/https?:\/\/(([^\.]*)\..*)/', $url, $output_array);
@@ -473,43 +451,5 @@ class DziennikBridge extends BridgeAbstract {
 		}
 		else
 			return FALSE;
-	}
-	
-	private function my_get_html($url)
-	{
-		$context = stream_context_create(array('http' => array('ignore_errors' => true)));
-
-		if (TRUE === $GLOBALS['my_debug'])
-		{
-			$start_request = microtime(TRUE);
-			$page_content = file_get_contents($url, false, $context);
-			$end_request = microtime(TRUE);
-			echo "<br>Article  took " . ($end_request - $start_request) . " seconds to complete - url: $url.";
-			$GLOBALS['all_articles_counter']++;
-			$GLOBALS['all_articles_time'] = $GLOBALS['all_articles_time'] + $end_request - $start_request;
-		}
-		else
-			$page_content = file_get_contents($url, false, $context);
-
-		$code = getHttpCode($http_response_header);
-		if (200 !== $code)
-		{
-			$html_error = createErrorContent($http_response_header);
-			$date = new DateTime("now", new DateTimeZone('Europe/Warsaw'));
-			$date_string = date_format($date, 'Y-m-d H:i:s');
-			$this->items[] = array(
-				'uri' => $url,
-				'title' => "Error ".$code.": ".$url,
-				'timestamp' => $date_string,
-				'content' => $html_error
-			);
-		}
-		$page_html = str_get_html($page_content);
-
-		$return_array = array(
-			'code' => $code,
-			'html' => $page_html,
-		);
-		return $return_array;
 	}
 }

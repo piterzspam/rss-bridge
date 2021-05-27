@@ -78,7 +78,7 @@ class NewsweekBridge extends BridgeAbstract {
 		print_var_dump($counter, "counter przed");
 		iterator($counter);
 		print_var_dump($counter, "counter po");*/
-		$returned_array = $this->my_get_html($url);
+		$returned_array = my_get_html($url);
 		if (200 !== $returned_array['code'])
 			return;
 		else
@@ -156,17 +156,19 @@ class NewsweekBridge extends BridgeAbstract {
 		//Przenoszenie tresci premium poziom wyzej
 
 
-		foreach_delete_element($article, 'comment');
-		foreach_delete_element($article, 'script');
-		foreach_delete_element($article, 'DIV.offerView');
-		foreach_delete_element($article, 'DIV.articleSocials');
-		foreach_delete_element($article, 'DIV.detailFeed');
-		foreach_delete_element($article, 'DIV.bottomArtticleAds');
-		foreach_delete_element($article, 'DIV.onet-ad');
-		foreach_delete_element($article, 'DIV#fbComments');
-		foreach_delete_element($article, 'UL.breadCrumb');
-		foreach_delete_element($article, 'DIV.tags');
-		foreach_delete_element($article, 'DIV.placeholder');
+		$selectors_array[] = 'comment';
+		$selectors_array[] = 'script';
+		$selectors_array[] = 'DIV.offerView';
+		$selectors_array[] = 'DIV.articleSocials';
+		$selectors_array[] = 'DIV.detailFeed';
+		$selectors_array[] = 'DIV.bottomArtticleAds';
+		$selectors_array[] = 'DIV.onet-ad';
+		$selectors_array[] = 'DIV#fbComments';
+		$selectors_array[] = 'UL.breadCrumb';
+		$selectors_array[] = 'DIV.tags';
+		$selectors_array[] = 'DIV.placeholder';
+		foreach_delete_element_array($article, $selectors_array);
+
 		 
 //		$article = str_get_html($article->save());
 
@@ -209,7 +211,7 @@ class NewsweekBridge extends BridgeAbstract {
 		$GLOBALS['author_name'] = "";
 		while (count($articles_urls) < $GLOBALS['limit'])
 		{
-			$returned_array = $this->my_get_html($url_articles_list);
+			$returned_array = my_get_html($url_articles_list);
 			if (200 !== $returned_array['code'])
 			{
 				break;
@@ -255,31 +257,5 @@ class NewsweekBridge extends BridgeAbstract {
 			$url_articles_list = $output_array[0].'?ajax=1&page=1';
 		}
 		return $url_articles_list;
-	}
-	
-	private function my_get_html($url)
-	{
-		$context = stream_context_create(array('http' => array('ignore_errors' => true)));
-		$page_content = file_get_contents($url, false, $context);
-		$code = getHttpCode($http_response_header);
-		if (200 !== $code)
-		{
-			$html_error = createErrorContent($http_response_header);
-			$date = new DateTime("now", new DateTimeZone('Europe/Warsaw'));
-			$date_string = date_format($date, 'Y-m-d H:i:s');
-			$this->items[] = array(
-				'uri' => $url,
-				'title' => "Error ".$code.": ".$url,
-				'timestamp' => $date_string,
-				'content' => $html_error
-			);
-		}
-		$page_html = str_get_html($page_content);
-
-		$return_array = array(
-			'code' => $code,
-			'html' => $page_html,
-		);
-		return $return_array;
 	}
 }

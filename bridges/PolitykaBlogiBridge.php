@@ -88,7 +88,7 @@ class PolitykaBlogiBridge extends BridgeAbstract {
 		$url_articles_list = $this->getInput('url');
 		while (count($articles_urls) < $GLOBALS['limit'] && "empty" != $url_articles_list)
 		{
-			$returned_array = $this->my_get_html($url_articles_list);
+			$returned_array = my_get_html($url_articles_list);
 			$html_articles_list = $returned_array['html'];
 			if (200 !== $returned_array['code'] || 0 === count($found_hrefs = $html_articles_list->find('A.linkbg[href]')))
 			{
@@ -121,7 +121,7 @@ class PolitykaBlogiBridge extends BridgeAbstract {
 
 	private function addArticle($url_article)
 	{
-		$returned_array = $this->my_get_html($url_article);
+		$returned_array = my_get_html($url_article);
 		if (200 !== $returned_array['code'])
 		{
 			return;
@@ -141,13 +141,14 @@ class PolitykaBlogiBridge extends BridgeAbstract {
 //https://bezprawnik.pl/korwin-mikke-wyrzucony-z-facebooka/amp/
 //https://bezprawnik.pl/rzad-zmienil-ustroj-polski/amp/
 		foreach_delete_element_containing_elements_hierarchy($article, array('ul', 'li', 'h3', 'a'));
-		foreach_delete_element($article, 'comment');
+		$selectors_array[] = 'comment';
 		//może pomoże na drugie zdjęcie pod zdjęciem głównynm w czytniku
-		foreach_delete_element($article, 'script');
+		$selectors_array[] = 'script';
 		//może pomoże na drugie zdjęcie pod zdjęciem głównynm w czytniku - 2
-		foreach_delete_element($article, 'NOSCRIPT');
-		foreach_delete_element($article, 'DIV.amp-autor');
-		foreach_delete_element($article, 'FOOTER');
+		$selectors_array[] = 'NOSCRIPT';
+		$selectors_array[] = 'DIV.amp-autor';
+		$selectors_array[] = 'FOOTER';
+		foreach_delete_element_array($article, $selectors_array);
 		clear_paragraphs_from_taglinks($article, 'P', array('/bezprawnik.pl\/tag\//'));
 
 		//zdjęcie autora
@@ -176,41 +177,6 @@ class PolitykaBlogiBridge extends BridgeAbstract {
 			'content' => $article,
 			'categories' => $tags
 		);
-	}
-
-	private function my_get_html($url)
-	{
-		$context = stream_context_create(array('http' => array('ignore_errors' => true)));
-		if (TRUE === $GLOBALS['my_debug'])
-		{
-			$start_request = microtime(TRUE);
-			$page_content = file_get_contents($url, false, $context);
-			$end_request = microtime(TRUE);
-			echo "<br>Article  took " . ($end_request - $start_request) . " seconds to complete - url: $url.";
-			$GLOBALS['all_articles_counter']++;
-			$GLOBALS['all_articles_time'] = $GLOBALS['all_articles_time'] + $end_request - $start_request;
-		}
-		else
-			$page_content = file_get_contents($url, false, $context);
-		$code = getHttpCode($http_response_header);
-		if (200 !== $code)
-		{
-			$html_error = createErrorContent($http_response_header);
-			$date = new DateTime("now", new DateTimeZone('Europe/Warsaw'));
-			$date_string = date_format($date, 'Y-m-d H:i:s');
-			$this->items[] = array(
-				'uri' => $url,
-				'title' => "Error ".$code.": ".$url,
-				'timestamp' => $date_string,
-				'content' => $html_error
-			);
-		}
-		$page_html = str_get_html($page_content);
-		$return_array = array(
-			'code' => $code,
-			'html' => $page_html,
-		);
-		return $return_array;
 	}
 
 	private function getCustomizedLink($url)

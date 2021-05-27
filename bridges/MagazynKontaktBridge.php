@@ -72,15 +72,16 @@ class MagazynKontaktBridge extends FeedExpander {
 				if(isset($photo_element->sizes)) $photo_element->sizes = NULL;
 			}
 			
-			foreach_delete_element($article, 'DIV.js-pullable_hard_dest_left');
-			foreach_delete_element($article, 'DIV.js-pullable_hard_dest_right');
-			foreach_delete_element($article, 'SECTION.block-sharer');
-			foreach_delete_element($article, 'DIV[data-source="ramka-zbiorka"]');
-			foreach_delete_element($article, 'DIV[data-source="ramka-newsletter"]');
-			foreach_delete_element($article, 'DIV[data-source="block-magazynpromo"]');
-			foreach_delete_element($article, 'DIV[data-source="ramka-polecane-1"]');
-			foreach_delete_element($article, 'DIV.block-content_breaker_ramka');
-			
+			$selectors_array[] = 'DIV.js-pullable_hard_dest_left';
+			$selectors_array[] = 'DIV.js-pullable_hard_dest_right';
+			$selectors_array[] = 'SECTION.block-sharer';
+			$selectors_array[] = 'DIV[data-source="ramka-zbiorka"]';
+			$selectors_array[] = 'DIV[data-source="ramka-newsletter"]';
+			$selectors_array[] = 'DIV[data-source="block-magazynpromo"]';
+			$selectors_array[] = 'DIV[data-source="ramka-polecane-1"]';
+			$selectors_array[] = 'DIV.block-content_breaker_ramka';
+			foreach_delete_element_array($article, $selectors_array);
+
 
 			$tags = return_tags_array($article, 'DIV.catbox A.block-catbox');
 			$author = return_authors_as_string($article, 'DIV.autor');

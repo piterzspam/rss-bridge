@@ -59,9 +59,11 @@ class OSWBridge extends FeedExpander {
 		$article_page = getSimpleHTMLDOMCached($item['uri'], 86400 * 14);
 		$article = $article_page->find('ARTICLE.publikacje[role="article"]', 0);
 		$this->fix_main_photo($article);
-		foreach_delete_element($article, 'comment');
-		foreach_delete_element($article, 'script');
-		foreach_delete_element($article, 'NOSCRIPT');
+		$selectors_array[] = 'comment';
+		$selectors_array[] = 'script';
+		$selectors_array[] = 'NOSCRIPT';
+		foreach_delete_element_array($article, $selectors_array);
+
 
 		//https://www.osw.waw.pl/pl/publikacje/komentarze-osw/2021-03-02/przeciaganie-grenlandii-dania-usa-i-chiny-na-lodowej-wyspie
 		$this->format_article_photos_sources($article);
@@ -78,7 +80,7 @@ class OSWBridge extends FeedExpander {
 		$date = "";
 		if (FALSE === is_null($date_element = $article_page->find('META[property="article:published_time"][content]', 0)))
 		{
-//			print_element($date_element, "date_element", "<br>");
+			//			print_element($date_element, "date_element", "<br>");
 			$date = $date_element->getAttribute('content');
 		}
 		

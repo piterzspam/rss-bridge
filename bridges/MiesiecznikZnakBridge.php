@@ -68,22 +68,24 @@ class MiesiecznikZnakBridge extends FeedExpander {
 			//https://www.miesiecznik.znak.com.pl/co-dalej-z-prawem-aborcyjnym-w-polsce/
 			$article = $articlePage->find('BODY', 0);
 
-			foreach_delete_element($article, 'SECTION.article.w-gradient');
-			foreach_delete_element($article, 'SCRIPT');
-			foreach_delete_element($article, 'SECTION.nav');
-			foreach_delete_element($article, 'SECTION#buy-issue');
-			foreach_delete_element($article, 'SECTION.related-tabs');
-			foreach_delete_element($article, 'FOOTER');
-			foreach_delete_element($article, 'DIV[id^="newsletter-popup"]');
-			foreach_delete_element($article, 'DIV#people-modal');
-			foreach_delete_element($article, 'DIV#mediaModal');
-			foreach_delete_element($article, 'DIV#cookie-notice');
-			foreach_delete_element($article, 'DIV.read-others');
-			foreach_delete_element($article, 'DIV.read-others-content');
-			foreach_delete_element($article, 'DIV.issue-sidebar');
-			foreach_delete_element($article, 'DIV.share-panel');
-			foreach_delete_element($article, 'DIV.article-col-33');
-			foreach_delete_element($article, 'DIV.read-others-content');
+			$selectors_array[] = 'SECTION.article.w-gradient';
+			$selectors_array[] = 'SCRIPT';
+			$selectors_array[] = 'SECTION.nav';
+			$selectors_array[] = 'SECTION#buy-issue';
+			$selectors_array[] = 'SECTION.related-tabs';
+			$selectors_array[] = 'FOOTER';
+			$selectors_array[] = 'DIV[id^="newsletter-popup"]';
+			$selectors_array[] = 'DIV#people-modal';
+			$selectors_array[] = 'DIV#mediaModal';
+			$selectors_array[] = 'DIV#cookie-notice';
+			$selectors_array[] = 'DIV.read-others';
+			$selectors_array[] = 'DIV.read-others-content';
+			$selectors_array[] = 'DIV.issue-sidebar';
+			$selectors_array[] = 'DIV.share-panel';
+			$selectors_array[] = 'DIV.article-col-33';
+			$selectors_array[] = 'DIV.read-others-content';
+			foreach_delete_element_array($article, $selectors_array);
+
 	
 			//Fix szerokości artykulu
 			if(isset($article->width))

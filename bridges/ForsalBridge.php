@@ -119,7 +119,7 @@ class ForsalBridge extends BridgeAbstract {
 		$article_data = str_replace('"width": ,'."\n", '"width": "",'."\n", $article_data);
 		$article_data = str_replace('"height": '."\n", '"height": ""'."\n", $article_data);
 
-		$article_data_parsed = $this->parse_article_data(json_decode($article_data));
+		$article_data_parsed = parse_article_data(json_decode($article_data));
 		$date = trim($article_data_parsed["datePublished"]);
 		$title = trim($article_data_parsed["headline"]);
 		$author = trim($article_data_parsed["author"]["name"]);
@@ -139,13 +139,14 @@ class ForsalBridge extends BridgeAbstract {
 			if(isset($photo_element->width)) $photo_element->width = NULL;
 			if(isset($photo_element->height)) $photo_element->height = NULL;
 		}
-		$this->foreach_delete_element($article, 'comment');
-		$this->foreach_delete_element($article, 'DIV.social-box');
-		$this->foreach_delete_element($article, 'amp-image-lightbox');
-		$this->foreach_delete_element($article, 'DIV.adBoxTop');
-		$this->foreach_delete_element($article, 'DIV.adBox');
-		$this->foreach_delete_element($article, 'DIV.widget.video');
-		$this->clear_paragraphs_from_taglinks($article, 'P.hyphenate', array('/forsal\.pl\/tagi\//'));
+		$selectors_array[] = 'comment';
+		$selectors_array[] = 'DIV.social-box';
+		$selectors_array[] = 'amp-image-lightbox';
+		$selectors_array[] = 'DIV.adBoxTop';
+		$selectors_array[] = 'DIV.adBox';
+		$selectors_array[] = 'DIV.widget.video';
+		foreach_delete_element_array($article, $selectors_array);
+		clear_paragraphs_from_taglinks($article, 'P.hyphenate', array('/forsal\.pl\/tagi\//'));
 
 
 		$this->items[] = array(

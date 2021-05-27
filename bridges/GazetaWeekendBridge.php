@@ -134,18 +134,19 @@ class GazetaWeekendBridge extends BridgeAbstract {
 			$article_data_element->outertext = '<br>'.$article_data_element->outertext;
 		}
 */
-		foreach_delete_element($article, 'comment');
-		foreach_delete_element($article, 'DIV.article__bottomTextFrame');
-//		foreach_delete_element($article, 'SCRIPT');
-		foreach_delete_element($article, 'DIV.article__socialbar');
-		foreach_delete_element($article, 'DIV#adUnit-007-CONTENTBOARD');
-		foreach_delete_element($article, 'DIV[id^="banC"]');
-		foreach_delete_element($article, 'DIV#bottom_wrapper');
-		foreach_delete_element($article, 'DIV#top_wrapper');
-		foreach_delete_element($article, 'DIV.socialBar');
-		foreach_delete_element($article, 'DIV.article__slot');
-		foreach_delete_element($article, 'DIV.article__sidebar_extraContent');
-		foreach_delete_element($article, 'DIV.article__type-wrapper');
+		$selectors_array[] = 'comment';
+		$selectors_array[] = 'DIV.article__bottomTextFrame';
+//		$selectors_array[] = 'SCRIPT';
+		$selectors_array[] = 'DIV.article__socialbar';
+		$selectors_array[] = 'DIV#adUnit-007-CONTENTBOARD';
+		$selectors_array[] = 'DIV[id^="banC"]';
+		$selectors_array[] = 'DIV#bottom_wrapper';
+		$selectors_array[] = 'DIV#top_wrapper';
+		$selectors_array[] = 'DIV.socialBar';
+		$selectors_array[] = 'DIV.article__slot';
+		$selectors_array[] = 'DIV.article__sidebar_extraContent';
+		$selectors_array[] = 'DIV.article__type-wrapper';
+		foreach_delete_element_array($article, $selectors_array);
 //		replace_attribute($article, 'IMG[data-src][!src]', 'src', 'data-src');
 		replace_attribute($article, 'BLOCKQUOTE[class="art_blockquote"]', 'class', NULL);
 		combine_two_elements($article, 'IMG.article__image', 'DIV.article__image_signature', 'DIV', 'super_photo');
@@ -200,7 +201,7 @@ class GazetaWeekendBridge extends BridgeAbstract {
 				}
 			}
 		}
-		foreach_delete_element($article, 'SCRIPT');
+		$selectors_array[] = 'SCRIPT';
 		$article = str_get_html($article->save());
 		//https://weekend.gazeta.pl/weekend/7,177333,26878416,mam-33-lata-i-troje-dzieci-to-nie-pora-by-umierac-malgorzata.html
 		
@@ -266,16 +267,16 @@ class GazetaWeekendBridge extends BridgeAbstract {
 			}
 		}
 		$article = str_get_html($article->save());
-		foreach_delete_element($article, 'DIV.keyTag');
-		foreach_delete_element($article, 'DIV#gazeta_article_author');
-		foreach_delete_element($article, 'DIV.shortSocialBar');
+		$selectors_array[] = 'DIV.keyTag';
+		$selectors_array[] = 'DIV#gazeta_article_author';
+		$selectors_array[] = 'DIV.shortSocialBar';
 		foreach_replace_outertext_with_subelement_innertext($article, 'DIV#article', 'DIV.cmsArtykulElem');
-		foreach_delete_element($article, 'DIV#sitePath');
-		foreach_delete_element($article, 'DIV#article_comments');
-		foreach_delete_element($article, 'DIV.relatedHolder');
-		foreach_delete_element($article, 'DIV#adUnit-007-CONTENTBOARD');
-		foreach_delete_element($article, 'comment');
-		foreach_delete_element($article, 'SCRIPT');
+		$selectors_array[] = 'DIV#sitePath';
+		$selectors_array[] = 'DIV#article_comments';
+		$selectors_array[] = 'DIV.relatedHolder';
+		$selectors_array[] = 'DIV#adUnit-007-CONTENTBOARD';
+		$selectors_array[] = 'comment';
+		$selectors_array[] = 'SCRIPT';
 		replace_attribute($article, '[data-pub]', 'data-pub', NULL);
 		replace_attribute($article, '[data-adv]', 'data-adv', NULL);
 		$article = str_get_html($article->save());
@@ -310,40 +311,4 @@ class GazetaWeekendBridge extends BridgeAbstract {
 			'content' => $article
 		);
 	}
-
-	private function my_get_html($url)
-	{
-		$context = stream_context_create(array('http' => array('ignore_errors' => true)));
-		if (TRUE === $GLOBALS['my_debug'])
-		{
-			$start_request = microtime(TRUE);
-			$page_content = file_get_contents($url, false, $context);
-			$end_request = microtime(TRUE);
-			echo "<br>Article  took " . ($end_request - $start_request) . " seconds to complete - url: $url.";
-			$GLOBALS['all_articles_counter']++;
-			$GLOBALS['all_articles_time'] = $GLOBALS['all_articles_time'] + $end_request - $start_request;
-		}
-		else
-			$page_content = file_get_contents($url, false, $context);
-		$code = getHttpCode($http_response_header);
-		if (200 !== $code)
-		{
-			$html_error = createErrorContent($http_response_header);
-			$date = new DateTime("now", new DateTimeZone('Europe/Warsaw'));
-			$date_string = date_format($date, 'Y-m-d H:i:s');
-			$this->items[] = array(
-				'uri' => $url,
-				'title' => "Error ".$code.": ".$url,
-				'timestamp' => $date_string,
-				'content' => $html_error
-			);
-		}
-		$page_html = str_get_html($page_content);
-		$return_array = array(
-			'code' => $code,
-			'html' => $page_html,
-		);
-		return $return_array;
-	}
-
 }

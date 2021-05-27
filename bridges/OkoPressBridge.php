@@ -68,7 +68,7 @@ class OkoPressBridge extends FeedExpander {
 				return;
 			}
 		}
-		$returned_array = $this->my_get_html($item['uri']);
+		$returned_array = my_get_html($item['uri']);
 		if (200 === $returned_array['code'])
 		{
 			$article_html = $returned_array['html'];
@@ -105,19 +105,20 @@ class OkoPressBridge extends FeedExpander {
 			$src_header_image = $header_photo->getAttribute('src');
 		}
 		$article = $article_html->find('ARTICLE[id^="post-"] DIV.large-9', 0);
-		foreach_delete_element($article, 'DIV.cr-paragraph-additions[data-cookie="HasLogged"]');
-		foreach_delete_element($article, 'DIV.cr-login-block.oko-widget-frame');
-		foreach_delete_element($article, 'comment');
-		foreach_delete_element($article, 'SCRIPT');
+		$selectors_array[] = 'DIV.cr-paragraph-additions[data-cookie="HasLogged"]';
+		$selectors_array[] = 'DIV.cr-login-block.oko-widget-frame';
+		$selectors_array[] = 'comment';
+		$selectors_array[] = 'SCRIPT';
 		foreach_replace_outertext_with_innertext($article, 'DIV.socialwall');
 		$article = str_get_html($article->save());
-		foreach_delete_element($article, 'DIV.related_image_open');
-		foreach_delete_element($article, 'DIV.row.js-display-random-element');
-		foreach_delete_element($article, 'DIV.tags');
-		foreach_delete_element($article, 'DIV.row.large-collapse');
-		foreach_delete_element($article, 'DIV#banner-after-excerpt');
-		foreach_delete_element($article, 'DIV#intertext-banners');
-		foreach_delete_element($article, 'DIV.powiazany-artykul-shortcode');
+		$selectors_array[] = 'DIV.related_image_open';
+		$selectors_array[] = 'DIV.row.js-display-random-element';
+		$selectors_array[] = 'DIV.tags';
+		$selectors_array[] = 'DIV.row.large-collapse';
+		$selectors_array[] = 'DIV#banner-after-excerpt';
+		$selectors_array[] = 'DIV#intertext-banners';
+		$selectors_array[] = 'DIV.powiazany-artykul-shortcode';
+		foreach_delete_element_array($article, $selectors_array);
 		$article->find('hr',-1)->outertext = '';
 		if (isset($src_header_image))
 		{
@@ -175,63 +176,5 @@ class OkoPressBridge extends FeedExpander {
 
 		return $item;
 	}
-	
-
-	private function format_article_photos_sources($article)
-	{
-/*		foreach($article->find('IMG.lazy[data-srcset]') as $photo_element)
-		{
-			$img_src = $photo_element->getAttribute('src');
-			if($photo_element->hasAttribute('data-srcset'))
-			{
-				$img_srcset = $photo_element->getAttribute('data-srcset');
-				$srcset_array  = explode(',', $img_srcset);
-				$last = count($srcset_array) - 1;
-				$last_url_string = trim($srcset_array[$last]);
-				$last_url_array  = explode(' ', $last_url_string);
-				$img_src = $last_url_array[0];
-			}
-			$photo_element->setAttribute('src', $img_src);
-		}*/
-	}
-	
-	private function my_get_html($url)
-	{
-		$context = stream_context_create(array('http' => array('ignore_errors' => true)));
-
-		if (TRUE === $GLOBALS['my_debug'])
-		{
-			$start_request = microtime(TRUE);
-			$page_content = file_get_contents($url, false, $context);
-			$end_request = microtime(TRUE);
-			echo "<br>Article  took " . ($end_request - $start_request) . " seconds to complete - url: $url.";
-			$GLOBALS['all_articles_counter']++;
-			$GLOBALS['all_articles_time'] = $GLOBALS['all_articles_time'] + $end_request - $start_request;
-		}
-		else
-			$page_content = file_get_contents($url, false, $context);
-
-		$code = getHttpCode($http_response_header);
-		if (200 !== $code)
-		{
-			$html_error = createErrorContent($http_response_header);
-			$date = new DateTime("now", new DateTimeZone('Europe/Warsaw'));
-			$date_string = date_format($date, 'Y-m-d H:i:s');
-			$this->items[] = array(
-				'uri' => $url,
-				'title' => "Error ".$code.": ".$url,
-				'timestamp' => $date_string,
-				'content' => $html_error
-			);
-		}
-		$page_html = str_get_html($page_content);
-
-		$return_array = array(
-			'code' => $code,
-			'html' => $page_html,
-		);
-		return $return_array;
-	}
-
 }
 // Imaginary empty line!

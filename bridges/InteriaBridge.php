@@ -101,7 +101,7 @@ class InteriaBridge extends BridgeAbstract {
 		$url_articles_list = $GLOBALS['url_articles_list'];
 		while (count($articles_urls) < $GLOBALS['limit'] && "empty" != $url_articles_list)
 		{
-			$returned_array = $this->my_get_html($url_articles_list);
+			$returned_array = my_get_html($url_articles_list);
 			if (200 !== $returned_array['code'])
 			{
 				break;
@@ -165,7 +165,7 @@ class InteriaBridge extends BridgeAbstract {
 	private function addArticleAmpProject($url_article_link)
 	{
 		$url_article_link = $this->getAmpProjectLink($url_article_link);
-		$returned_array = $this->my_get_html($url_article_link);
+		$returned_array = my_get_html($url_article_link);
 		if (200 !== $returned_array['code'])
 		{
 			return;
@@ -184,7 +184,7 @@ class InteriaBridge extends BridgeAbstract {
 				{
 					$next_page_url = $this->getAmpProjectLink($naxt_page_element->href);
 //					$next_page_url = $GLOBALS["prefix"].$naxt_page_element->href;
-					$next_page_array = $this->my_get_html($next_page_url);
+					$next_page_array = my_get_html($next_page_url);
 					if (200 !== $next_page_array['code'])
 					{
 						return;
@@ -225,7 +225,7 @@ class InteriaBridge extends BridgeAbstract {
 
 	private function addArticleCanonical($url_article_link)
 	{
-		$returned_array = $this->my_get_html($url_article_link);
+		$returned_array = my_get_html($url_article_link);
 		if (200 !== $returned_array['code'])
 		{
 			return;
@@ -243,7 +243,7 @@ class InteriaBridge extends BridgeAbstract {
 				if (!is_null($naxt_page_element = $current_page_html->find($naxt_page_element_selector, 0)))
 				{
 					$next_page_url = $GLOBALS["prefix"].$naxt_page_element->href;
-					$next_page_array = $this->my_get_html($next_page_url);
+					$next_page_array = my_get_html($next_page_url);
 					if (200 !== $next_page_array['code'])
 					{
 						return;
@@ -313,28 +313,6 @@ class InteriaBridge extends BridgeAbstract {
 		);
 	}
 
-	private function remove_empty_elements($main_element_str, $tag)
-	{
-		$main_element = str_get_html($main_element_str);
-		foreach($main_element->find($tag) as $empty_element)
-		{
-/*			print_html($empty_element->outertext, "empty_element->outertext");
-			print_html($empty_element->innertext, "empty_element->innertext");
-			print_html($empty_element->plaintext, "empty_element->plaintext");
-			print_var_dump($empty_element->outertext, "empty_element->outertext");
-			print_var_dump($empty_element->innertext, "empty_element->innertext");
-			print_var_dump($empty_element->plaintext, "empty_element->plaintext");
-			hex_dump($empty_element->outertext);
-			hex_dump($empty_element->innertext);
-			hex_dump($empty_element->plaintext);*/
-			if (0 === strlen($empty_element->innertext) && 0 === strlen($empty_element->plaintext))
-			{
-				$main_element_str = str_replace($empty_element->outertext, "", $main_element_str);
-			}
-		}
-		return $main_element_str;
-	}
-
 	private function getAmpProjectLink($url)
 	{
 		$prefix_edit = str_replace(".", "-", $GLOBALS["prefix"]);
@@ -373,44 +351,5 @@ class InteriaBridge extends BridgeAbstract {
 		}
 		$new_title = '['.strtoupper($price_param).']'.$title_prefix.' '.trim($title);
 		return $new_title;
-	}
-
-	
-	private function my_get_html($url)
-	{
-		$context = stream_context_create(array('http' => array('ignore_errors' => true)));
-
-		if (TRUE === $GLOBALS['my_debug'])
-		{
-			$start_request = microtime(TRUE);
-			$page_content = file_get_contents($url, false, $context);
-			$end_request = microtime(TRUE);
-			echo "<br>Article  took " . ($end_request - $start_request) . " seconds to complete - url: $url.";
-			$GLOBALS['all_articles_counter']++;
-			$GLOBALS['all_articles_time'] = $GLOBALS['all_articles_time'] + $end_request - $start_request;
-		}
-		else
-			$page_content = file_get_contents($url, false, $context);
-
-		$code = getHttpCode($http_response_header);
-		if (200 !== $code)
-		{
-			$html_error = createErrorContent($http_response_header);
-			$date = new DateTime("now", new DateTimeZone('Europe/Warsaw'));
-			$date_string = date_format($date, 'Y-m-d H:i:s');
-			$this->items[] = array(
-				'uri' => $url,
-				'title' => "Error ".$code.": ".$url,
-				'timestamp' => $date_string,
-				'content' => $html_error
-			);
-		}
-		$page_html = str_get_html($page_content);
-
-		$return_array = array(
-			'code' => $code,
-			'html' => $page_html,
-		);
-		return $return_array;
 	}
 }

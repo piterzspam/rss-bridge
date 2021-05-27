@@ -42,7 +42,7 @@ class WPplBridge extends BridgeAbstract {
 		{
 			$getAmp = FALSE;
 			$getCanonical = FALSE;
-//			$ampproject_returned_array = $this->my_get_html($ampproject_url);
+//			$ampproject_returned_array = my_get_html($ampproject_url);
 			$ampproject_url = $this->getAmpprojectLink($canonical_url);
 			$ampproject_returned_array = my_get_html($ampproject_url);
 			if (200 === $ampproject_returned_array['code'])
@@ -261,7 +261,7 @@ class WPplBridge extends BridgeAbstract {
 		$url_articles_list = $this->getInput('url');
 		while (count($articles_urls) < $GLOBALS['limit'] && "empty" != $url_articles_list)
 		{
-			$returned_array = $this->my_get_html($url_articles_list);
+			$returned_array = my_get_html($url_articles_list);
 			if (200 !== $returned_array['code'])
 			{
 				break;
@@ -301,57 +301,6 @@ class WPplBridge extends BridgeAbstract {
 		}
 		else
 			return "empty";
-	}
-	
-	private function my_get_html($url)
-	{
-		$context = stream_context_create(array('http' => array('ignore_errors' => true)));
-
-		if (TRUE === $GLOBALS['my_debug'])
-		{
-			$start_request = microtime(TRUE);
-			$page_content = file_get_contents($url, false, $context);
-			$end_request = microtime(TRUE);
-			echo "<br>Article  took " . ($end_request - $start_request) . " seconds to complete - url: $url.";
-			$GLOBALS['all_articles_counter']++;
-			$GLOBALS['all_articles_time'] = $GLOBALS['all_articles_time'] + $end_request - $start_request;
-		}
-		else
-			$page_content = file_get_contents($url, false, $context);
-
-		$code = getHttpCode($http_response_header);
-		if (200 !== $code)
-		{
-			$html_error = createErrorContent($http_response_header);
-			$date = new DateTime("now", new DateTimeZone('Europe/Warsaw'));
-			$date_string = date_format($date, 'Y-m-d H:i:s');
-			$this->items[] = array(
-				'uri' => $url,
-				'title' => "Error ".$code.": ".$url,
-				'timestamp' => $date_string,
-				'content' => $html_error
-			);
-		}
-		$page_html = str_get_html($page_content);
-
-		$return_array = array(
-			'code' => $code,
-			'html' => $page_html,
-		);
-		return $return_array;
-	}
-
-	private function removeVideoTitles($article)
-	{
-		foreach($article->find('amp-video-iframe') as $amp_video_iframe)
-		{
-			$previous = $amp_video_iframe->prev_sibling();
-			if ('h2' === $previous->tag)
-			{
-				$previous->outertext='';
-				$amp_video_iframe->outertext='';
-			}
-		}
 	}
 
 	private function getAmpprojectLink($url)

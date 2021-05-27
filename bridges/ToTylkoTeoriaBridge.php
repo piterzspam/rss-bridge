@@ -1,5 +1,5 @@
 <?php
-class ToTylkoTeoriaBridge extends BridgeAbstract {
+	class ToTylkoTeoriaBridge extends BridgeAbstract {
 	const NAME = 'To tylko teoria';
 	const URI = 'https://www.totylkoteoria.pl/';
 	const DESCRIPTION = 'No description provided';
@@ -27,7 +27,7 @@ class ToTylkoTeoriaBridge extends BridgeAbstract {
 
 	public function collectData()
 	{
-
+		include 'myFunctions.php';
 		$GLOBALS['limit'] = $this->getInput('limit');
 		$main_page_url = 'https://www.totylkoteoria.pl/';
 		$html_main_page = getSimpleHTMLDOM($main_page_url);
@@ -67,13 +67,14 @@ class ToTylkoTeoriaBridge extends BridgeAbstract {
 			return;
 		}
 
-		$this->foreach_delete_element($article, 'SPAN.label-info');
-		$this->foreach_delete_element($article, 'SPAN.item-control.blog-admin');
-		$this->foreach_delete_element($article, 'A[href="https://patronite.pl/totylkoteoria"][style="margin-left: 1em; margin-right: 1em;"]');
-		$this->foreach_delete_element($article, 'DIV#share-post');
-		$this->foreach_delete_element($article, 'DIV#related-posts');
-		$this->foreach_delete_element($article, 'A[href="https://www.totylkoteoria.pl/2015/06/kim-jestem.html"]');
-		$this->foreach_delete_element($article, 'DIV.author-avatar');
+		$selectors_array[] = 'SPAN.label-info';
+		$selectors_array[] = 'SPAN.item-control.blog-admin';
+		$selectors_array[] = 'A[href="https://patronite.pl/totylkoteoria"][style="margin-left: 1em; margin-right: 1em;"]';
+		$selectors_array[] = 'DIV#share-post';
+		$selectors_array[] = 'DIV#related-posts';
+		$selectors_array[] = 'A[href="https://www.totylkoteoria.pl/2015/06/kim-jestem.html"]';
+		$selectors_array[] = 'DIV.author-avatar';
+		foreach_delete_element_array($article, $selectors_array);
 		//date
 		$date = $article->find('ABBR.published', 0)->getAttribute('title');
 		//title

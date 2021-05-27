@@ -189,14 +189,15 @@ class RespublicaBridge extends FeedExpander {
 		$article_page = getSimpleHTMLDOMCached($item['uri'], 86400 * 14);
 		$article = $article_page->find('DIV.container.container-fix.moon_post_container[post_id]', 0);
 		$this->fix_main_photo($article);
-		foreach_delete_element($article, 'comment');
-		foreach_delete_element($article, 'script');
-		foreach_delete_element($article, 'NOSCRIPT');
-		foreach_delete_element($article, 'DIV.main-column-social-icons');
-		foreach_delete_element($article, 'DIV[role="main"] DIV.row');
-		foreach_delete_element($article, 'DIV.social_bottom_container');
-		foreach_delete_element($article, 'ARTICLE[id^="post-"] DIV[style="clear:both;"]');
-		foreach_delete_element($article, 'DL.komentarze-w-akordeonie');
+		$selectors_array[] = 'comment';
+		$selectors_array[] = 'script';
+		$selectors_array[] = 'NOSCRIPT';
+		$selectors_array[] = 'DIV.main-column-social-icons';
+		$selectors_array[] = 'DIV[role="main"] DIV.row';
+		$selectors_array[] = 'DIV.social_bottom_container';
+		$selectors_array[] = 'ARTICLE[id^="post-"] DIV[style="clear:both;"]';
+		$selectors_array[] = 'DL.komentarze-w-akordeonie';
+		foreach_delete_element_array($article, $selectors_array);
 		//https://publica.pl/teksty/ue-zawiodla-w-sprawie-szczepionek-68348.html
 		foreach_delete_element_containing_subelement($article, 'FIGURE.figure', 'A[href*="publica.pl/produkt"]');
 		foreach_delete_element_containing_subelement($article, 'FIGURE.figure', 'IMG[title^="Zadeklaruj 1%"]');

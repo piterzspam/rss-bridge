@@ -126,7 +126,7 @@ class DemagogBridge extends BridgeAbstract {
 		$url_articles_list = $GLOBALS['chosen_category_url'];
 		while (count($articles_data) < $GLOBALS['limit'] && "empty" != $url_articles_list)
 		{
-			$returned_array = $this->my_get_html($url_articles_list);
+			$returned_array = my_get_html($url_articles_list);
 			$html_articles_list = $returned_array['html'];
 			if (200 !== $returned_array['code'] || 0 === count($preview_elements = $html_articles_list->find('DIV#response ARTICLE[id^="post-"]')))
 			{
@@ -166,7 +166,7 @@ class DemagogBridge extends BridgeAbstract {
 		$articles_data = array();
 		$GLOBALS['limit'] = $this->getInput('limit');
 
-		$returned_array = $this->my_get_html('https://demagog.org.pl/');
+		$returned_array = my_get_html('https://demagog.org.pl/');
 		$html_articles_list = $returned_array['html'];
 //		if (200 === $returned_array['code'] || 0 !== count($found_hrefs = $html_articles_list->find('DIV.slider-news-home.mt-5.mt-md-0 H2.title-archive A[href]')))
 //		if (200 === $returned_array['code'] && 0 !== count($found_hrefs = $html_articles_list->find('DIV.container.pb-2.mt-4 H2.title-archive A[href]')))
@@ -200,7 +200,7 @@ class DemagogBridge extends BridgeAbstract {
 
 	private function addArticle($url, $tags)
 	{
-		$returned_array = $this->my_get_html($url);
+		$returned_array = my_get_html($url);
 		if (200 !== $returned_array['code'])
 		{
 			return;
@@ -271,43 +271,5 @@ class DemagogBridge extends BridgeAbstract {
 			'categories' => $tags,
 			'content' => $article
 		);
-	}
-	
-	private function my_get_html($url)
-	{
-		$context = stream_context_create(array('http' => array('ignore_errors' => true)));
-
-		if (TRUE === $GLOBALS['my_debug'])
-		{
-			$start_request = microtime(TRUE);
-			$page_content = file_get_contents($url, false, $context);
-			$end_request = microtime(TRUE);
-			echo "<br>Article  took " . ($end_request - $start_request) . " seconds to complete - url: $url.";
-			$GLOBALS['all_articles_counter']++;
-			$GLOBALS['all_articles_time'] = $GLOBALS['all_articles_time'] + $end_request - $start_request;
-		}
-		else
-			$page_content = file_get_contents($url, false, $context);
-
-		$code = getHttpCode($http_response_header);
-		if (200 !== $code)
-		{
-			$html_error = createErrorContent($http_response_header);
-			$date = new DateTime("now", new DateTimeZone('Europe/Warsaw'));
-			$date_string = date_format($date, 'Y-m-d H:i:s');
-			$this->items[] = array(
-				'uri' => $url,
-				'title' => "Error ".$code.": ".$url,
-				'timestamp' => $date_string,
-				'content' => $html_error
-			);
-		}
-		$page_html = str_get_html($page_content);
-
-		$return_array = array(
-			'code' => $code,
-			'html' => $page_html,
-		);
-		return $return_array;
 	}
 }

@@ -59,15 +59,16 @@ class KulturaLiberalnaBridge extends FeedExpander {
 		$article_page = getSimpleHTMLDOMCached($item['uri'], 86400 * 14);
 		$article_post = $article_page->find('ARTICLE[id^="post-"]', 0);
 		
-		foreach_delete_element($article_post, 'script');
-		foreach_delete_element($article_post, 'DIV.kl-10lat-box');
-		foreach_delete_element($article_post, 'DIV.go-to-comments');
-		foreach_delete_element($article_post, 'DIV.nr-info');
-		foreach_delete_element($article_post, 'DIV.more-in-number-container');
-		foreach_delete_element($article_post, 'DIV.fb-comm');
-		foreach_delete_element($article_post, 'P.section-name.mobile-section-name');
+		$selectors_array[] = 'script';
+		$selectors_array[] = 'DIV.kl-10lat-box';
+		$selectors_array[] = 'DIV.go-to-comments';
+		$selectors_array[] = 'DIV.nr-info';
+		$selectors_array[] = 'DIV.more-in-number-container';
+		$selectors_array[] = 'DIV.fb-comm';
+		$selectors_array[] = 'P.section-name.mobile-section-name';
 		//https://kulturaliberalna.pl/2021/01/12/cena-osobnosci-nie-jest-wysoka-na-razie/
-		foreach_delete_element($article_post, 'DIV.promobox');
+		$selectors_array[] = 'DIV.promobox';
+		foreach_delete_element_array($article_post, $selectors_array);
 		$tags = return_tags_array($article_post, 'DIV.post-tags A');
 		$author = return_authors_as_string($article_post, 'DIV.article-footer H2');
 

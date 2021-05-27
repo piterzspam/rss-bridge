@@ -82,7 +82,7 @@ class OnetBridge extends BridgeAbstract {
 		$GLOBALS['author_name'] = "";
 		while (count($articles_urls) < $GLOBALS['limit'])
 		{
-			$returned_array = $this->my_get_html($url_articles_list);
+			$returned_array = my_get_html($url_articles_list);
 			if (200 !== $returned_array['code'])
 			{
 				break;
@@ -134,7 +134,7 @@ class OnetBridge extends BridgeAbstract {
 
 	private function addArticle($url)
 	{
-		$returned_array = $this->my_get_html($url);
+		$returned_array = my_get_html($url);
 		if (200 !== $returned_array['code'])
 		{
 			return;
@@ -145,7 +145,7 @@ class OnetBridge extends BridgeAbstract {
 		}
 		$tags = return_tags_array($article_html, 'DIV#relatedTopics A[href]');
 		$amp_url = $this->getCustomizedLink($url);
-		$returned_array = $this->my_get_html($amp_url);
+		$returned_array = my_get_html($amp_url);
 		if (200 !== $returned_array['code'])
 		{
 			return;
@@ -167,17 +167,18 @@ class OnetBridge extends BridgeAbstract {
 		$article = str_get_html($article->save());
 		fix_all_photos_attributes($article);
 		$article = str_get_html($article->save());
-
+		
 //		print_element($article, 'article');
 
 		$author = return_authors_as_string($article, 'DIV.dateAuthor SPAN.author');
 		$title = get_text_plaintext($article, 'H1.name.headline', $amp_url);
 //		$title = $this->getChangedTitle($title);
 
-		foreach_delete_element($article, 'comment');
-		foreach_delete_element($article, 'script');
-		foreach_delete_element($article, 'DIV.social-box');
-		foreach_delete_element($article, 'DIV[style="margin:auto;width:300px;"]');
+		$selectors_array[] = 'comment';
+		$selectors_array[] = 'script';
+		$selectors_array[] = 'DIV.social-box';
+		$selectors_array[] = 'DIV[style="margin:auto;width:300px;"]';
+		foreach_delete_element_array($article, $selectors_array);
 //https://wiadomosci-onet-pl.cdn.ampproject.org/v/s/wiadomosci.onet.pl/tylko-w-onecie/wybory-w-usa-2020-andrzej-stankiewicz-dzis-jest-czas-wielkiej-smuty-w-pis/fcktclw.amp?amp_js_v=0.1
 //https://wiadomosci-onet-pl.cdn.ampproject.org/v/s/wiadomosci.onet.pl/kraj/koronawirus-piotr-glinski-komentuje-milionowe-dofinansowania-dla-artystow/bv013rl.amp?amp_js_v=0.1
 //Glińskłumaczy się kryteriami obiektywnymi.
@@ -303,31 +304,5 @@ class OnetBridge extends BridgeAbstract {
 		$new_url = str_replace('https://', 'https://wiadomosci-onet-pl.cdn.ampproject.org/v/s/', $new_url);
 		
 		return $new_url;
-	}
-	
-	private function my_get_html($url)
-	{
-		$context = stream_context_create(array('http' => array('ignore_errors' => true)));
-		$page_content = file_get_contents($url, false, $context);
-		$code = getHttpCode($http_response_header);
-		if (200 !== $code)
-		{
-			$html_error = createErrorContent($http_response_header);
-			$date = new DateTime("now", new DateTimeZone('Europe/Warsaw'));
-			$date_string = date_format($date, 'Y-m-d H:i:s');
-			$this->items[] = array(
-				'uri' => $url,
-				'title' => "Error ".$code.": ".$url,
-				'timestamp' => $date_string,
-				'content' => $html_error
-			);
-		}
-		$page_html = str_get_html($page_content);
-
-		$return_array = array(
-			'code' => $code,
-			'html' => $page_html,
-		);
-		return $return_array;
 	}
 }
