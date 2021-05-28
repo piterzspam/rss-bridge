@@ -254,7 +254,7 @@ class DziennikBridge extends BridgeAbstract {
 		$attributes_array[] = "data-text-len";
 		$attributes_array[] = "data-scroll";
 		$attributes_array[] = "data-async-ad-slot";
-		$article = str_get_html(remove_multiple_attributes($article, $attributes_array));
+		$article = remove_multiple_attributes($article, $attributes_array);
 //		$article = str_get_html($this->remove_empty_elements($article->save(), "DIV"));
 //		$article = str_get_html($this->remove_empty_elements($article->save(), "SPAN"));
 //		$article = str_get_html($article_str);

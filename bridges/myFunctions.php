@@ -329,6 +329,7 @@
 		{
 			$element->outertext = $element->plaintext;
 		}
+		return str_get_html($main_element->save());
 	}
 
 	function foreach_replace_innertext_with_plaintext($main_element, $element_search_string)
@@ -337,6 +338,7 @@
 		{
 			$element->innertext = $element->plaintext;
 		}
+		return str_get_html($main_element->save());
 	}
 
 	function get_proxy_url($social_url)
@@ -543,7 +545,7 @@
 				}
 			}
 		}
-		return $main_element->save();
+		return str_get_html($main_element->save());
 	}
 
 	function fix_all_photos_attributes($main_element)
@@ -1578,6 +1580,91 @@ function getArray($array, $index) {
 		}
 		$new_title = trim($prefixes_combined.' '.trim($title));
 		return $new_title;
+	}
+	
+	function replace_date($main_element, $date_element_selector, $date_published, $date_modified = NULL)
+	{
+		$main_element_str = $main_element->save();
+		if(isset($date_published) && 1 < strlen($date_published))
+		{
+			if (FALSE === is_null($date_element = $main_element->find($date_element_selector, 0)))
+			{
+				$new_date_outertext = '<DIV class="dates">';
+				$text_published = localStrftime('%d %F %Y, %H:%M', strtotime($date_published));
+				$text_published = "Data publikacji: ".$text_published;
+				$new_date_outertext = $new_date_outertext.'<DIV class="date published">'.$text_published.'</DIV>';
+				if(isset($date_modified) && 1 < strlen($date_modified))
+				{
+					$text_modified = localStrftime('%d %F %Y, %H:%M', strtotime($date_modified));
+					$text_modified = "Data aktualizacji: ".$text_modified;
+					$new_date_outertext = $new_date_outertext.'<DIV class="date modified">'.$text_modified.'</DIV>';
+				}
+				$new_date_outertext = $new_date_outertext.'</DIV>';
+			}
+			$main_element_str = str_replace($date_element->outertext, $new_date_outertext, $main_element_str);
+		}
+		return str_get_html($main_element_str);
+	}
+	
+	function localStrftime($format, $timestamp = 0)
+	{
+/*
+		if($timestamp == 0)
+		{
+			// Sytuacja, gdy czas nie jest podany - używamy aktualnego.
+			$timestamp = time();
+		}
+*/
+		setlocale(LC_TIME, 'pl');
+		// Nowy kod - %F dla odmienionej nazwy miesiąca
+		if(strpos($format, '%F') !== false)
+		{
+			$mies = date('m', $timestamp);
+			
+			// odmienianie
+			switch($mies)
+			{
+				case 1:
+					$mies = 'stycznia';
+					break;
+				case 2:
+					$mies = 'lutego';
+					break;
+				case 3:
+					$mies = 'marca';
+					break;
+				case 4:
+					$mies = 'kwietnia';
+					break;
+				case 5:
+					$mies = 'maja';
+					break;
+				case 6:
+					$mies = 'czerwca';
+					break;
+				case 7:
+					$mies = 'lipca';
+					break;
+				case 8:
+					$mies = 'sierpnia';
+					break;
+				case 9:
+					$mies = 'września';
+					break;
+				case 10:
+					$mies = 'października';
+					break;
+				case 11:
+					$mies = 'listopada';
+					break;
+				case 12:
+					$mies = 'grudnia';
+					break;			
+			}
+			// dodawanie formatowania
+			return strftime(str_replace('%F', $mies, $format), $timestamp);		
+		}
+		return strftime($format, $timestamp);	
 	}
 
 	function prepare_article($main_element, $page_url = NULL)

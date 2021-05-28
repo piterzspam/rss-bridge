@@ -285,8 +285,7 @@ class FacebookMobileBridge extends BridgeAbstract {
 		$attributes_array[] = "tabindex";
 		$attributes_array[] = "target";
 		$attributes_array[] = "style";
-		$article_html_str = remove_multiple_attributes($article_html, $attributes_array);
-		$article_html = str_get_html($article_html_str);
+		$article_html = remove_multiple_attributes($article_html, $attributes_array);
 		//DIV[style="width:500px; height:500px;"]
 		//jeżeli jest kilka zdjęć w poście jak tu: https://www.facebook.com/wojownicyklawiatury/posts/236861054861137
 

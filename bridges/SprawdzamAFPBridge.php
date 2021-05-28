@@ -95,6 +95,8 @@ class SprawdzamAFPBridge extends BridgeAbstract {
 		$title = get_text_from_attribute($article_html, 'META[property="og:title"][content]', 'content', $url);
 		//date
 		$date = get_text_from_attribute($article_html, 'META[property="article:published_time"][content]', 'content', "");
+		$date_updated = get_text_from_attribute($article_html, 'META[property="article:modified_time"][content]', 'content', "");
+
 		//authors
 		$author = return_authors_as_string($article, 'SPAN.meta-author A[href][target="_blank"]');
 		$author = str_replace(', AFP Polska', '', $author);
@@ -109,7 +111,19 @@ class SprawdzamAFPBridge extends BridgeAbstract {
 		$selectors_array[] = 'script';
 		$selectors_array[] = 'SPAN.meta-share.addtoany';
 		$selectors_array[] = 'SPAN.meta-separator';
+		$selectors_array[] = 'DIV.disclaimer';
 		$article = foreach_delete_element_array($article, $selectors_array);
+
+		$article = replace_tag_and_class($article, 'H3[dir="ltr"]', 'single', 'STRONG', 'lead');		
+		$attributes_array[] = "dir";
+		$attributes_array[] = "about";
+		$attributes_array[] = "typeof";
+		$attributes_array[] = "role";
+		$attributes_array[] = "data-article-type";
+//		$attributes_array[] = "style";
+		$article = remove_multiple_attributes($article, $attributes_array);
+		$article = replace_attribute($article, "ARTICLE", "class", NULL);
+
 //		$article = move_element($article, 'DIV#container HEADER.entry-header.clearfix', 'DIV#content', 'innertext', 'before');
 		$article = format_article_photos($article, 'IMG.photoWrapper.mainPhoto', TRUE);
 		$article = format_article_photos($article, 'DIV.ww-item.image', FALSE, 'src', 'SPAN.legend');
@@ -127,6 +141,13 @@ class SprawdzamAFPBridge extends BridgeAbstract {
 		}
 		$article = str_get_html($article_str);
 		
+		$article = move_element($article, 'SPAN.meta-date', 'H1.content-title', 'outertext', 'after');
+		$article = move_element($article, 'H3[dir="ltr"]', 'SPAN.meta-date', 'outertext', 'after');
+		$article = move_element($article, 'DIV.content-meta', 'DIV.article-entry', 'outertext', 'after');
+		$article = insert_html($article, 'DIV.content-meta', '<HR>', '');
+		$article = replace_date($article, 'SPAN.meta-date', $date, $date_updated);
+//		$article = replace_date($article, 'SPAN.meta-date', $date);
+		
 		$article = add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
 		$article = add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
 		$article = add_style($article, 'FIGCAPTION', getStylePhotoCaption());
@@ -140,4 +161,64 @@ class SprawdzamAFPBridge extends BridgeAbstract {
 			'content' => $article
 		);
 	}
+
+	
+	function localStrftime($format, $timestamp = 0)
+	{
+		if($timestamp == 0)
+		{
+			// Sytuacja, gdy czas nie jest podany - używamy aktualnego.
+			$timestamp = time();
+		}
+
+		// Nowy kod - %F dla odmienionej nazwy miesiąca
+		if(strpos($format, '%F') !== false)
+		{
+			$mies = date('m', $timestamp);
+			
+			// odmienianie
+			switch($mies)
+			{
+				case 1:
+					$mies = 'stycznia';
+					break;
+				case 2:
+					$mies = 'lutego';
+					break;
+				case 3:
+					$mies = 'marca';
+					break;
+				case 4:
+					$mies = 'kwietnia';
+					break;
+				case 5:
+					$mies = 'maja';
+					break;
+				case 6:
+					$mies = 'czerwca';
+					break;
+				case 7:
+					$mies = 'lipca';
+					break;
+				case 8:
+					$mies = 'sierpnia';
+					break;
+				case 9:
+					$mies = 'września';
+					break;
+				case 10:
+					$mies = 'października';
+					break;
+				case 11:
+					$mies = 'listopada';
+					break;
+				case 12:
+					$mies = 'grudnia';
+					break;			
+			}
+			// dodawanie formatowania
+			return strftime(str_replace('%F', $mies, $format), $timestamp);		
+		}
+		return strftime($format, $timestamp);	
+	} // end localStrftime();
 }

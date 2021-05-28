@@ -265,21 +265,7 @@ class InteriaBridge extends BridgeAbstract {
 		$article_html = str_get_html(prepare_article($article_html, $GLOBALS["prefix"]));
 		$article = $article_html->find('ARTICLE[id^="article-single-"]', 0);
 		$article = str_get_html($this->remove_useless_elements($article));
-//		print_element($article, "article przed");
-//		$article = str_get_html($this->remove_empty_elements($article->save(), "DIV"));
-//		print_element($article, "article po");
-//		$article = str_get_html($this->remove_empty_elements($article->save(), "DIV"));
-		$article = foreach_replace_outertext_with_innertext($article, 'DIV[id^="naglowek-"]');
-		$article = replace_tag_and_class($article, 'P.article-lead', 'single', 'STRONG', NULL);
-		$article = move_element($article, 'DIV.article-date', 'ASIDE.embed-photo', 'outertext', 'before');
-//		$article = move_element($article, '.article-lead', 'DIV.article-date', 'outertext', 'after');
-		$article = insert_html($article, 'A.article-author-name', '<BR>');
-		$article = format_article_photos($article, 'ASIDE.embed-photo', TRUE, 'src', 'DIV.embed-work-detail');
-		$article = move_element($article, 'DIV.article-info', 'DIV.article-body', 'outertext', 'after');
-		$article = insert_html($article, 'DIV.article-info', '<HR>');
-
-
-//title
+		//title
 		$title = get_text_plaintext($article, 'H1.article-title', $url_article_link);
 //tags
 		$tags = return_tags_array($article, 'DIV.article-info DIV.article-category');
@@ -288,7 +274,41 @@ class InteriaBridge extends BridgeAbstract {
 		$author = return_authors_as_string($article, 'DIV.article-info A.article-author-name');
 //date
 		$date = get_text_from_attribute($article, 'META[itemprop="datePublished"][content]', 'content', "");
-		foreach_replace_innertext_with_plaintext($article, "DIV.article-date");
+
+//		print_element($article, "article przed");
+//		$article = str_get_html($this->remove_empty_elements($article->save(), "DIV"));
+//		print_element($article, "article po");
+//		$article = str_get_html($this->remove_empty_elements($article->save(), "DIV"));
+		$article = foreach_replace_outertext_with_innertext($article, 'DIV[id^="naglowek-"]');
+		$article = format_article_photos($article, 'ASIDE.embed-photo', TRUE, 'src', 'DIV.embed-work-detail');
+
+//		$article = move_element($article, 'DIV.article-date', 'ASIDE.embed-photo', 'outertext', 'before');
+//		$article = move_element($article, 'DIV.article-info', 'DIV.article-body', 'outertext', 'after');
+//		$article = insert_html($article, 'DIV.article-info', '<HR>');
+		$article = move_element($article, 'DIV.article-date', 'H1.article-title', 'outertext', 'after');
+		$article = move_element($article, 'P.article-lead', 'DIV.article-date', 'outertext', 'after');
+		$article = move_element($article, 'DIV.article-info', 'DIV.article-body', 'outertext', 'after');
+		$article = insert_html($article, 'A.article-author-name', '<BR>');
+		
+		$article = foreach_replace_outertext_with_subelement_outertext($article, "HEADER.article-header", "DIV.article-header-body");
+		$article = foreach_replace_outertext_with_subelement_outertext($article, "DIV.article-info", "DIV.article-author");
+		$article = foreach_replace_outertext_with_innertext($article, 'DIV.article-container');
+		$article = insert_html($article, "DIV.article-author", '', '', '<HR>');
+		$article = replace_tag_and_class($article, 'P.article-lead', 'single', 'STRONG', "lead");
+		$article = replace_date($article, 'DIV.article-date', $date);
+
+
+		$attributes_array[] = "itemscope";
+		$attributes_array[] = "itemtype";
+		$attributes_array[] = "itemprop";
+//		$attributes_array[] = "style";
+		$article = remove_multiple_attributes($article, $attributes_array);
+		$article = replace_attribute($article, "ARTICLE", "class", NULL);
+		$article = replace_attribute($article, "ARTICLE", "id", NULL);
+
+
+
+//		$article = foreach_replace_innertext_with_plaintext($article, "DIV.article-date");
 		$article = add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
 		$article = add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
 		$article = add_style($article, 'FIGCAPTION', getStylePhotoCaption());

@@ -429,7 +429,7 @@ private function getAmpLink($url)
 		$selectors_array[] = 'qqqqqqqq';
 		$article = foreach_delete_element_array($article, $selectors_array);
 		//Zamiana elementu z perwszą literą na tekst
-		foreach_replace_outertext_with_plaintext($article, "SPAN.first-letter");
+		$article = foreach_replace_outertext_with_plaintext($article, "SPAN.first-letter");
 		//lead
 		$article = replace_tag_and_class($article, 'DIV.article--lead.fb-quote', 'single', 'STRONG', 'lead');
 		$article = move_element($article, 'HEADER.fullPage--teaser DIV.teaser--row', 'HEADER.fullPage--teaser', 'outertext', 'after');
