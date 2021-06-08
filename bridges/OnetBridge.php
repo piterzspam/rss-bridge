@@ -49,15 +49,7 @@ class OnetBridge extends BridgeAbstract {
 	public function collectData()
 	{
 		include 'myFunctions.php';
-		$url_articles_list = $this->getInput('url');
-		$GLOBALS['limit'] = intval($this->getInput('limit'));
-		$GLOBALS['my_debug'] = FALSE;
-//		$GLOBALS['my_debug'] = TRUE;
-		if (TRUE === $GLOBALS['my_debug'])
-		{
-			$GLOBALS['all_articles_time'] = 0;
-			$GLOBALS['all_articles_counter'] = 0;
-		}
+		$this->setGlobalArticlesParams();
 		
 		$urls = $this->getArticlesUrls();
 //		$urls[] = 'https://wiadomosci-onet-pl.cdn.ampproject.org/v/s/wiadomosci.onet.pl/kraj/koronawirus-piotr-glinski-komentuje-milionowe-dofinansowania-dla-artystow/bv013rl.amp?amp_js_v=0.1';
@@ -73,6 +65,21 @@ class OnetBridge extends BridgeAbstract {
 		if (TRUE === $GLOBALS['my_debug'])
 			echo "<br>Wszystkie {$GLOBALS['all_articles_counter']} artykulow zajelo {$GLOBALS['all_articles_time']}, <br>średnio ".$GLOBALS['all_articles_time']/$GLOBALS['all_articles_counter'] ."<br>";
 
+	}
+
+	private function setGlobalArticlesParams()
+	{
+		$GLOBALS['my_debug'] = FALSE;
+		if (TRUE === $GLOBALS['my_debug'])
+		{
+			$GLOBALS['all_articles_time'] = 0;
+			$GLOBALS['all_articles_counter'] = 0;
+		}
+		$GLOBALS['limit'] = intval($this->getInput('limit'));
+		$GLOBALS['url_articles_list'] = $this->getInput('url');
+		$url_array = parse_url($this->getInput('url'));
+		$GLOBALS['prefix'] = $url_array["scheme"].'://'.$url_array["host"];
+//		print_var_dump($url_array, "url_array");
 	}
 	
 	private function getArticlesUrls()
@@ -144,7 +151,7 @@ class OnetBridge extends BridgeAbstract {
 			$article_html = $returned_array['html'];
 		}
 		$tags = return_tags_array($article_html, 'DIV#relatedTopics A[href]');
-		$amp_url = $this->getCustomizedLink($url);
+		$amp_url = $this->getCustomizedLink($article_html, $url);
 		$returned_array = my_get_html($amp_url);
 		if (200 !== $returned_array['code'])
 		{
@@ -152,38 +159,62 @@ class OnetBridge extends BridgeAbstract {
 		}
 		else
 		{
-			$article_html = $returned_array['html'];
+			$article_html = str_get_html(prepare_article($returned_array['html']));
 		}
-		//date
-		$article_data = $article_html->find('SCRIPT[type="application/ld+json"]', 0)->innertext;
-		$article_data_parsed = parse_article_data(json_decode($article_data));
-		$date = trim($article_data_parsed["datePublished"]);
-		
 		$article_html = str_get_html(prepare_article($article_html));
+		
 		$article = $article_html->find('article', 0);
-/*
-//		foreach_delete_element($article, 'AMP-IMG[src] IMG');
-		$article = convert_iframes_to_links($article);
-		convert_amp_photos($article);
-		$article = str_get_html($article->save());
-		$article = fix_all_photos_attributes($article);*/
-		$article_html = str_get_html(prepare_article($article_html));
-		
-//		print_element($article, 'article');
-
+		$datePublished = get_json_value($article_html, 'SCRIPT[type="application/ld+json"]', 'datePublished');
+		$dateModified = get_json_value($article_html, 'SCRIPT[type="application/ld+json"]', 'dateModified');
+		$article = $this->removeElements($article);
+		$article = replace_date($article, 'SPAN.date', $datePublished, $dateModified);
 		$author = return_authors_as_string($article, 'DIV.dateAuthor SPAN.author');
 		$title = get_text_plaintext($article, 'H1.name.headline', $amp_url);
-//		$title = $this->getChangedTitle($title);
 
+		$article = replace_tag_and_class($article, 'ARTICLE P.hyphenate', 'single', 'STRONG', 'lead');
+		$article = format_article_photos($article, 'FIGURE.lead', TRUE, 'src', 'SPAN.source');
+		$article = format_article_photos($article, 'FIGURE[!class]', FALSE, 'src', 'SPAN.source');
+		$article = move_element($article, 'FIGURE.photoWrapper.mainPhoto', 'STRONG.lead', 'outertext', 'after');
+		$article = move_element($article, 'DIV.dateAuthor', 'H1.headline', 'outertext', 'after');
+		$article = move_element($article, 'DIV.dateAuthor DIV.dates', 'DIV.dateAuthor', 'outertext', 'before');
+		$article = replace_tag_and_class($article, 'DIV.dates', 'single', 'DIV', NULL);
+		$article = replace_tag_and_class($article, 'SPAN.author', 'multiple', 'DIV', NULL);
+		$article = move_element($article, 'DIV.dateAuthor', 'ARTICLE', 'innertext', 'after');
+		$article = insert_html($article, 'DIV.dateAuthor', '<HR>', '');
+
+		//https://opinie.wp.pl/kataryna-zyjemy-w-okrutnym-swiecie-ale-aborcja-embriopatologiczna-musi-pozostac-opinia-6567085945505921a?amp=1&_js_v=0.1
+		$article = add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
+		$article = add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
+		$article = add_style($article, 'FIGCAPTION', getStylePhotoCaption());
+		$article = add_style($article, 'BLOCKQUOTE', getStyleQuote());
+
+		$this->items[] = array(
+			'uri' => $amp_url,
+			'title' => getChangedTitle($title),
+			'timestamp' => $datePublished,
+			'author' => $author,
+			'categories' => $tags,
+			'content' => $article
+		);
+
+//		echo "<br>Wszystkie $all_articles_counter artykulow zajelo $all_articles_time, <br>średnio ".$all_articles_time/$all_articles_counter ."<br>";
+	}
+
+	private function removeElements($article)
+	{
 		$selectors_array[] = 'comment';
 		$selectors_array[] = 'script';
 		$selectors_array[] = 'DIV.social-box';
 		$selectors_array[] = 'DIV[style="margin:auto;width:300px;"]';
 		$article = foreach_delete_element_array($article, $selectors_array);
-//https://wiadomosci-onet-pl.cdn.ampproject.org/v/s/wiadomosci.onet.pl/tylko-w-onecie/wybory-w-usa-2020-andrzej-stankiewicz-dzis-jest-czas-wielkiej-smuty-w-pis/fcktclw.amp?amp_js_v=0.1
-//https://wiadomosci-onet-pl.cdn.ampproject.org/v/s/wiadomosci.onet.pl/kraj/koronawirus-piotr-glinski-komentuje-milionowe-dofinansowania-dla-artystow/bv013rl.amp?amp_js_v=0.1
-//Glińskłumaczy się kryteriami obiektywnymi.
-//		$article = clear_paragraphs_from_taglinks($article, 'P.hyphenate', array('/onet\.pl\/[^\/]*$/'));
+
+		$article = foreach_delete_element_containing_elements_hierarchy($article, array('LI', 'A[href*="www.onet.pl/#utm_source"]'));
+		$article = foreach_delete_element_containing_elements_hierarchy($article, array('LI', 'A[href="https://www.onet.pl/"]'));
+		
+		//https://wiadomosci-onet-pl.cdn.ampproject.org/v/s/wiadomosci.onet.pl/tylko-w-onecie/wybory-w-usa-2020-andrzej-stankiewicz-dzis-jest-czas-wielkiej-smuty-w-pis/fcktclw.amp?amp_js_v=0.1
+		//https://wiadomosci-onet-pl.cdn.ampproject.org/v/s/wiadomosci.onet.pl/kraj/koronawirus-piotr-glinski-komentuje-milionowe-dofinansowania-dla-artystow/bv013rl.amp?amp_js_v=0.1
+		//Gliński łumaczy się kryteriami obiektywnymi.
+		//$article = clear_paragraphs_from_taglinks($article, 'P.hyphenate', array('/onet\.pl\/[^\/]*$/'));
 		$article = foreach_delete_element_containing_text_from_array($article, 'LI', array('Więcej informacji i podcastów znajdziesz na stronie głównej Onet.pl'));
 		$article = foreach_delete_element_containing_text_from_array($article, 'P.hyphenate', 
 			array(
@@ -217,14 +248,7 @@ class OnetBridge extends BridgeAbstract {
 			}
 		}
 		$article = str_get_html($article->save());
-		$article = replace_tag_and_class($article, 'ARTICLE P.hyphenate', 'single', 'STRONG', 'lead');
-		convert_amp_frames_to_links($article);
-		$article = format_article_photos($article, 'FIGURE.lead', TRUE, 'src', 'SPAN.source');
-		$article = format_article_photos($article, 'FIGURE[!class]', FALSE, 'src', 'SPAN.source');
-		$article = move_element($article, 'FIGURE.photoWrapper.mainPhoto', 'STRONG.lead', 'outertext', 'after');
-		$article = move_element($article, 'DIV.dateAuthor', 'H1.headline', 'outertext', 'after');
-		$article = foreach_delete_element_containing_elements_hierarchy($article, array('LI', 'A[href*="www.onet.pl/#utm_source"]'));
-		$article = foreach_delete_element_containing_elements_hierarchy($article, array('LI', 'A[href="https://www.onet.pl/"]'));
+
 		$article_str = $article->save();
 		foreach($article->find('UL LI A[href*="onet.pl/"][target="_top"]') as $element)
 		{
@@ -244,50 +268,21 @@ class OnetBridge extends BridgeAbstract {
 			}
 			$article_str = str_replace($data_element_innertext, $span_string, $article_str);
 		}
-		$article = str_get_html($article_str);
-		$article = move_element($article, 'DIV.dateAuthor SPAN.date', 'DIV.dateAuthor', 'outertext', 'before');
-		$article = replace_tag_and_class($article, 'SPAN.date', 'single', 'DIV', NULL);
-		$article = replace_tag_and_class($article, 'SPAN.author', 'multiple', 'DIV', NULL);
-		$article = move_element($article, 'DIV.dateAuthor', 'ARTICLE', 'innertext', 'after');
-		$article = insert_html($article, 'DIV.dateAuthor', '<HR>', '');
-
-		//https://opinie.wp.pl/kataryna-zyjemy-w-okrutnym-swiecie-ale-aborcja-embriopatologiczna-musi-pozostac-opinia-6567085945505921a?amp=1&_js_v=0.1
-		$article = add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
-		$article = add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
-		$article = add_style($article, 'FIGCAPTION', getStylePhotoCaption());
-		$article = add_style($article, 'BLOCKQUOTE', getStyleQuote());
-
-		$this->items[] = array(
-			'uri' => $amp_url,
-			'title' => getChangedTitle($title),
-			'timestamp' => $date,
-			'author' => $author,
-			'categories' => $tags,
-			'content' => $article
-		);
-
-//		echo "<br>Wszystkie $all_articles_counter artykulow zajelo $all_articles_time, <br>średnio ".$all_articles_time/$all_articles_counter ."<br>";
+		return str_get_html($article_str);
 	}
 
-	private function getChangedTitle($title)
+	private function getCustomizedLink($article_html, $url)
 	{
-		preg_match_all('/\[[^\]]*\]/', $title, $title_categories);
-		$title_prefix = "";
-		foreach($title_categories[0] as $category)
+		if (!is_null($amp_link_element = $article_html->find('LINK[href][rel="amphtml"]', 0)))
 		{
-			$title = str_replace($category, '', $title);
-			$title_prefix = $title_prefix.$category;
+			$amp_link = $amp_link_element->href;
+			$prefix_edit = str_replace(".", "-", $GLOBALS["prefix"]);
+			$amp_link_edit = str_replace("https://", "", $amp_link);
+			return $prefix_edit.".cdn.ampproject.org/c/s/".$amp_link_edit;
 		}
-		$new_title = $title_prefix.' '.trim($title);
-		return $new_title;
-	}
-
-
-	private function getCustomizedLink($url)
-	{
-		$new_url = $url.'.amp?amp_js_v=0.1';
-		$new_url = str_replace('https://', 'https://wiadomosci-onet-pl.cdn.ampproject.org/v/s/', $new_url);
-		
-		return $new_url;
+		else
+		{
+			return $url;
+		}
 	}
 }

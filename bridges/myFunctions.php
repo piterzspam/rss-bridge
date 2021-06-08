@@ -169,6 +169,7 @@
 				$amp_youtube->outertext = get_frame_outertext($youtube_url);
 			}
 		}
+		return str_get_html($main_element->save());
 	}
 
 	function parse_article_data($article_data)
@@ -1693,9 +1694,7 @@ function getArray($array, $index) {
 		convert_amp_photos($main_element);
 		$main_element = str_get_html($main_element->save());
 		fix_all_photos_attributes($main_element);
-		$main_element = str_get_html($main_element->save());
-		convert_amp_frames_to_links($main_element);
-		$main_element = str_get_html($main_element->save());
+		$main_element = convert_amp_frames_to_links($main_element);
 		$main_element = convert_iframes_to_links($main_element);
 		if (isset($page_url))
 		{
