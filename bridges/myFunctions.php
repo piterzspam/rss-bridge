@@ -571,6 +571,7 @@
 
 	function format_article_photos($main_element, $element_search_string, $is_main = FALSE, $str_photo_url_attribute = 'src', $str_selectror_photo_caption = '')
 	{
+		$main_element_str = $main_element->save();
 		$array_allowed_attributes = array_merge(get_photo_attributes_caption(), get_photo_attributes_img());
 
 		foreach($main_element->find($element_search_string) as $old_photo_wrapper)
@@ -592,6 +593,7 @@
 					continue;
 				}
 				$caption_text = '';
+//				print_html($old_photo_wrapper, "old_photo_wrapper 1");
 				if (0 !== strlen($str_selectror_photo_caption) && FALSE === is_null($caption_element = $old_photo_wrapper->find($str_selectror_photo_caption, 0)))
 				{
 					$caption_text = trim($caption_element->plaintext);
@@ -600,7 +602,8 @@
 					$caption_innertext = $caption_element->innertext;
 				}
 				$href = '';
-				if (FALSE === is_null($href_element = $old_photo_wrapper->find('A[href]', 0)))
+//				print_html($old_photo_wrapper, "old_photo_wrapper 2");
+				if (FALSE === is_null($href_element = $old_photo_wrapper->getElementByTagName('A[href]')))
 				{
 					$href = $href_element->getAttribute('href');
 					if (TRUE === $href)
@@ -609,6 +612,7 @@
 					}
 				}
 
+//				print_html($old_photo_wrapper, "old_photo_wrapper 3");
 				if (TRUE === $is_main)
 				{
 					$class_string = 'photoWrapper mainPhoto';
@@ -619,34 +623,65 @@
 				}
 				if (0 !== strlen($href) && 0 !== strlen($caption_text))
 				{
-					$new_photo_wrapper = str_get_html('<figure class="'.$class_string.'"><a href="'.$href.'"><img src="'.$img_src.'" ></a><figcaption>'.$caption_innertext.'</figcaption></figure>');
+//					echo 'if (0 !== strlen($href) && 0 !== strlen($caption_text))'."<br>";
+					$new_photo_wrapper_outertext = '<figure class="'.$class_string.'"><a href="'.$href.'"><img src="'.$img_src.'" ></a><figcaption>'.$caption_innertext.'</figcaption></figure>';
+					$new_photo_wrapper = str_get_html($new_photo_wrapper_outertext);
+//					print_html($new_photo_wrapper_outertext, "new_photo_wrapper_outertext");
 				}
 				else if (0 !== strlen($href) && 0 === strlen($caption_text))
 				{
-					$new_photo_wrapper = str_get_html('<figure class="'.$class_string.'"><a href="'.$href.'"><img src="'.$img_src.'" ></a></figure>');
+//					$new_photo_wrapper = str_get_html('<figure class="'.$class_string.'"><a href="'.$href.'"><img src="'.$img_src.'" ></a></figure>');
+//					echo 'else if (0 !== strlen($href) && 0 === strlen($caption_text))'."<br>";
+					$new_photo_wrapper_outertext = '<figure class="'.$class_string.'"><a href="'.$href.'"><img src="'.$img_src.'" ></a></figure>';
+					$new_photo_wrapper = str_get_html($new_photo_wrapper_outertext);
+//					print_html($new_photo_wrapper_outertext, "new_photo_wrapper_outertext");
 				}
 				else if (0 === strlen($href) && 0 !== strlen($caption_text))
 				{
-					$new_photo_wrapper = str_get_html('<figure class="'.$class_string.'"><img src="'.$img_src.'" ><figcaption>'.$caption_innertext.'</figcaption></figure>');
+//					$new_photo_wrapper = str_get_html('<figure class="'.$class_string.'"><img src="'.$img_src.'" ><figcaption>'.$caption_innertext.'</figcaption></figure>');
+//					echo 'else if (0 === strlen($href) && 0 !== strlen($caption_text))'."<br>";
+					$new_photo_wrapper_outertext = '<figure class="'.$class_string.'"><img src="'.$img_src.'" ><figcaption>'.$caption_innertext.'</figcaption></figure>';
+					$new_photo_wrapper = str_get_html($new_photo_wrapper_outertext);
+//					print_html($new_photo_wrapper_outertext, "new_photo_wrapper_outertext");
 				}
 				else if (0 === strlen($href) && 0 === strlen($caption_text))
 				{
-					$new_photo_wrapper = str_get_html('<figure class="'.$class_string.'"><img src="'.$img_src.'" ></figure>');
+//					$new_photo_wrapper = str_get_html('<figure class="'.$class_string.'"><img src="'.$img_src.'" ></figure>');
+//					echo 'else if (0 === strlen($href) && 0 === strlen($caption_text))'."<br>";
+					$new_photo_wrapper_outertext = '<figure class="'.$class_string.'"><img src="'.$img_src.'" ></figure>';
+					$new_photo_wrapper = str_get_html($new_photo_wrapper_outertext);
+//					print_html($new_photo_wrapper_outertext, "new_photo_wrapper_outertext");
+				}
+				else
+				{
+					echo "Coś nie pykło<br>";
 				}
 				$new_element_img = $new_photo_wrapper->find('IMG', 0);
-
-				//dla atrybutu bez wartosci zwracane jest true
-				foreach($old_photo_element->getAllAttributes() as $key => $element)
+				$new_element_img_before_changes = $new_element_img->outertext;
+/*				if (TRUE === $is_main)
 				{
-					if ("" !== $element && FALSE === is_null($element) && TRUE === in_array($key, $array_allowed_attributes))
+					print_element($old_photo_wrapper, "old_photo_wrapper");
+					print_element($old_photo_element, "old_photo_element");
+					print_element($new_photo_wrapper, "new_photo_wrapper");
+					print_element($href_element, "href_element");
+				}
+*/
+				//dla atrybutu bez wartosci zwracane jest true
+				foreach($old_photo_element->getAllAttributes() as $attribute => $value)
+				{
+					if ("" !== $value && FALSE === is_null($value) && TRUE === in_array($attribute, $array_allowed_attributes))
 					{
-						$new_element_img->setAttribute($key , $element);
+						$new_element_img->setAttribute($attribute, $value);
 					}
 				}
-				$old_photo_wrapper->outertext = $new_photo_wrapper;
+				$new_element_img_after_changes = $new_element_img->outertext;
+				$new_photo_wrapper_outertext = str_replace($new_element_img_before_changes, $new_element_img_after_changes, $new_photo_wrapper_outertext);
+
+				$main_element_str = str_replace($old_photo_wrapper->outertext, $new_photo_wrapper_outertext, $main_element_str);
+//				$old_photo_wrapper->outertext = $new_photo_wrapper;
 			}
 		}
-		return str_get_html($main_element->save());
+		return str_get_html($main_element_str);
 	}
 
 	function convert_iframes_to_links($main_element)
@@ -1703,21 +1738,25 @@ function getArray($array, $index) {
 				$img_src = $image_with_bad_source->getAttribute('src');
 				$image_with_bad_source->setAttribute('src', 'https:'.$img_src);
 			}
+			$main_element = str_get_html($main_element->save());
 			foreach ($main_element->find('IMG[src^="/"]') as $image_with_bad_source)
 			{
 				$img_src = $image_with_bad_source->getAttribute('src');
 				$image_with_bad_source->setAttribute('src', $page_url.$img_src);
 			}
+			$main_element = str_get_html($main_element->save());
 			foreach ($main_element->find('A[href^="//"]') as $link_with_bad_href)
 			{
 				$href = $link_with_bad_href->getAttribute('href');
 				$link_with_bad_href->setAttribute('href', 'https:'.$href);
 			}
+			$main_element = str_get_html($main_element->save());
 			foreach ($main_element->find('A[href^="/"]') as $link_with_bad_href)
 			{
 				$href = $link_with_bad_href->getAttribute('href');
 				$link_with_bad_href->setAttribute('href', $page_url.$href);
 			}
+			$main_element = str_get_html($main_element->save());
 		}
 		$main_element = str_get_html($main_element->save());
 //		print_element($main_element, 'main_element po');

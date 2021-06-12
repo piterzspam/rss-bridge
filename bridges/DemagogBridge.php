@@ -213,11 +213,10 @@ class DemagogBridge extends BridgeAbstract {
 		//autor
 		$author = "Demagog";
 		//data
-		$date = get_json_value($article_html, 'SCRIPT.yoast-schema-graph', 'datePublished');
-		if ("" === $date || is_null($date))
-		{
-			$date = get_text_from_attribute($article_html, 'META[property="article:modified_time"][content]', 'content', "");
-		}
+		$datePublished = get_json_value($article_html, 'SCRIPT.yoast-schema-graph', 'datePublished');
+		$dateModified = get_json_value($article_html, 'SCRIPT.yoast-schema-graph', 'dateModified');
+		$article = replace_date($article, 'P.date', $datePublished, $dateModified);
+
 		//tagi
 		$tags = array_diff($tags, array("Analizy i raporty", "Fake news", "Podcast", "Wypowiedzi", ""));
 		if (FALSE !== strpos($url, 'demagog.org.pl/analizy_i_raporty/')) array_unshift($tags, 'Analizy i raporty');
@@ -228,8 +227,8 @@ class DemagogBridge extends BridgeAbstract {
 		$rating = get_text_plaintext($article, 'DIV.ocena-content P.ocena', NULL);
 		if (isset($rating))
 		{
+			$rating = mb_strtoupper($rating, "UTF-8");
 			$prefix = '['.strtoupper($rating).'] ';
-			$prefix = str_replace('ł', 'Ł', $prefix);
 			$title = $prefix.$title;
 		}
 
@@ -241,19 +240,37 @@ class DemagogBridge extends BridgeAbstract {
 		$selectors_array[] = 'DIV.newsletter-post';
 		$selectors_array[] = 'comment';
 		$article = foreach_delete_element_array($article, $selectors_array);
+		//https://demagog.org.pl/wypowiedzi/ilu-wnioskow-o-skargi-nadzwyczajne-wciaz-nie-rozpatrzono/
+		$article = format_article_photos($article, 'DIV.col-12.mb-4.px-0.w-img-100', TRUE);
+		$article = format_article_photos($article, 'DIV[id^="attachment_"], IMG.alignnone', FALSE, 'src', 'P.wp-caption-text');
+		
+		$article = foreach_replace_outertext_with_plaintext($article, 'SPAN[style="font-weight: 400;"]');
+		$article = foreach_replace_innertext_with_plaintext($article, "DIV.lead.target-blank");
+		$article = replace_attribute($article, '[style="font-weight: 400;"]', 'style', NULL);
+		$attributes_array = array();
+		$attributes_array[] = "aria-level";
+		$article = remove_multiple_attributes($article, $attributes_array);
+		
+		$article = replace_tag_and_class($article, 'DIV.lead.target-blank', 'single', 'STRONG', 'lead');
+		$article = move_element($article, 'FIGURE.photoWrapper.mainPhoto', 'STRONG.lead', 'outertext', 'after');
 
 		$article = foreach_replace_outertext_with_innertext($article, 'DIV.row-custom.blue.mb-3.pb-2');
 		$article = foreach_replace_outertext_with_innertext($article, 'DIV.mb-5.pb-3.count-text');
+		$article = foreach_replace_outertext_with_innertext($article, 'DIV.content-editor.target-blank');
+		
+
+		
+//		$article = foreach_replace_outertext_with_plaintext($article, 'DIV.lead.target-blank P');
+/*
 		//https://demagog.org.pl/fake_news/nagrania-ze-szpitali-nie-neguja-istnienia-pandemii-zestawienie-zdarzen/
 		$article = foreach_replace_outertext_with_subelement_innertext($article, 'DIV.lead.target-blank', 'P');
 		//https://demagog.org.pl/fake_news/pawel-kukiz-przeszedl-do-prawa-i-sprawiedliwosci-fake-news/
 		$article = foreach_replace_outertext_with_subelement_innertext($article, 'DIV.lead.target-blank', 'DIV.p-rich_text_section');
 		
+		
+*/
 		$article = replace_tag_and_class($article, 'DIV.important-text, DIV.summary-text', 'multiple', 'BLOCKQUOTE', NULL);
-		$article = replace_tag_and_class($article, 'DIV.lead.target-blank', 'single', 'STRONG', 'lead');
-		//https://demagog.org.pl/wypowiedzi/ilu-wnioskow-o-skargi-nadzwyczajne-wciaz-nie-rozpatrzono/
-		$article = format_article_photos($article, 'DIV.col-12.mb-4.px-0.w-img-100', TRUE);
-		$article = format_article_photos($article, 'DIV[id^="attachment_"], IMG.alignnone', FALSE, 'src', 'P.wp-caption-text');
+
 		$article = add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
 		$article = add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
 		$article = add_style($article, 'FIGCAPTION', getStylePhotoCaption());
@@ -262,7 +279,7 @@ class DemagogBridge extends BridgeAbstract {
 		$this->items[] = array(
 			'uri' => $url,
 			'title' => $title,
-			'timestamp' => $date,
+			'timestamp' => $datePublished,
 			'author' => $author,
 			'categories' => $tags,
 			'content' => $article

@@ -85,10 +85,19 @@ class SprawdzamAFPBridge extends BridgeAbstract {
 		$next_data_array = get_json_variable_as_array($article_html, 'afp_blog_theme', 'SCRIPT');
 		$next_data_subarrays = get_subarrays_by_key($next_data_array, "output", NULL);
 		$detail_data_flattened = flatten_array($next_data_subarrays, "output");
-		$main_image_code = str_replace('<img', '<img class="photoWrapper mainPhoto" ', $detail_data_flattened[0]["output"]);
+		$main_image_code = str_replace('<img', '<figure class="photoWrapper mainPhoto"> <img  ', $detail_data_flattened[0]["output"]);
+		$main_image_code = $main_image_code."</figure>";
 		$article_html = insert_html($article_html, 'H1.content-title', '', $main_image_code, '', '');
 
 		$article_html = str_get_html(prepare_article($article_html, 'https://sprawdzam.afp.com'));
+		$article_html_str = $article_html->save();
+		foreach($article_html->find('IMG[src^=" /"]') as $image)
+		{
+			$old_src = $image->src;
+			$new_src = "https://sprawdzam.afp.com".trim($old_src);
+			$article_html_str = str_replace($old_src, $new_src, $article_html_str);
+		}
+		$article_html = str_get_html($article_html_str);
 		$article = $article_html->find('ARTICLE[role="article"]', 0);
 
 		//title
@@ -107,6 +116,7 @@ class SprawdzamAFPBridge extends BridgeAbstract {
 			$tags[$key] = ucwords(strtolower($tag));
 		}
 
+		$selectors_array = array();
 		$selectors_array[] = 'comment';
 		$selectors_array[] = 'script';
 		$selectors_array[] = 'SPAN.meta-share.addtoany';
@@ -114,39 +124,53 @@ class SprawdzamAFPBridge extends BridgeAbstract {
 		$selectors_array[] = 'DIV.disclaimer';
 		$article = foreach_delete_element_array($article, $selectors_array);
 
-		$article = replace_tag_and_class($article, 'H3[dir="ltr"]', 'single', 'STRONG', 'lead');		
+		$attributes_array = array();
 		$attributes_array[] = "dir";
 		$attributes_array[] = "about";
 		$attributes_array[] = "typeof";
 		$attributes_array[] = "role";
 		$attributes_array[] = "data-article-type";
-//		$attributes_array[] = "style";
+		$attributes_array[] = "container-fid";
 		$article = remove_multiple_attributes($article, $attributes_array);
-		$article = replace_attribute($article, "ARTICLE", "class", NULL);
 
 //		$article = move_element($article, 'DIV#container HEADER.entry-header.clearfix', 'DIV#content', 'innertext', 'before');
-		$article = format_article_photos($article, 'IMG.photoWrapper.mainPhoto', TRUE);
+		$article = format_article_photos($article, 'FIGURE.photoWrapper.mainPhoto', TRUE);
 		$article = format_article_photos($article, 'DIV.ww-item.image', FALSE, 'src', 'SPAN.legend');
-		foreach($article->find('DIV.content-meta SPAN[class^="meta-"]') as $separator)
+/*		foreach($article->find('DIV.content-meta SPAN[class^="meta-"]') as $separator)
 		{
 			$separator->outertext = $separator->outertext.'<br>';
-		}
+		}*/
 		$article = str_get_html($article->save());
-		$article_str = $article->save();
-		foreach($article->find('IMG[src^=" /"]') as $image)
-		{
-			$old_src = $image->src;
-			$new_src = "https://sprawdzam.afp.com".trim($old_src);
-			$article_str = str_replace($old_src, $new_src, $article_str);
-		}
-		$article = str_get_html($article_str);
 		
-		$article = move_element($article, 'SPAN.meta-date', 'H1.content-title', 'outertext', 'after');
-		$article = move_element($article, 'H3[dir="ltr"]', 'SPAN.meta-date', 'outertext', 'after');
-		$article = move_element($article, 'DIV.content-meta', 'DIV.article-entry', 'outertext', 'after');
-		$article = insert_html($article, 'DIV.content-meta', '<HR>', '');
+
 		$article = replace_date($article, 'SPAN.meta-date', $date, $date_updated);
-//		$article = replace_date($article, 'SPAN.meta-date', $date);
+		if (FALSE === is_null($lead = $article->find('DIV.article-entry H3 B[id^="docs-internal-guid-"]', 0)))
+		{
+			//https://sprawdzam.afp.com/nie-placebo-podawane-jest-wylacznie-wolontariuszom-uczestniczacym-w-badaniach-klinicznych
+			$article = replace_tag_and_class($article, 'DIV.article-entry H3 B[id^="docs-internal-guid-"]', 'single', 'STRONG', 'lead');
+			$article = foreach_replace_outertext_with_subelement_outertext($article, 'H3', 'STRONG.lead');
+		}
+		else
+		{
+			//gdyby nie było elementu B
+			//https://sprawdzam.afp.com/netanjahu-powiedzial-ze-kraj-mierzy-sie-z-najgorszym-scenariuszem-poszczepionkowym-manipulacja
+			$article = replace_tag_and_class($article, 'DIV.article-entry H3', 'single', 'STRONG', 'lead');
+		}
+		$article = replace_tag_and_class($article, 'H1.content-title', 'single', 'H1', 'title');
+		$article = replace_tag_and_class($article, 'DIV.content-meta', 'single', 'DIV', 'authors');
+		$article = move_element($article, 'DIV.dates', 'H1.title', 'outertext', 'after');
+		$article = move_element($article, 'STRONG.lead', 'DIV.dates', 'outertext', 'after');
+		$article = move_element($article, 'DIV.authors', 'DIV.article-entry', 'outertext', 'after');
+		$article = foreach_replace_outertext_with_innertext($article, 'SPAN.meta-author');
+		$article = foreach_replace_outertext_with_innertext($article, 'DIV.content-header-single');
+		$article = foreach_replace_outertext_with_innertext($article, 'DIV.article-entry');
+//		$article = foreach_replace_outertext_with_innertext($article, 'DIV.content-meta');
+		$article = insert_html($article, 'DIV.authors', '<hr>');
+		
+		$attributes_array = array();
+		$attributes_array[] = "id";
+		$article = remove_multiple_attributes($article, $attributes_array);
+		$article = replace_attribute($article, "ARTICLE", "class", NULL);
 		
 		$article = add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
 		$article = add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
@@ -161,64 +185,4 @@ class SprawdzamAFPBridge extends BridgeAbstract {
 			'content' => $article
 		);
 	}
-
-	
-	function localStrftime($format, $timestamp = 0)
-	{
-		if($timestamp == 0)
-		{
-			// Sytuacja, gdy czas nie jest podany - używamy aktualnego.
-			$timestamp = time();
-		}
-
-		// Nowy kod - %F dla odmienionej nazwy miesiąca
-		if(strpos($format, '%F') !== false)
-		{
-			$mies = date('m', $timestamp);
-			
-			// odmienianie
-			switch($mies)
-			{
-				case 1:
-					$mies = 'stycznia';
-					break;
-				case 2:
-					$mies = 'lutego';
-					break;
-				case 3:
-					$mies = 'marca';
-					break;
-				case 4:
-					$mies = 'kwietnia';
-					break;
-				case 5:
-					$mies = 'maja';
-					break;
-				case 6:
-					$mies = 'czerwca';
-					break;
-				case 7:
-					$mies = 'lipca';
-					break;
-				case 8:
-					$mies = 'sierpnia';
-					break;
-				case 9:
-					$mies = 'września';
-					break;
-				case 10:
-					$mies = 'października';
-					break;
-				case 11:
-					$mies = 'listopada';
-					break;
-				case 12:
-					$mies = 'grudnia';
-					break;			
-			}
-			// dodawanie formatowania
-			return strftime(str_replace('%F', $mies, $format), $timestamp);		
-		}
-		return strftime($format, $timestamp);	
-	} // end localStrftime();
 }

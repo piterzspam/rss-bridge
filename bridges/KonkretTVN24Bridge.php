@@ -147,6 +147,8 @@ class KonkretTVN24Bridge extends BridgeAbstract {
 		
 		$article_html = move_element($article_html,  'HEADER.article-main-photo', 'DIV.article-content__metadata', 'outertext', 'after');
 
+		
+
 		$article = $article_html->find('DIV.page-article DIV.article-content', 0);
 		$title = get_text_plaintext($article, 'H2.article-content__title', $url);
 		$author = get_text_plaintext($article, 'DIV.article-content__sources__type--author', '');
@@ -180,6 +182,10 @@ class KonkretTVN24Bridge extends BridgeAbstract {
 		$selectors_array[] = 'DIV.share-container__position';
 		$article = foreach_delete_element_array($article, $selectors_array);
 		$article = foreach_replace_outertext_with_innertext($article, 'DIV.article-content__inner-texts');
+		$article = replace_date($article, 'DIV.article-content__metadata-detail', $date);
+		$article = move_element($article, 'STRONG.article-content__lead.article-content--bold', 'DIV.dates', 'outertext', 'after');
+		$article = replace_tag_and_class($article, 'STRONG.article-content__lead.article-content--bold', 'single', 'STRONG', 'lead');
+		$article = replace_tag_and_class($article, 'H2.article-content__title', 'single', 'H1', 'title');
 
 		$next_data_array = get_json_variable_as_array($article_html, '__NEXT_DATA__', 'SCRIPT');
 		$next_data_subarrays = get_subarrays_by_key($next_data_array, "detail", NULL);
