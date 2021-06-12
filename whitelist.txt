@@ -23,6 +23,7 @@ MyEconomistBridge
 MiesiecznikZnakBridge
 NewsweekBridge
 NiebezpiecznikBridge
+NoizzBridge
 OkoPressBridge
 OnetBridge
 OSWBridge
