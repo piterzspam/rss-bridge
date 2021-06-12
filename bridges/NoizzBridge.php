@@ -122,7 +122,7 @@ class NoizzBridge extends FeedExpander {
 		}
 		$datePublished = get_json_value($article_html, 'SCRIPT[type="application/ld+json"]', 'datePublished');
 		$dateModified = get_json_value($article_html, 'SCRIPT[type="application/ld+json"]', 'dateModified');
-		$article_html = $this->removeElements($article_html);
+		$article_html = $this->remove_useless_elements($article_html);
 		$article_html = move_element($article_html, 'DIV#page DIV.source', 'DIV#page ARTICLE', 'innertext', 'after');
 		$article_html = move_element($article_html, 'DIV#page DIV.tags', 'DIV#page ARTICLE', 'innertext', 'after');
 		$article_html = str_get_html(prepare_article($article_html));
@@ -168,7 +168,7 @@ class NoizzBridge extends FeedExpander {
 	}
 
 
-	private function removeElements($article)
+	private function remove_useless_elements($article)
 	{
 		$selectors_array[] = 'comment';
 		$selectors_array[] = 'script';

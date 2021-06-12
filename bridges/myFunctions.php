@@ -1594,7 +1594,7 @@ function getArray($array, $index) {
 				$text_published = localStrftime('%d %F %Y, %H:%M', strtotime($date_published));
 				$text_published = "Data publikacji: ".$text_published;
 				$new_date_outertext = $new_date_outertext.'<DIV class="date published">'.$text_published.'</DIV>';
-				if(isset($date_modified) && 1 < strlen($date_modified))
+				if(isset($date_modified) && 1 < strlen($date_modified) && $date_published !== $date_modified)
 				{
 					$text_modified = localStrftime('%d %F %Y, %H:%M', strtotime($date_modified));
 					$text_modified = "Data aktualizacji: ".$text_modified;
