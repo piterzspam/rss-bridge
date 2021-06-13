@@ -1636,8 +1636,8 @@ function getArray($array, $index) {
 					$new_date_outertext = $new_date_outertext.'<DIV class="date modified">'.$text_modified.'</DIV>';
 				}
 				$new_date_outertext = $new_date_outertext.'</DIV>';
+				$main_element_str = str_replace($date_element->outertext, $new_date_outertext, $main_element_str);
 			}
-			$main_element_str = str_replace($date_element->outertext, $new_date_outertext, $main_element_str);
 		}
 		return str_get_html($main_element_str);
 	}
