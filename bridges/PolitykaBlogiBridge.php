@@ -159,6 +159,10 @@ class PolitykaBlogiBridge extends FeedExpander {
 			preg_match_all('/[0-9]+/', $url_article, $output_array);
 			$date = $output_array[0][0]."-".$output_array[0][1]."-".$output_array[0][2]." 00:00:00+0000";
 		}
+		else
+		{
+			$date = date_format(date_timestamp_set(new DateTime(), $date)->setTimezone(new DateTimeZone('Europe/Warsaw')), 'c');
+		}
 		
 
 		$article = replace_date($article, 'DIV.cg_date', $date);
