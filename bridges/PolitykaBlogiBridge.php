@@ -163,7 +163,6 @@ class PolitykaBlogiBridge extends FeedExpander {
 		{
 			$date = date_format(date_timestamp_set(new DateTime(), $date)->setTimezone(new DateTimeZone('Europe/Warsaw')), 'c');
 		}
-		
 
 		$article = replace_date($article, 'DIV.cg_date', $date);
 		$article = replace_tag_and_class($article, 'H1.entry-title', 'single', 'H1', 'title');
@@ -186,8 +185,6 @@ class PolitykaBlogiBridge extends FeedExpander {
 		$article = foreach_replace_outertext_with_innertext($article, 'DIV.cg_single_entry_title');
 		$article = foreach_replace_outertext_with_innertext($article, 'DIV.cg_single_entry_content');
 		$article = foreach_replace_outertext_with_innertext($article, 'DIV.single-entry');
-		$article = foreach_replace_outertext_with_innertext($article, 'qqqqqqqqqqqqq');
-		$article = foreach_replace_outertext_with_innertext($article, 'qqqqqqqqqqqqq');
 		
 		$attributes_array = array();
 		$attributes_array[] = "id";
@@ -195,15 +192,11 @@ class PolitykaBlogiBridge extends FeedExpander {
 		$article = remove_multiple_attributes($article, $attributes_array);
 		$article = replace_attribute($article, "ARTICLE", "class", NULL);
 		$article = format_article_photos($article, 'FIGURE', FALSE, 'src', 'FIGCAPTION');
-		
-		
-	
 
 		$article = add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
 		$article = add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
 		$article = add_style($article, 'FIGCAPTION', getStylePhotoCaption());
 		$article = add_style($article, 'BLOCKQUOTE', getStyleQuote());
-
 
 		$this->items[] = array(
 			'uri' => $url_article,
