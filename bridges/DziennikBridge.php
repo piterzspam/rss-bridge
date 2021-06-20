@@ -273,7 +273,7 @@ class DziennikBridge extends BridgeAbstract {
 		$selectors_array[] = 'DIV.authorSourceProfile DIV.clear';
 		$selectors_array[] = 'DIV.licenceInfo';
 		$selectors_array[] = 'DIV.articleFooter';
-		$selectors_array[] = 'qqqqqqqqqqqqqq';
+		$selectors_array[] = 'SPAN.dateModified';
 		
 //		$selectors_array[] = 'comment';
 //		$selectors_array[] = 'comment';
@@ -312,7 +312,7 @@ class DziennikBridge extends BridgeAbstract {
 //tags
 		$tags = return_tags_array($article, 'DIV.relatedTopicWrapper SPAN.relatedTopic');
 //authors
-		$author = return_authors_as_string($article, 'DIV.authBox DIV.authDesc');
+		$author = return_authors_as_string($article, 'DIV.authBox SPAN.name');
 //date
 		$date = get_text_from_attribute($article_html, 'META[property="article:published_time"][content]', 'content', "");
 
