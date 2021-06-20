@@ -38,6 +38,7 @@ class MagazynWPBridge extends BridgeAbstract {
 //		$found_urls[] = "https://wiadomosci.wp.pl/zycie-ze-spadkiem-po-koronawirusie-czyli-wojna-za-wojna-6639264505064320a";
 //		$found_urls[] = "qqqqqqqqqqqq";
 //		$found_urls[] = "qqqqqqqqqqqq";
+/*
 $found_urls[] = "https://sportowefakty.wp.pl/alpinizm/903081/anna-solska-mackiewicz-jestesmy-z-niego-dumni-energia-tomka-wciaz-zyje";
 $found_urls[] = "https://sportowefakty.wp.pl/euro-2020-2021/premium/943856/aleksander-kwasniewski-mam-klopot-z-wiara-w-reprezentacje";
 $found_urls[] = "https://sportowefakty.wp.pl/kajakarstwo/841641/marta-walczykiewicz-potrafie-oddac-serce-wywiad";
@@ -49,90 +50,73 @@ $found_urls[] = "https://sportowefakty.wp.pl/la/premium/937591/na-ulicy-medali-j
 $found_urls[] = "https://sportowefakty.wp.pl/la/premium/938325/charakter-rodzi-sie-w-glowie";
 $found_urls[] = "https://sportowefakty.wp.pl/la/premium/938588/mozesz-byc-smutna-mamo-ale-musisz-zyc";
 $found_urls[] = "https://sportowefakty.wp.pl/mma/premium/937021/droga-do-marzen";
-/*
-$found_urls[] = "https://sportowefakty.wp.pl/pilka-nozna/841466/the-boys-arek-hersh-widzialem-pieklo-i-raj-widzialem-wszystko";
-$found_urls[] = "https://sportowefakty.wp.pl/pilka-nozna/848336/eliminacje-euro-2020-wszystkie-wybory-papieza-jerzy-brzeczek-i-jego-polska";
-$found_urls[] = "https://sportowefakty.wp.pl/pilka-nozna/856914/anna-lewandowska-dobre-miejsce-odpowiedni-czas";
-$found_urls[] = "https://sportowefakty.wp.pl/pilka-nozna/858129/w-domu-spokojnego-snu-sergiu-hanca-z-cracovii-zaadoptowal-biedna-rodzine";
-$found_urls[] = "https://sportowefakty.wp.pl/pilka-nozna/858243/aleksandar-vukovic-jestem-serbem-to-dla-mnie-wazne";
-$found_urls[] = "https://sportowefakty.wp.pl/pilka-nozna/860370/grzegorz-rasiak-pilka-ma-krotka-pamiec";
-$found_urls[] = "https://sportowefakty.wp.pl/pilka-nozna/863141/maor-melikson-i-rodzina-swietej-wojny";
-$found_urls[] = "https://sportowefakty.wp.pl/pilka-nozna/879607/koronawirus-bialoruska-maskarada";
-$found_urls[] = "https://sportowefakty.wp.pl/pilka-nozna/880478/koronawirus-bialorus-marsz-na-smierc";
-$found_urls[] = "https://sportowefakty.wp.pl/pilka-nozna/882231/niemeska-gra-chrzaszczykow-nie-zwalczysz-uprzedzen-gdy-bedziesz-je-chowala";
-$found_urls[] = "https://sportowefakty.wp.pl/pilka-nozna/888095/bundesliga-robert-lewandowski-w-pogoni-za-legenda-gerda-muellera";
-$found_urls[] = "https://sportowefakty.wp.pl/pilka-nozna/908338/pko-ekstraklasa-dariusz-mioduski-lech-nigdy-nie-bedzie-legia-my-musimy-wygrywac";
-$found_urls[] = "https://sportowefakty.wp.pl/pilka-nozna/913894/maciej-zurawski-xavi-nie-mogl-uwierzyc-gdzie-gramy-zastanawialem-sie-czy-real-ma";
-$found_urls[] = "https://sportowefakty.wp.pl/plywanie/895262/wakacje-2020-do-trzech-razy-smierc";
-$found_urls[] = "https://sportowefakty.wp.pl/podnoszenie-ciezarow/841644/the-boys-dzieci-ktore-nie-mialy-juz-lez";
-$found_urls[] = "https://sportowefakty.wp.pl/rzut-mlotem/premium/939654/musze-byc-pierwszy";
-$found_urls[] = "https://sportowefakty.wp.pl/siatkowka/846617/katarzyna-skowronska-dolata-oscar-za-dobra-maske";
-$found_urls[] = "https://sportowefakty.wp.pl/siatkowka/premium/943174/sluchalem-serca-i-rozumu-wyszlo-idealnie";
-$found_urls[] = "https://sportowefakty.wp.pl/skoki-narciarskie/864229/skoki-narciarskie-puchar-swiata-w-titisee-neustadt-dawid-kubacki-lepszy-model";
-$found_urls[] = "https://sportowefakty.wp.pl/skoki-narciarskie/870696/skoki-narciarskie-wojciech-skupien-pracuje-na-budowie-a-tomislaw-tajner-wypozycz";
-$found_urls[] = "https://sportowefakty.wp.pl/skoki-narciarskie/910552/kamil-stoch-fruwac-nie-przestane";
-$found_urls[] = "https://sportowefakty.wp.pl/skoki-narciarskie/911867/strach-przed-lataniem";
-$found_urls[] = "https://sportowefakty.wp.pl/tenis-stolowy/premium/941930/chcialam-byc-jak-siostra";
-$found_urls[] = "https://sportowefakty.wp.pl/tenis/904246/tenis-roland-garros-iga-swiatek-dziewczyna-pelna-magii";
-$found_urls[] = "https://sportowefakty.wp.pl/tenis/premium/936108/przyspieszony-kurs-dojrzewania";
 */
-		print_var_dump($found_urls, "found_urls");
+/*
+$found_urls[] = "https://magazyn.wp.pl/moto/artykul/zanim-przyjedzie-karetka";
+$found_urls[] = "https://magazyn.wp.pl/moto/artykul/zmyslowski-wodor-to-przyszlosc-ale-diesel-zostanie-z-nami-jeszcze-dlugo";
+$found_urls[] = "https://magazyn.wp.pl/moto/artykul/zycie-z-deadlinem";
+$found_urls[] = "https://magazyn.wp.pl/tech/artykul/50-lat-temu-w-katowicach-wyladowalo-ufo";
+$found_urls[] = "https://magazyn.wp.pl/tech/artykul/ach-coz-to-byl-za-slub";
+$found_urls[] = "https://magazyn.wp.pl/tech/artykul/aleksander-doba-ostatni-romantyk-wielkich-podrozy";
+$found_urls[] = "https://magazyn.wp.pl/tech/artykul/alfredl-redl-podwojny-agent-ktory-zachwial-cesarstwem";
+$found_urls[] = "https://magazyn.wp.pl/tech/artykul/bursztynowy-szpieg-stary-nazista-i-tajemnica-bursztynowej-komnaty";
+$found_urls[] = "https://magazyn.wp.pl/tech/artykul/cud-znad-wisly-polska-perla-popkultury";
+$found_urls[] = "https://magazyn.wp.pl/tech/artykul/dwoje-bezdzietnych-boomerow-rozmawia-o-dzieciach";
+*/
+$found_urls[] = "https://wiadomosci.wp.pl/ujawniamy-oto-majatek-mateusza-i-iwony-morawieckich-6643252365990816a";
+
+$found_urls[] = "https://film.wp.pl/brad-pitt-dla-wp-ostatnio-troche-myslalem-o-smierci-6428961770256001a";
+$found_urls[] = "https://finanse.wp.pl/emerytalne-perpetuum-mobile-system-stanal-na-glowie-6641692256443328a";
+$found_urls[] = "https://gwiazdy.wp.pl/kazik-staszewski-wrocilem-do-swoich-zasad-6646710523185952a";
+$found_urls[] = "https://kobieta.wp.pl/polska-bieda-nie-zniknela-przyczaila-sie-tylko-i-wyglada-inaczej-6427938873690241a";
+$found_urls[] = "https://ksiazki.wp.pl/istnieja-tylko-zycia-ludzi-czyli-czym-zachwyca-proza-tokarczuk-6433949495383681a";
+
+$found_urls[] = "https://ksiazki.wp.pl/w-podrozy-z-adolfem-hitlerem-6428692796860545a";
+$found_urls[] = "https://opinie.wp.pl/ten-niedobry-komunista-joe-felieton-6649523316730784a";
+$found_urls[] = "https://tech.wp.pl/amerykanski-sen-ryszarda-bez-wizy-ale-z-oddechem-smierci-na-plecach-6433923530978945a";
+$found_urls[] = "https://teleshow.wp.pl/kim-jest-dorota-kania-to-ona-zdecyduje-o-przekazie-do-17-mln-czytelnikow-mediow-orlenu-6626181291801216a";
+$found_urls[] = "https://turystyka.wp.pl/wyspy-zielonego-przyladka-sal-tropem-atrakcji-6466181276333697a";
+//$found_urls[] = "https://video.wp.pl/zbrodnia-bez-kary-kiepska-pamiec-erny-wallisch-strazniczki-z-majdanka-6431508306228865v";
+$found_urls[] = "https://wiadomosci.wp.pl/adam-bodnar-czekam-na-lepsze-czasy-6642150627334784a";
+$found_urls[] = "https://wiadomosci.wp.pl/beata-zegnaj-beata-wroc-szydlo-juz-wie-ze-dobrze-atakowac-z-cienia-6642074199394944a";
+//$found_urls[] = "https://wideo.wp.pl/zbrodnia-bez-kary-co-horst-pilarzik-robil-w-plaszowie-christiane-szuka-prawdy-6440983341185153v";
+
+
+		//print_var_dump($found_urls, "found_urls");
 		$GLOBALS["amp_urls_data"] = array();
 		$amp_urls_data = array();
 		foreach($found_urls as $url)
 		{
 			$amp_urls_data[] = $this->getAmpData($url);
 		}
-		print_var_dump($amp_urls_data, "amp_urls_data");
+//		print_var_dump($amp_urls_data, "amp_urls_data");
 		foreach($amp_urls_data as $amp_url_data)
 		{
-			$this->addArticle2($amp_url_data["url"], $amp_url_data["type"], $amp_url_data["original_url"]);
+			$this->addArticle2($amp_url_data);
 		}
-/*
-//		$found_urls[] = 'https://wiadomosci.wp.pl/poprosil-o-ekstradycje-do-polski-dostal-70-dni-w-karcerze-polak-z-rosyjskiego-lagru-potrzebuje-pomocy-6604992688413312a';
-//		$found_urls[] = 'https://opinie.wp.pl/kataryna-zyjemy-w-okrutnym-swiecie-ale-aborcja-embriopatologiczna-musi-pozostac-opinia-6567085945505921a';
-		
-		foreach($found_urls as $url)
+	}
+	private function addArticle2($amp_url_data)
+	{
+		if ("sportowefakty_wp_pl" === $amp_url_data["type"])
 		{
-			$amp_url = $this->getAmpLink($url);
-			if ($url === $amp_url)
+			$returned_array = my_get_html($amp_url_data["ampproject_url"]);
+			if (200 !== $returned_array['code'])
 			{
-				$this->addArticle($url);
+				$this->items[] = $returned_array['html'];
+				return;
 			}
 			else
 			{
-				$GLOBALS["amp_urls_data"][] = $this->getAmpProjectLink($amp_url);
+				$article_html = str_get_html(prepare_article($returned_array['html']));
 			}
-		}
-		foreach($GLOBALS["amp_urls_data"] as $amp_url)
-		{
-			$this->addArticleAmp($amp_url);
-		}
-//		*/
-	}
-	private function addArticle2($url_article, $type, $original_url = NULL)
-	{
-		$returned_array = my_get_html($url_article);
-		if (200 !== $returned_array['code'])
-		{
-			return;
-		}
-		else
-		{
-			$article_html = str_get_html(prepare_article($returned_array['html']));
-		}
-//					"type" => "sportowefakty_wp_pl",
-//					"type" => "magazyn_wp_pl",
-//					"type" => "wp_pl",
-		if ($type === "sportowefakty_wp_pl")
-		{
+			$url_article = $amp_url_data["ampproject_url"];
 			$article = $article_html->find('ARTICLE', 0);
 			$title = get_text_from_attribute($article_html, 'META[property="og:title"][content]', 'content', NULL);
 			$title = remove_substring_if_exists_last($title, " - WP SportoweFakty");
 			$datePublished = get_json_value($article_html, 'SCRIPT[type="application/ld+json"]', 'datePublished');
 			$dateModified = get_json_value($article_html, 'SCRIPT[type="application/ld+json"]', 'dateModified');
 			$author = get_text_plaintext($article, 'SPAN.indicator__authorname--name', NULL);
-			$returned_array = my_get_html($original_url);
+			$returned_array = my_get_html($amp_url_data["canonical_url"]);
 			if (200 !== $returned_array['code'])
 			{
 				$tags = array();
@@ -143,6 +127,8 @@ $found_urls[] = "https://sportowefakty.wp.pl/tenis/premium/936108/przyspieszony-
 				$tags = return_tags_array($article_html, 'ADDRESS.articletags A[href]');
 			}
 			$selectors_array = array();
+			$selectors_array[] = 'comment';
+			$selectors_array[] = 'script';
 			$selectors_array[] = 'DIV.wpsocial-shareBox';
 			$selectors_array[] = 'UL.teasers';
 			$selectors_array[] = 'DIV.center-content';
@@ -156,32 +142,20 @@ $found_urls[] = "https://sportowefakty.wp.pl/tenis/premium/936108/przyspieszony-
 			$article = remove_multiple_attributes($article, $attributes_array);
 			$article = replace_attribute($article, 'IMG[class]', 'class', NULL);
 			$article = foreach_replace_outertext_with_plaintext($article, 'A[data-st-area="Artykul-link-tag-mob"]');
-/*
-			$article_str = $article->save();
-			$article_str = str_replace("<p></p>", "", $article_str);
-			$article_str = str_replace("<br>", "", $article_str);
-			$article_str = str_replace("<strong> </strong><br>", "", $article_str);
-			$article = str_get_html($article_str);
-*/
+
+			//Wideo powiązane w treści
 			$article_str = $article->save();
 			foreach ($article->find("P") as $paragraph)
 			{
-				print_html($paragraph, "paragraph");
 				foreach ($paragraph->find("STRONG") as $strong)
 				{
-					print_html($strong, "strong");
 					if (check_string_contains_needle_from_array($strong->plaintext, array("ZOBACZ WIDEO")))
 					{
 						$current_child = $strong;
-						print_html($current_child, "current_child");
 						$outertext_to_remove = $strong->outertext;
-						print_html($outertext_to_remove, "outertext_to_remove 1 print_html");
-						print_var_dump($outertext_to_remove, "outertext_to_remove 1 print_var_dump");
 						//https://sportowefakty-wp-pl.cdn.ampproject.org/v/s/sportowefakty.wp.pl/amp/kolarstwo/926408/43-lata-temu-polscy-kolarze-zgineli-w-katastrofie-lotniczej-po-otwarciu-trumny-o?amp_js_v=0.1
 						while (FALSE === is_null($next_child = $current_child->next_sibling()))
 						{
-						print_html($outertext_to_remove, "outertext_to_remove print_html");
-						print_var_dump($outertext_to_remove, "outertext_to_remove print_var_dump");
 							if ("br" === strtolower($next_child->tag))
 							{
 								$outertext_to_remove = $outertext_to_remove.$next_child->outertext;
@@ -192,14 +166,10 @@ $found_urls[] = "https://sportowefakty.wp.pl/tenis/premium/936108/przyspieszony-
 								if (FALSE === is_null($possible_next_child = $next_child->next_sibling()))
 								{//nie jest to ostatni element w paragrafie, wiec usuwane tylko te, co były do tej pory
 									$outertext_to_remove = $outertext_to_remove.$next_child->outertext;
-									print_html($outertext_to_remove, "outertext_to_remove final print_html");
-									print_var_dump($outertext_to_remove, "outertext_to_remove final print_var_dump");
 									$article_str = str_replace($outertext_to_remove, "", $article_str);
 								}
 								else
 								{
-									print_html($outertext_to_remove, "outertext_to_remove final print_html");
-									print_var_dump($outertext_to_remove, "outertext_to_remove final print_var_dump");
 									$article_str = str_replace($paragraph, "", $article_str);
 								}
 								break;
@@ -211,87 +181,8 @@ $found_urls[] = "https://sportowefakty.wp.pl/tenis/premium/936108/przyspieszony-
 						}
 					}
 				}
-//				$children = $paragraph->children;
-/*
-				print_element($paragraph, "paragraph");
-				foreach ($children as $key => $child)
-				{
-					echo "Dziecko nr $key, tag=".$child->tag.", plaintext=".$child->plaintext."<br>";
-				}
-				if (2 === count($children))
-					echo "count = 2<br>";
-				else
-					echo "count != 2<br>";
-
-				if ("strong" === strtolower($children[0]->tag))
-					echo "TRUE if (\"strong\" === strtolower(\$children[0]->tag))<br>";
-				else
-					echo "FALSE if (\"strong\" === strtolower(\$children[0]->tag))<br>";
-
-				if ("amp-video-iframe" === strtolower($children[1]->tag))
-					echo "TRUE if (\"amp-video-iframe\" === strtolower(\$children[0]->tag))<br>";
-				else
-					echo "FALSE if (\"amp-video-iframe\" === strtolower(\$children[0]->tag))<br>";
-					
-				if (check_string_contains_needle_from_array($children[0]->plaintext, array("ZOBACZ WIDEO")))
-					echo "TRUE if (check_string_contains_needle_from_array(\$children[0]->plaintext, array(\"ZOBACZ WIDEO\")))<br>";
-				else
-					echo "FALSE if (check_string_contains_needle_from_array(\$children[0]->plaintext, array(\"ZOBACZ WIDEO\")))<br>";
-*/
-/*
-				if (2 === count($children) && "strong" === strtolower($children[0]->tag) && "amp-video-iframe" === strtolower($children[1]->tag))
-				{
-					if (check_string_contains_needle_from_array($children[0]->plaintext, array("ZOBACZ WIDEO")))
-					{
-//						$paragraph->outertext = "";
-
-						$article_str = str_replace($children[0]->outertext, "", $article_str);
-						$article_str = str_replace($children[1]->outertext, "", $article_str);
-					}
-				}
-*/
 			}
 			$article = str_get_html($article_str);
-//			$article = str_get_html($article->save());
-
-			/*
-			foreach ($article->find("P") as $paragraph)
-			{
-				if (check_string_contains_needle_from_array($paragraph->plaintext, array("ZOBACZ WIDEO:")))
-				{
-					if (!is_null($paragraph->find("AMP-VIDEO-IFRAME", 0)))
-					{
-						$paragraph->outertext = "";
-					}
-				}
-				else if (check_string_contains_needle_from_array($paragraph->plaintext, array("Masz newsa, zdjęcie lub filmik?")))
-				{
-					$paragraph->outertext = "";
-				}
-			}
-			*/
-/*		
-		$article_str = $article->save();
-		foreach($article->find('UL LI A[href*="onet.pl/"][target="_top"]') as $element)
-		{
-			$parent = $element->parent;
-			if (is_null($parent->prev_sibling()) && is_null($parent->next_sibling()))
-			{
-				$article_str = str_replace($parent->parent->outertext, '', $article_str);
-			}
-		}
-		if (FALSE === is_null($data_element = $article->find('DIV.dateAuthor', 0)))
-		{
-			$data_element_innertext = $data_element->innertext;
-			$span_string = "";
-			foreach($article->find('DIV.dateAuthor SPAN') as $element)
-			{
-				$span_string = $span_string.$element->outertext;
-			}
-			$article_str = str_replace($data_element_innertext, $span_string, $article_str);
-		}
-		$article = str_get_html($article_str);
-*/
 
 			$article = replace_tag_and_class($article, 'ARTICLE SPAN.h5', 'single', 'STRONG', 'lead');
 			$article = replace_tag_and_class($article, 'ARTICLE ADDRESS.indicator', 'single', 'DIV', 'author');
@@ -307,12 +198,180 @@ $found_urls[] = "https://sportowefakty.wp.pl/tenis/premium/936108/przyspieszony-
 			$article = move_element($article, 'H1.title', 'ARTICLE', 'innertext', 'before');
 			$article = move_element($article, 'DIV.author', 'ARTICLE', 'innertext', 'after');
 			$article = insert_html($article, 'DIV.author', '', '', '<HR>');
-			
-//			$article = replace_tag_and_class($article, 'ARTICLE SPAN.h5', 'single', 'STRONG', 'lead');
+		}
+		else if ("magazyn_wp_pl" === $amp_url_data["type"])
+		{
+			$returned_array = my_get_html($amp_url_data["canonical_url"]);
+			if (200 !== $returned_array['code'])
+			{
+				$this->items[] = $returned_array['html'];
+				return;
+			}
+			else
+			{
+				$article_html = str_get_html(prepare_article($returned_array['html']));
+			}
+			$url_article = $amp_url_data["canonical_url"];
+			$article = $article_html->find('ARTICLE.article--center', 0);
+			$author = return_authors_as_string($article, 'DIV.teaser--row SPAN.author');
+			$datePublished = get_json_value($article_html, 'HEAD SCRIPT', 'cdate');
+			$tags_string = get_json_value($article_html, 'HEAD SCRIPT', 'ctags');
+			//https://magazyn.wp.pl/informacje/artykul/wstrzasajace-jak-wybiorczo-pis-traktuje-fakty-w-sprawie-lotow-opinia
+			$tags_string = json_decode("\"$tags_string\"");
+			$tags_string = str_replace(",magazynwp:sg", "", $tags_string);
+			$tags_string = str_replace("magazynwp:sg,", "", $tags_string);
+			$tags = explode(",", $tags_string);
+			$title = get_text_plaintext($article, 'HEADER.fullPage--teaser H1', NULL);
+			//Zdjęcie główne
+			$article = move_element($article, 'FIGURE.teaser', 'HEADER', 'outertext', 'after');
+			if (!is_null($header_element = $article->find('HEADER[data-bg]', 0)))
+			{
+				$photo_url = $header_element->getAttribute('data-bg');
+				if (!is_null($caption = $header_element->find('DIV.foto-desc', 0)))
+				{
+					$main_photo_html = '<figure class="photoWrapper mainPhoto"><img src="'.$photo_url.'"><figcaption>'.$caption->innertext.'</figcaption></figure>';
+				}
+				else
+				{
+					$main_photo_html = '<figure class="photoWrapper mainPhoto"><img src="'.$photo_url.'"></figure>';
+				}
+				$header_element->outertext = $main_photo_html;
+			}
+			$article = format_article_photos($article, 'FIGURE.photoWrapper.mainPhoto', TRUE, 'src', 'FIGCAPTION');
+			$article = format_article_photos($article, 'FIGURE[!class]', FALSE, 'src', 'FIGCAPTION');
 
+			foreach($article->find('FIGURE FIGCAPTION') as $caption)
+			{
+				$new_caption_text = "";
+				foreach($caption->children as $paragraph)
+				{
+					if (0 < strlen($current_text = trim($paragraph->plaintext)))
+					{
+						if ("" === $new_caption_text)
+						{
+							$new_caption_text = $current_text;
+						}
+						else
+						{
+							$new_caption_text = $new_caption_text."; ".$current_text;
+						}
+					}
+				}
+				if ("" === $new_caption_text)
+				{
+					$caption->outertext = "";
+				}
+				else
+				{
+					$caption->innertext = $new_caption_text;
+				}
+			}
+			$article = str_get_html($article->save());
+			$article = foreach_replace_outertext_with_innertext($article, 'DIV.article--body');
+			$article = foreach_replace_outertext_with_innertext($article, 'DIV.wrapper');
+			$article = foreach_replace_outertext_with_innertext($article, 'DIV.fullPage--rest-of-art');	
+			//cytat https://magazyn.wp.pl/ksiazki/artykul/zapomniana-epidemia
+			$article = replace_date($article, 'SPAN.time', $datePublished);
+			//lead
+			$article = replace_tag_and_class($article, 'DIV.article--lead.fb-quote', 'single', 'STRONG', 'lead');
+			$article = replace_tag_and_class($article, 'DIV.article--author-wrapper-new', 'single', 'DIV', 'author');
+			$article = replace_tag_and_class($article, 'A[href="#"] H1', 'single', 'H1', 'title');
+			$article = move_element($article, 'FIGURE.photoWrapper.mainPhoto', 'ARTICLE', 'innertext', 'before');
+			$article = move_element($article, 'STRONG.lead', 'ARTICLE', 'innertext', 'before');
+			$article = move_element($article, 'DIV.dates', 'ARTICLE', 'innertext', 'before');
+			$article = move_element($article, 'H1.title', 'ARTICLE', 'innertext', 'before');
+			$article = move_element($article, 'DIV.author', 'ARTICLE', 'innertext', 'after');
+			$article = insert_html($article, 'DIV.author', '', '', '<HR>');
+			$article = move_element($article, 'DIV.author SPAN.article--author-name', 'DIV.author DIV.article--avatar', 'outertext', 'before');
+			$selectors_array = array();
+			$selectors_array[] = 'DIV.socials';
+			$selectors_array[] = 'DIV.article--footer';
+			$selectors_array[] = 'comment';
+			$selectors_array[] = 'SCRIPT';
+			$selectors_array[] = 'FIGURE.a--instream';
+			$selectors_array[] = 'FIGURE.teaser';
+			$article = foreach_delete_element_array($article, $selectors_array);
+		}
+		else if ("wp_pl" === $amp_url_data["type"])
+		{
+			$returned_array = my_get_html($amp_url_data["ampproject_url"]);
+			if (200 !== $returned_array['code'])
+			{
+				$this->items[] = $returned_array['html'];
+				return;
+			}
+			else
+			{
+				$article_html = str_get_html(prepare_article($returned_array['html']));
+			}
+			$url_article = $amp_url_data["ampproject_url"];
+			$article = $article_html->find('MAIN', 0);
+			$title = get_text_plaintext($article, 'H1', NULL);
+			$datePublished = get_json_value($article_html, 'SCRIPT[type="application/ld+json"]', 'datePublished');
+			$dateModified = get_json_value($article_html, 'SCRIPT[type="application/ld+json"]', 'dateModified');
+			$tags = return_tags_array($article_html, 'P.tags A[href]');
+			$author_from_element = get_text_plaintext($article, 'P[data-st-area="Autor"] SPAN.uppercase', NULL);
+			$author_from_element = trim($author_from_element);
+			$author_from_element = remove_substring_if_exists_last($author_from_element, ",");
+			$author = $author_from_element;
+			$selectors_array = array();
+			$selectors_array[] = 'comment';
+			$selectors_array[] = 'SCRIPT';
+			$selectors_array[] = 'DIV.seolinks';
+			$selectors_array[] = 'DIV.ad';
+			$selectors_array[] = 'FOOTER';
+			$selectors_array[] = 'SECTION.recommendations';
+			$selectors_array[] = 'A.comment-button';
+			$selectors_array[] = 'AMP-SOCIAL-SHARE';
+			$selectors_array[] = 'P.tags';
+			$article = foreach_delete_element_array($article, $selectors_array);
+			$attributes_array = array();
+			$attributes_array[] = "id";
+			$article = remove_multiple_attributes($article, $attributes_array);
+			
+			//Wideo powiązane w treści
+			//https://gwiazdy-wp-pl.cdn.ampproject.org/v/s/gwiazdy.wp.pl/kazik-staszewski-wrocilem-do-swoich-zasad-6646710523185952a?amp=1&amp_js_v=0.1
+			//https://opinie-wp-pl.cdn.ampproject.org/v/s/opinie.wp.pl/ten-niedobry-komunista-joe-felieton-6649523316730784a?amp=1&amp_js_v=0.1
+
+			foreach ($article->find("MAIN AMP-VIDEO-IFRAME") as $amp_video)
+			{
+				if (FALSE === is_null($previous_element = $amp_video->prev_sibling()))
+				{
+					if ("h2" === strtolower($previous_element->tag))
+					{
+						$previous_element->outertext = "";
+						$amp_video->outertext = "";
+					}
+					else
+					{
+						$amp_video->outertext = "";
+					}
+				}
+				else
+				{
+					$amp_video->outertext = "";
+				}
+			}
+			$article = str_get_html($article->save());
+			
+			$article = foreach_delete_element_containing_elements_hierarchy($article, array('P', 'STRONG', 'A[href="https://dziejesie.wp.pl/"]'));
+			$article = format_article_photos($article, 'DIV.header-image-container', TRUE, 'src', 'DIV.header-author');
+			$article = format_article_photos($article, 'DIV.photo.from.amp', FALSE, 'src', 'FIGCAPTION');
+			$article = foreach_replace_outertext_with_innertext($article, 'ARTICLE');
+			$article = replace_tag_and_class($article, 'MAIN', 'single', 'ARTICLE', NULL);
+			$article = replace_date($article, 'P[data-st-area="Autor"]', $datePublished, $dateModified);
+			$article = insert_html($article, 'ARTICLE', '', '', '<DIV class="author">'.$author.'</DIV>');
+			$article = replace_tag_and_class($article, 'H1', 'single', 'H1', 'title');
+			$article = replace_tag_and_class($article, 'STRONG', 'single', 'STRONG', 'lead');
+
+			$article = move_element($article, 'FIGURE.photoWrapper.mainPhoto', 'ARTICLE', 'innertext', 'before');
+			$article = move_element($article, 'STRONG.lead', 'ARTICLE', 'innertext', 'before');
+			$article = move_element($article, 'DIV.dates', 'ARTICLE', 'innertext', 'before');
+			$article = move_element($article, 'H1.title', 'ARTICLE', 'innertext', 'before');
+			$article = move_element($article, 'DIV.author', 'ARTICLE', 'innertext', 'after');
+			$article = insert_html($article, 'DIV.author', '', '', '<HR>');
 		}
 
-		//https://opinie.wp.pl/kataryna-zyjemy-w-okrutnym-swiecie-ale-aborcja-embriopatologiczna-musi-pozostac-opinia-6567085945505921a?amp=1&_js_v=0.1
 		$article = add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
 		$article = add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
 		$article = add_style($article, 'FIGCAPTION', getStylePhotoCaption());
@@ -342,7 +401,7 @@ $found_urls[] = "https://sportowefakty.wp.pl/tenis/premium/936108/przyspieszony-
 			return;
 		}
 		$article_html = str_get_html(prepare_article($article_html));
-		$article = $article_html->find('main#content', 0);
+		$article = $article_html->find('MAIN', 0);
 		//https://sportowefakty-wp-pl.cdn.ampproject.org/c/s/sportowefakty.wp.pl/amp/kolarstwo/926408/43-lata-temu-polscy-kolarze-zgineli-w-katastrofie-lotniczej-po-otwarciu-trumny-o
 		if (!is_null($article_test = $article->find('ARTICLE[id].article', 0)))
 		{
@@ -423,17 +482,17 @@ $found_urls[] = "https://sportowefakty.wp.pl/tenis/premium/936108/przyspieszony-
 		$edited_host = str_replace(".", "-", $url_array["host"]);
 		$prefix = $url_array["scheme"].'://';
 		$ampproject_domain = ".cdn.ampproject.org/v/s/";
-		print_var_dump($url_array, "url_array");
+		//print_var_dump($url_array, "url_array");
 		if (FALSE !== strpos($url_array["host"], "wp.pl"))
 		{
 			if ("sportowefakty.wp.pl" === $url_array["host"])
 			{
 				$new_path = "/amp".$url_array["path"];
-				print_var_dump($new_path, "new_path");
+		//		print_var_dump($new_path, "new_path");
 				return array(
 					"type" => "sportowefakty_wp_pl",
-					"url" => $prefix.$edited_host.$ampproject_domain.$url_array["host"].$new_path."?amp_js_v=0.1",
-					"original_url" => $prefix.$url_array["host"].$url_array["path"],
+					"ampproject_url" => $prefix.$edited_host.$ampproject_domain.$url_array["host"].$new_path."?amp_js_v=0.1",
+					"canonical_url" => $prefix.$url_array["host"].$url_array["path"],
 				);
 			}
 			else if ("magazyn.wp.pl" === $url_array["host"])
@@ -441,17 +500,15 @@ $found_urls[] = "https://sportowefakty.wp.pl/tenis/premium/936108/przyspieszony-
 				return array(
 					"type" => "magazyn_wp_pl",
 					"url" => $url,
-					"original_url" => $prefix.$url_array["host"].$url_array["path"],
+					"canonical_url" => $prefix.$url_array["host"].$url_array["path"],
 				);
 			}
 			else
 			{
-//			'uri' => htmlentities($url_article, ENT_QUOTES, 'UTF-8'),
-				$new_path = $url_array["path"].'?amp=1&amp_js_v=0.1';
 				return array(
 					"type" => "wp_pl",
-					"url" => htmlentities($prefix.$edited_host.$ampproject_domain.$url_array["host"].$new_path, ENT_QUOTES, 'UTF-8'),
-					"original_url" => $prefix.$url_array["host"].$url_array["path"],
+					"ampproject_url" => htmlentities($prefix.$edited_host.$ampproject_domain.$url_array["host"].$url_array["path"].'?amp=1&amp_js_v=0.1', ENT_QUOTES, 'UTF-8'),
+					"amp_url" => $prefix.$url_array["host"].$url_array["path"].'?amp=1',
 				);
 			}
 		}
@@ -465,13 +522,6 @@ $found_urls[] = "https://sportowefakty.wp.pl/tenis/premium/936108/przyspieszony-
 	{
 		$articles_urls = array();
 		$url_articles_list = 'https://magazyn.wp.pl/';
-/*
-		$articles_urls[] = 'https://magazyn.wp.pl/ksiazki/artykul/zapomniana-epidemia';
-		$articles_urls[] = 'https://wiadomosci.wp.pl/poprosil-o-ekstradycje-do-polski-dostal-70-dni-w-karcerze-polak-z-rosyjskiego-lagru-potrzebuje-pomocy-6604992688413312a';
-		$articles_urls[] = 'https://opinie.wp.pl/kataryna-zyjemy-w-okrutnym-swiecie-ale-aborcja-embriopatologiczna-musi-pozostac-opinia-6567085945505921a';
-		$articles_urls[] = 'https://www.money.pl/gospodarka/polski-manhattan-bezdomnych-ogrzewana-nora-za-prace-w-zsypach-6629704500415008a.html';
-		$articles_urls[] = 'https://sportowefakty.wp.pl/kolarstwo/926408/43-lata-temu-polscy-kolarze-zgineli-w-katastrofie-lotniczej-po-otwarciu-trumny-o';
-*/
 		while (count($articles_urls) < $GLOBALS['limit'] && "empty" != $url_articles_list)
 		{
 			$returned_array = my_get_html($url_articles_list, TRUE);
@@ -781,6 +831,7 @@ $found_urls[] = "https://sportowefakty.wp.pl/tenis/premium/936108/przyspieszony-
 			$caption_text = remove_substring_if_exists_first($caption_text, "; ");
 			$caption->innertext = $caption_text;
 		}
+		//https://magazyn.wp.pl/ksiazki/artykul/zapomniana-epidemia
 		$article = add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
 		$article = add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
 		$article = add_style($article, 'FIGCAPTION', getStylePhotoCaption());

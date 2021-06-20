@@ -593,7 +593,7 @@
 					continue;
 				}
 				$caption_text = '';
-//				print_html($old_photo_wrapper, "old_photo_wrapper 1");
+				//print_html($old_photo_wrapper, "old_photo_wrapper 1");
 				if (0 !== strlen($str_selectror_photo_caption) && FALSE === is_null($caption_element = $old_photo_wrapper->find($str_selectror_photo_caption, 0)))
 				{
 					$caption_text = trim($caption_element->plaintext);
@@ -602,7 +602,7 @@
 					$caption_innertext = $caption_element->innertext;
 				}
 				$href = '';
-//				print_html($old_photo_wrapper, "old_photo_wrapper 2");
+				//print_html($old_photo_wrapper, "old_photo_wrapper 2");
 				if (FALSE === is_null($href_element = $old_photo_wrapper->getElementByTagName('A[href]')))
 				{
 					$href = $href_element->getAttribute('href');
@@ -612,7 +612,7 @@
 					}
 				}
 
-//				print_html($old_photo_wrapper, "old_photo_wrapper 3");
+				//print_html($old_photo_wrapper, "old_photo_wrapper 3");
 				if (TRUE === $is_main)
 				{
 					$class_string = 'photoWrapper mainPhoto';
@@ -623,34 +623,34 @@
 				}
 				if (0 !== strlen($href) && 0 !== strlen($caption_text))
 				{
-//					echo 'if (0 !== strlen($href) && 0 !== strlen($caption_text))'."<br>";
+					//echo 'if (0 !== strlen($href) && 0 !== strlen($caption_text))'."<br>";
 					$new_photo_wrapper_outertext = '<figure class="'.$class_string.'"><a href="'.$href.'"><img src="'.$img_src.'" ></a><figcaption>'.$caption_innertext.'</figcaption></figure>';
 					$new_photo_wrapper = str_get_html($new_photo_wrapper_outertext);
-//					print_html($new_photo_wrapper_outertext, "new_photo_wrapper_outertext");
+					//print_html($new_photo_wrapper_outertext, "new_photo_wrapper_outertext");
 				}
 				else if (0 !== strlen($href) && 0 === strlen($caption_text))
 				{
 //					$new_photo_wrapper = str_get_html('<figure class="'.$class_string.'"><a href="'.$href.'"><img src="'.$img_src.'" ></a></figure>');
-//					echo 'else if (0 !== strlen($href) && 0 === strlen($caption_text))'."<br>";
+					//echo 'else if (0 !== strlen($href) && 0 === strlen($caption_text))'."<br>";
 					$new_photo_wrapper_outertext = '<figure class="'.$class_string.'"><a href="'.$href.'"><img src="'.$img_src.'" ></a></figure>';
 					$new_photo_wrapper = str_get_html($new_photo_wrapper_outertext);
-//					print_html($new_photo_wrapper_outertext, "new_photo_wrapper_outertext");
+					//print_html($new_photo_wrapper_outertext, "new_photo_wrapper_outertext");
 				}
 				else if (0 === strlen($href) && 0 !== strlen($caption_text))
 				{
 //					$new_photo_wrapper = str_get_html('<figure class="'.$class_string.'"><img src="'.$img_src.'" ><figcaption>'.$caption_innertext.'</figcaption></figure>');
-//					echo 'else if (0 === strlen($href) && 0 !== strlen($caption_text))'."<br>";
+					//echo 'else if (0 === strlen($href) && 0 !== strlen($caption_text))'."<br>";
 					$new_photo_wrapper_outertext = '<figure class="'.$class_string.'"><img src="'.$img_src.'" ><figcaption>'.$caption_innertext.'</figcaption></figure>';
 					$new_photo_wrapper = str_get_html($new_photo_wrapper_outertext);
-//					print_html($new_photo_wrapper_outertext, "new_photo_wrapper_outertext");
+					//print_html($new_photo_wrapper_outertext, "new_photo_wrapper_outertext");
 				}
 				else if (0 === strlen($href) && 0 === strlen($caption_text))
 				{
 //					$new_photo_wrapper = str_get_html('<figure class="'.$class_string.'"><img src="'.$img_src.'" ></figure>');
-//					echo 'else if (0 === strlen($href) && 0 === strlen($caption_text))'."<br>";
+					//echo 'else if (0 === strlen($href) && 0 === strlen($caption_text))'."<br>";
 					$new_photo_wrapper_outertext = '<figure class="'.$class_string.'"><img src="'.$img_src.'" ></figure>';
 					$new_photo_wrapper = str_get_html($new_photo_wrapper_outertext);
-//					print_html($new_photo_wrapper_outertext, "new_photo_wrapper_outertext");
+					//print_html($new_photo_wrapper_outertext, "new_photo_wrapper_outertext");
 				}
 				else
 				{
@@ -666,11 +666,14 @@
 					print_element($href_element, "href_element");
 				}
 */
+				//print_var_dump($old_photo_element->getAllAttributes(), "old_photo_element->getAllAttributes()");
 				//dla atrybutu bez wartosci zwracane jest true
 				foreach($old_photo_element->getAllAttributes() as $attribute => $value)
 				{
+					//print_var_dump($value, "$attribute-value");
 					if ("" !== $value && FALSE === is_null($value) && TRUE === in_array($attribute, $array_allowed_attributes))
 					{
+						//print_var_dump($value, "weszlo: $attribute-value");
 						$new_element_img->setAttribute($attribute, $value);
 					}
 				}
@@ -1475,6 +1478,7 @@ function getArray($array, $index) {
 	
 	function my_get_html($url, $get_premium = FALSE)
 	{
+		$url = html_entity_decode($url);
 		if (TRUE === $get_premium)
 		{
 			$context = stream_context_create(
@@ -1546,6 +1550,8 @@ function getArray($array, $index) {
 		if (200 !== $code)
 		{
 			$html_error = createErrorContent($http_response_header);
+//			print_var_dump($http_response_header, "http_response_header");
+//			print_html($page_content, "page_content");
 			$date = new DateTime("now", new DateTimeZone('Europe/Warsaw'));
 			$date_string = date_format($date, 'Y-m-d H:i:s');
 			$page_html = array(
