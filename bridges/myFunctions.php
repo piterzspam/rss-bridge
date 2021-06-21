@@ -1478,7 +1478,32 @@ function getArray($array, $index) {
 	
 	function my_get_html($url, $get_premium = FALSE)
 	{
-		$url = html_entity_decode($url);
+//		$url = htmlspecialchars($url);
+//		$url = htmlspecialchars($url);
+//		$url = htmlspecialchars($url);
+//		$url = htmlspecialchars($url);
+		echo "<br>my_get_html url przed: $url<br>";
+		hex_dump($url);
+
+		echo "<br>my_get_html url po htmlspecialchars: $url<br>";
+		hex_dump(htmlspecialchars($url));
+		echo "<br>my_get_html url po htmlentities: $url<br>";
+		hex_dump(htmlentities($url));
+
+		echo "<br>my_get_html url po html_entity_decode: $url<br>";
+		hex_dump(html_entity_decode($url));
+		echo "<br>my_get_html url po htmlspecialchars_decode: $url<br>";
+		hex_dump(htmlspecialchars_decode($url));
+
+		$url = htmlspecialchars_decode($url);
+		echo "<br>my_get_html url po 1: $url<br>";
+		hex_dump($url);
+
+		$url = htmlspecialchars_decode($url);
+		$url = htmlspecialchars_decode($url);
+		$url = htmlspecialchars_decode($url);
+		echo "<br>my_get_html url po 2: $url<br>";
+		hex_dump($url);
 		if (TRUE === $get_premium)
 		{
 			$context = stream_context_create(

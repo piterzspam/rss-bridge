@@ -8,8 +8,40 @@ class MagazynWPBridge extends BridgeAbstract {
 
 	const PARAMETERS = array
 	(
-		'Parametry' => array
+		'Magazyn WP' => array
 		(
+			'limit' => array
+			(
+				'name' => 'Liczba artykułów',
+				'type' => 'number',
+				'required' => true,
+				'defaultValue' => 3,
+			)
+		),
+		'WP' => array
+		(
+			'url' => array
+			(
+				'name' => 'URL',
+				'type' => 'text',
+				'required' => true
+			),
+			'limit' => array
+			(
+				'name' => 'Liczba artykułów',
+				'type' => 'number',
+				'required' => true,
+				'defaultValue' => 3,
+			)
+		),
+		'Money' => array
+		(
+			'url' => array
+			(
+				'name' => 'URL',
+				'type' => 'text',
+				'required' => true
+			),
 			'limit' => array
 			(
 				'name' => 'Liczba artykułów',
@@ -20,22 +52,65 @@ class MagazynWPBridge extends BridgeAbstract {
 		)
 	);
 
+	public function getName()
+	{
+		switch($this->queriedContext)
+		{
+			case 'Magazyn WP':
+				return "Magazyn WP";
+				break;
+			case 'WP':
+				if(1 < strlen($GLOBALS['host']) && 1 < strlen($GLOBALS['author_name']))
+					return $GLOBALS['host']." - ".ucfirst($GLOBALS['author_name']);
+				else if (1 < strlen($GLOBALS['host']))
+					return $GLOBALS['host'];
+				break;
+			case 'Money':
+				if(1 < strlen($GLOBALS['host']) && 1 < strlen($GLOBALS['author_name']))
+					return $GLOBALS['host']." - ".ucfirst($GLOBALS['author_name']);
+				else if (1 < strlen($GLOBALS['host']))
+					return $GLOBALS['host'];
+				break;
+			default:
+				return parent::getName();
+		}
+	}
+	
+	public function getURI()
+	{
+		switch($this->queriedContext)
+		{
+			case 'Magazyn WP':
+				return "https://magazyn.wp.pl/";
+				break;
+			case 'WP':
+				return $this->getInput('url');
+				break;
+			case 'Money':
+				return $this->getInput('url');
+				break;
+			default:
+				return parent::getName();
+		}
+	}
 
 	public function collectData()
 	{
 		include 'myFunctions.php';
-		$GLOBALS['limit'] = $this->getInput('limit');
-		$GLOBALS['my_debug'] = FALSE;
-//		$GLOBALS['my_debug'] = TRUE;
-		if (TRUE === $GLOBALS['my_debug'])
+		$this->setGlobalArticlesParams();
+		switch($this->queriedContext)
 		{
-			$GLOBALS['all_articles_time'] = 0;
-			$GLOBALS['all_articles_counter'] = 0;
+			case 'Magazyn WP':
+				$found_urls = $this->getArticlesUrls_magazyn();
+				break;
+			case 'WP':
+				$found_urls = $this->getArticlesUrls_wp();
+				break;
+			case 'Money':
+				$found_urls = $this->getArticlesUrls_money();
+				break;
 		}
-		
-		$found_urls = $this->getArticlesUrls();
 
-		$GLOBALS["amp_urls_data"] = array();
 		$amp_urls_data = array();
 		foreach($found_urls as $url)
 		{
@@ -43,9 +118,31 @@ class MagazynWPBridge extends BridgeAbstract {
 		}
 		foreach($amp_urls_data as $amp_url_data)
 		{
+			echo "<br>foreach url przed: ".$amp_url_data["ampproject_url"]."<br>";
+			hex_dump($amp_url_data["ampproject_url"]);
 			$this->addArticle($amp_url_data);
 		}
 	}
+
+	private function setGlobalArticlesParams()
+	{
+		//https://opinie-wp-pl.cdn.ampproject.org/c/s/opinie.wp.pl/kataryna-hackowanie-systemu-rzadowych-obostrzen-zabawa-w-kotka-i-myszke-opinia-6628299841584000a?amp=1
+		$GLOBALS['limit'] = intval($this->getInput('limit'));
+//		$GLOBALS['my_debug'] = TRUE;
+		$GLOBALS['my_debug'] = FALSE;
+		$GLOBALS['url_articles_list'] = $this->getInput('url');
+		if (TRUE === $GLOBALS['my_debug'])
+		{
+			$GLOBALS['all_articles_time'] = 0;
+			$GLOBALS['all_articles_counter'] = 0;
+		}
+		$url_array = parse_url($this->getInput('url'));
+		$GLOBALS['prefix'] = $url_array["scheme"].'://'.$url_array["host"];
+		$GLOBALS['host'] = str_replace('www.', "", $url_array["host"]);
+		$GLOBALS['host'] = ucfirst($url_array["host"]);
+
+	}
+
 	private function addArticle($amp_url_data)
 	{
 		if ("sportowefakty_wp_pl" === $amp_url_data["type"])
@@ -255,6 +352,8 @@ class MagazynWPBridge extends BridgeAbstract {
 			{
 				$article_html = str_get_html(prepare_article($returned_array['html']));
 			}
+			echo "<br>addArticle url przed: ".$amp_url_data["ampproject_url"]."<br>";
+			hex_dump($amp_url_data["ampproject_url"]);
 			$url_article = $amp_url_data["ampproject_url"];
 			$article = $article_html->find('MAIN', 0);
 			$title = get_text_plaintext($article, 'H1', NULL);
@@ -432,7 +531,7 @@ class MagazynWPBridge extends BridgeAbstract {
 					"type" => "wideo",
 					"canonical_url" => $prefix.$url_array["host"].$url_array["path"],
 					"amp_url" => $prefix.$url_array["host"].$url_array["path"].'?amp=1',
-					"ampproject_url" => html_entity_decode($prefix.$edited_host.$ampproject_domain.$url_array["host"].$url_array["path"].'?amp=1&amp_js_v=0.1'),
+					"ampproject_url" => htmlspecialchars($prefix.$edited_host.$ampproject_domain.$url_array["host"].$url_array["path"].'?amp=1&amp_js_v=0.1'),
 				);
 			}
 			else
@@ -440,17 +539,65 @@ class MagazynWPBridge extends BridgeAbstract {
 				return array(
 					"type" => "wp_pl",
 					//"ampproject_url" => htmlentities($prefix.$edited_host.$ampproject_domain.$url_array["host"].$url_array["path"].'?amp=1&amp_js_v=0.1', ENT_QUOTES, 'UTF-8'),
-					"ampproject_url" => html_entity_decode($prefix.$edited_host.$ampproject_domain.$url_array["host"].$url_array["path"].'?amp=1&amp_js_v=0.1'),
+					"ampproject_url" => htmlspecialchars($prefix.$edited_host.$ampproject_domain.$url_array["host"].$url_array["path"].'?amp=1&amp_js_v=0.1'),
 					"amp_url" => $prefix.$url_array["host"].$url_array["path"].'?amp=1',
 				);
 			}
 		}
 		else if(check_string_contains_needle_from_array($url_array["host"], array("www.o2.pl", "www.money.pl")))
 		{
+			$url = $prefix.$edited_host.$ampproject_domain.$url_array["host"].$url_array["path"].'?amp=1&amp_js_v=0.1';
+			$temp = "amp=1&amp_js_v=0.1";
+/*			echo "<br>getAmpData temp przed: $temp<br>";
+			hex_dump($temp);
+			$temp = html_entity_decode($temp);
+			echo "<br>getAmpData temp po: $temp<br>";
+			hex_dump($temp);
+
+			$temp2 = 'amp=1&amp_js_v=0.1';
+			echo "<br>getAmpData temp2 przed: $temp2<br>";
+			hex_dump($temp2);
+			$temp2 = html_entity_decode($temp2);
+			echo "<br>getAmpData temp2 po: $temp2<br>";
+			hex_dump($temp2);
+
+			$temp3 = 'amp=1&amp_js_v=0.1';
+			echo "<br>getAmpData temp3 1: $temp3<br>";
+			hex_dump($temp3);
+
+//			$temp3 = htmlspecialchars_decode($temp3);
+			$temp3 = htmlspecialchars($temp3);
+			echo "<br>getAmpData temp3 2: $temp3<br>";
+			hex_dump($temp3);
+			
+			$temp3 = htmlspecialchars($temp3);
+			echo "<br>getAmpData temp3 3: $temp3<br>";
+			hex_dump($temp3);
+*/
+
+			echo "<br>getAmpData temp przed: $temp<br>";
+			hex_dump($temp);
+
+			$temp1 = htmlspecialchars($temp);
+			echo "<br>getAmpData htmlspecialchars: $temp1<br>";
+			hex_dump($temp1);
+
+			$temp1 = htmlspecialchars_decode($temp);
+			echo "<br>getAmpData htmlspecialchars_decode: $temp1<br>";
+			hex_dump($temp1);
+
+			$temp1 = html_entity_decode($temp);
+			echo "<br>getAmpData html_entity_decode: $temp1<br>";
+			hex_dump($temp1);
+
+			
+
 			return array(
 				"type" => "wp_pl",
 				"canonical_url" => $prefix.$url_array["host"].$url_array["path"],
-				"ampproject_url" => html_entity_decode($prefix.$edited_host.$ampproject_domain.$url_array["host"].$url_array["path"].'?amp=1&amp_js_v=0.1'),
+				//"ampproject_url" => html_entity_decode($prefix.$edited_host.$ampproject_domain.$url_array["host"].$url_array["path"].'?amp=1&amp_js_v=0.1'),
+				"ampproject_url" => htmlspecialchars($url),
+				//"ampproject_url" => $url,
 			);
 		}
 		else if(check_string_contains_needle_from_array($url_array["host"], array("parenting.pl", "abczdrowie.pl")))
@@ -458,7 +605,7 @@ class MagazynWPBridge extends BridgeAbstract {
 			return array(
 				"type" => "wp_pl",
 				"canonical_url" => $prefix.$url_array["host"].$url_array["path"],
-				"ampproject_url" => html_entity_decode($prefix.$edited_host.$ampproject_domain.$url_array["host"].$url_array["path"].'?amp=1&amp_js_v=0.1'),
+				"ampproject_url" => htmlspecialchars($prefix.$edited_host.$ampproject_domain.$url_array["host"].$url_array["path"].'?amp=1&amp_js_v=0.1'),
 			);
 		}
 		else
@@ -466,8 +613,132 @@ class MagazynWPBridge extends BridgeAbstract {
 			return NULL;
 		}
 	}
+	
+	private function getArticlesUrls_wp()
+	{
+		$GLOBALS['author_name'] = "";
+		$articles_urls = array();
+		$url_articles_list = $this->getInput('url');
+		while (count($articles_urls) < $GLOBALS['limit'] && "empty" != $url_articles_list)
+		{
+			$returned_array = my_get_html($url_articles_list);
+			if (200 !== $returned_array['code'])
+			{
+				break;
+			}
+			//DIV.teasersListing A[class][title][href][data-reactid]
+			$html_articles_list = $returned_array['html'];
+			if (200 !== $returned_array['code'] || 0 === count($found_hrefs = $html_articles_list->find('DIV.teasersListing A[class][title][href][data-reactid]')))
+			{
+				break;
+			}
+			else
+			{
+				$GLOBALS['author_name'] = get_text_plaintext($html_articles_list, 'H1.author--name, H1.sectionPage--title', $GLOBALS['author_name']);
+				foreach($found_hrefs as $href_element)
+				{
+					if(isset($href_element->href))
+					{
+						$new_url = $GLOBALS['prefix'].$href_element->href;
+						if (!in_array($new_url, $articles_urls))
+						{
+							$articles_urls[] = $new_url;
+						}
+					}
+				}
+			}
+			$url_articles_list = $this->getNextPageUrl_wp($html_articles_list);
+		}
+		return array_slice($articles_urls, 0, $GLOBALS['limit']);
+	}
+	
+	private function getNextPageUrl_wp($html_articles_list)
+	{
+		$next_page_element = $html_articles_list->find('A[rel="next"][href]', 0);
+		if (FALSE === is_null($next_page_element) && $next_page_element->hasAttribute('href'))
+		{
+			return $GLOBALS['prefix'].$next_page_element->getAttribute('href');
+		}
+		else
+			return "empty";
+	}
 
-	private function getArticlesUrls()
+	private function getArticlesUrls_money()
+	{
+		$GLOBALS['author_name'] = "";
+		$articles_urls = array();
+		$url_articles_list = $this->getInput('url');
+		while (count($articles_urls) < $GLOBALS['limit'] && "empty" != $url_articles_list)
+		{
+			$returned_array = my_get_html($url_articles_list);
+			if (200 !== $returned_array['code'])
+			{
+				break;
+			}
+			//DIV.teasersListing A[class][title][href][data-reactid]
+			$html_articles_list = $returned_array['html'];
+			if (200 !== $returned_array['code'])
+			{
+				break;
+			}
+			else
+			{
+				$content = $html_articles_list->find('DIV[data-st-area="st-page_content"]', 0);
+				if (is_null($content))
+				{
+					break;
+				}
+				else
+				{
+					if (0 == count($found_leads = $content->children))
+					{
+						break;
+					}
+					else
+					{
+						foreach($found_leads as $lead_element)
+						{
+							$href_element = $lead_element->find('A[href]', 0);
+							if(isset($href_element->href))
+							{
+								$new_url = $GLOBALS['prefix'].$href_element->href;
+								if (!in_array($new_url, $articles_urls))
+								{
+									$articles_urls[] = $new_url;
+								}
+							}
+						}
+					}
+				}
+
+				$GLOBALS['author_name'] = get_text_plaintext($html_articles_list, 'ARTICLE H1.author--name', $GLOBALS['author_name']);
+				$GLOBALS['author_name'] = str_replace("Archiwum artykułów autora ", "", $GLOBALS['author_name']);
+			}
+			$url_articles_list = $this->getNextPageUrl_money($url_articles_list);
+		}
+		return array_slice($articles_urls, 0, $GLOBALS['limit']);
+	}
+
+	private function getNextPageUrl_money($url_articles_list)
+	{
+		if (FALSE !== strpos($url_articles_list, '?strona='))
+		{
+			preg_match('/(.*\.money\.pl\/.+\.html\?strona=)([0-9]+)/', $url_articles_list, $output_array);
+			$url_without__page_number = $output_array[1];
+			$page_number = $output_array[2];
+			$page_number++;
+			$url_articles_list = $url_without__page_number.$page_number;
+		}
+		else
+		{
+			preg_match('/.*\.money\.pl\/.+\.html/', $url_articles_list, $output_array);
+			$url_articles_list = $output_array[0].'?strona=2';
+		}
+		return $url_articles_list;
+	}
+
+
+	private function getArticlesUrls_magazyn()
 	{
 		$articles_urls = array();
 		$url_articles_list = 'https://magazyn.wp.pl/';
@@ -492,12 +763,12 @@ class MagazynWPBridge extends BridgeAbstract {
 				foreach($found_hrefs as $href_element)
 					if(isset($href_element->href)) $articles_urls[] = $href_element->href;
 			}
-			$url_articles_list = $this->getNextPageUrl($html_articles_list);
+			$url_articles_list = $this->getNextPageUrl_magazyn($html_articles_list);
 		}
 		return array_slice($articles_urls, 0, $GLOBALS['limit']);
 	}
 
-	private function getNextPageUrl($html_articles_list)
+	private function getNextPageUrl_magazyn($html_articles_list)
 	{		
 		$next_page_element = $html_articles_list->find('DIV.moreTeasers', 0);
 		if (FALSE === is_null($next_page_element) && $next_page_element->hasAttribute('data-url'))
