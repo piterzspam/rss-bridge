@@ -116,6 +116,7 @@ class WPplBridge extends BridgeAbstract {
 		{
 			$amp_urls_data[] = $this->getAmpData($url);
 		}
+		//print_var_dump($amp_urls_data, "amp_urls_data");
 		foreach($amp_urls_data as $amp_url_data)
 		{
 			//echo "<br>foreach url przed: ".$amp_url_data["ampproject_url"]."<br>";
@@ -499,7 +500,7 @@ class WPplBridge extends BridgeAbstract {
 		$article = add_style($article, 'BLOCKQUOTE', getStyleQuote());
 
 		$this->items[] = array(
-			'uri' => htmlspecialchars($url_article),
+			'uri' => $url_article,
 			'title' => getChangedTitle($title),
 			'timestamp' => $datePublished,
 			'author' => $author,
@@ -516,57 +517,38 @@ class WPplBridge extends BridgeAbstract {
 		$prefix = $url_array["scheme"].'://';
 		$ampproject_domain = ".cdn.ampproject.org/v/s/";
 		//print_var_dump($url_array, "url_array");
-		if (FALSE !== strpos($url_array["host"], "wp.pl"))
+
+		if ("sportowefakty.wp.pl" === $url_array["host"])
 		{
-			if ("sportowefakty.wp.pl" === $url_array["host"])
-			{
-				$new_path = "/amp".$url_array["path"];
-				return array(
-					"type" => "sportowefakty_wp_pl",
-					"ampproject_url" => $prefix.$edited_host.$ampproject_domain.$url_array["host"].$new_path."?amp_js_v=0.1",
-					"canonical_url" => $prefix.$url_array["host"].$url_array["path"],
-				);
-			}
-			else if ("magazyn.wp.pl" === $url_array["host"])
-			{
-				return array(
-					"type" => "magazyn_wp_pl",
-					"canonical_url" => $prefix.$url_array["host"].$url_array["path"],
-				);
-			}
-			else if(check_string_contains_needle_from_array($url_array["host"], array("wideo.wp.pl", "video.wp.pl")))
-			{
-				return array(
-					"type" => "wideo",
-					"canonical_url" => $prefix.$url_array["host"].$url_array["path"],
-					"amp_url" => $prefix.$url_array["host"].$url_array["path"].'?amp=1',
-					"ampproject_url" => $prefix.$edited_host.$ampproject_domain.$url_array["host"].$url_array["path"].'?amp=1&amp_js_v=0.1',
-				);
-			}
-			else
-			{
-				return array(
-					"type" => "wp_pl",
-					"amp_url" => $prefix.$url_array["host"].$url_array["path"].'?amp=1',
-					"ampproject_url" => $prefix.$edited_host.$ampproject_domain.$url_array["host"].$url_array["path"].'?amp=1&amp_js_v=0.1',
-				);
-			}
+			$new_path = "/amp".$url_array["path"];
+			return array(
+				"type" => "sportowefakty_wp_pl",
+				"ampproject_url" => $prefix.$edited_host.$ampproject_domain.$url_array["host"].$new_path."?amp_js_v=0.1",
+				"canonical_url" => $prefix.$url_array["host"].$url_array["path"],
+			);
 		}
-		else if(check_string_contains_needle_from_array($url_array["host"], array("www.o2.pl", "money.pl")))
+		else if ("magazyn.wp.pl" === $url_array["host"])
+		{
+			return array(
+				"type" => "magazyn_wp_pl",
+				"canonical_url" => $prefix.$url_array["host"].$url_array["path"],
+			);
+		}
+		else if(check_string_contains_needle_from_array($url_array["host"], array("wideo.wp.pl", "video.wp.pl")))
+		{
+			return array(
+				"type" => "wideo",
+				"canonical_url" => $prefix.$url_array["host"].$url_array["path"],
+				"amp_url" => $prefix.$url_array["host"].$url_array["path"].'?amp=1',
+			);
+		}
+		else if(check_string_contains_needle_from_array($url_array["host"], array("wp.pl", "www.o2.pl", "money.pl", "parenting.pl", "abczdrowie.pl")))
 		{
 			return array(
 				"type" => "wp_pl",
 				"canonical_url" => $prefix.$url_array["host"].$url_array["path"],
 				"amp_url" => $prefix.$url_array["host"].$url_array["path"].'?amp=1',
-				"ampproject_url" => $prefix.$edited_host.$ampproject_domain.$url_array["host"].$url_array["path"].'?amp=1&amp_js_v=0.1',
-			);
-		}
-		else if(check_string_contains_needle_from_array($url_array["host"], array("parenting.pl", "abczdrowie.pl")))
-		{
-			return array(
-				"type" => "wp_pl",
-				"canonical_url" => $prefix.$url_array["host"].$url_array["path"],
-				"ampproject_url" => $prefix.$edited_host.$ampproject_domain.$url_array["host"].$url_array["path"].'?amp=1&amp_js_v=0.1',
+				"ampproject_url" => htmlspecialchars($prefix.$edited_host.$ampproject_domain.$url_array["host"].$url_array["path"].'?amp=1&amp_js_v=0.1'),
 			);
 		}
 		else
@@ -659,7 +641,11 @@ class WPplBridge extends BridgeAbstract {
 							$href_element = $lead_element->find('A[href]', 0);
 							if(isset($href_element->href))
 							{
-								$new_url = $GLOBALS['prefix'].$href_element->href;
+								$new_url = $href_element->href;
+								if (FALSE === strpos($new_url, "http"))
+								{
+									$new_url = $GLOBALS['prefix'].$href_element->href;
+								}
 								if (!in_array($new_url, $articles_urls))
 								{
 									$articles_urls[] = $new_url;
