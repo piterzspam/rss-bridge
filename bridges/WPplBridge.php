@@ -110,6 +110,7 @@ class WPplBridge extends BridgeAbstract {
 				$found_urls = $this->getArticlesUrls_money();
 				break;
 		}
+		$found_urls[] = "https://msp.money.pl/wiadomosci/sztuczna-inteligencja-w-unijnym-wydaniu-problemy-jednak-dotkna-polakow-6635631816583840a.html";
 
 		$amp_urls_data = array();
 		foreach($found_urls as $url)
@@ -345,16 +346,25 @@ class WPplBridge extends BridgeAbstract {
 			$returned_array = my_get_html($amp_url_data["ampproject_url"]);
 			if (200 !== $returned_array['code'])
 			{
-				$this->items[] = $returned_array['html'];
-				return;
+				//https://msp.money.pl/wiadomosci/sztuczna-inteligencja-w-unijnym-wydaniu-problemy-jednak-dotkna-polakow-6635631816583840a.html
+				$returned_array = my_get_html($amp_url_data["amp_url"]);
+				if (200 !== $returned_array['code'])
+				{
+					$this->items[] = $returned_array['html'];
+					return;
+				}
+				else
+				{
+					$url_article = $amp_url_data["amp_url"];
+				}
 			}
 			else
 			{
-				$article_html = str_get_html(prepare_article($returned_array['html']));
+				$url_article = $amp_url_data["ampproject_url"];
 			}
+			$article_html = str_get_html(prepare_article($returned_array['html']));
 			//echo "<br>addArticle url przed: ".$amp_url_data["ampproject_url"]."<br>";
 			//hex_dump($amp_url_data["ampproject_url"]);
-			$url_article = $amp_url_data["ampproject_url"];
 			$article = $article_html->find('MAIN', 0);
 			$title = get_text_plaintext($article, 'H1', NULL);
 			$datePublished = get_json_value($article_html, 'SCRIPT[type="application/ld+json"]', 'datePublished');
@@ -543,11 +553,12 @@ class WPplBridge extends BridgeAbstract {
 				);
 			}
 		}
-		else if(check_string_contains_needle_from_array($url_array["host"], array("www.o2.pl", "www.money.pl")))
+		else if(check_string_contains_needle_from_array($url_array["host"], array("www.o2.pl", "money.pl")))
 		{
 			return array(
 				"type" => "wp_pl",
 				"canonical_url" => $prefix.$url_array["host"].$url_array["path"],
+				"amp_url" => $prefix.$url_array["host"].$url_array["path"].'?amp=1',
 				"ampproject_url" => $prefix.$edited_host.$ampproject_domain.$url_array["host"].$url_array["path"].'?amp=1&amp_js_v=0.1',
 			);
 		}
