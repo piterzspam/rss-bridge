@@ -118,8 +118,8 @@ class MagazynWPBridge extends BridgeAbstract {
 		}
 		foreach($amp_urls_data as $amp_url_data)
 		{
-			echo "<br>foreach url przed: ".$amp_url_data["ampproject_url"]."<br>";
-			hex_dump($amp_url_data["ampproject_url"]);
+			//echo "<br>foreach url przed: ".$amp_url_data["ampproject_url"]."<br>";
+			//hex_dump($amp_url_data["ampproject_url"]);
 			$this->addArticle($amp_url_data);
 		}
 	}
@@ -139,7 +139,7 @@ class MagazynWPBridge extends BridgeAbstract {
 		$url_array = parse_url($this->getInput('url'));
 		$GLOBALS['prefix'] = $url_array["scheme"].'://'.$url_array["host"];
 		$GLOBALS['host'] = str_replace('www.', "", $url_array["host"]);
-		$GLOBALS['host'] = ucfirst($url_array["host"]);
+		$GLOBALS['host'] = ucfirst($GLOBALS["host"]);
 
 	}
 
@@ -352,8 +352,8 @@ class MagazynWPBridge extends BridgeAbstract {
 			{
 				$article_html = str_get_html(prepare_article($returned_array['html']));
 			}
-			echo "<br>addArticle url przed: ".$amp_url_data["ampproject_url"]."<br>";
-			hex_dump($amp_url_data["ampproject_url"]);
+			//echo "<br>addArticle url przed: ".$amp_url_data["ampproject_url"]."<br>";
+			//hex_dump($amp_url_data["ampproject_url"]);
 			$url_article = $amp_url_data["ampproject_url"];
 			$article = $article_html->find('MAIN', 0);
 			$title = get_text_plaintext($article, 'H1', NULL);
@@ -490,7 +490,7 @@ class MagazynWPBridge extends BridgeAbstract {
 		$article = add_style($article, 'BLOCKQUOTE', getStyleQuote());
 
 		$this->items[] = array(
-			'uri' => $url_article,
+			'uri' => htmlspecialchars($url_article),
 			'title' => getChangedTitle($title),
 			'timestamp' => $datePublished,
 			'author' => $author,
@@ -531,73 +531,24 @@ class MagazynWPBridge extends BridgeAbstract {
 					"type" => "wideo",
 					"canonical_url" => $prefix.$url_array["host"].$url_array["path"],
 					"amp_url" => $prefix.$url_array["host"].$url_array["path"].'?amp=1',
-					"ampproject_url" => htmlspecialchars($prefix.$edited_host.$ampproject_domain.$url_array["host"].$url_array["path"].'?amp=1&amp_js_v=0.1'),
+					"ampproject_url" => $prefix.$edited_host.$ampproject_domain.$url_array["host"].$url_array["path"].'?amp=1&amp_js_v=0.1',
 				);
 			}
 			else
 			{
 				return array(
 					"type" => "wp_pl",
-					//"ampproject_url" => htmlentities($prefix.$edited_host.$ampproject_domain.$url_array["host"].$url_array["path"].'?amp=1&amp_js_v=0.1', ENT_QUOTES, 'UTF-8'),
-					"ampproject_url" => htmlspecialchars($prefix.$edited_host.$ampproject_domain.$url_array["host"].$url_array["path"].'?amp=1&amp_js_v=0.1'),
 					"amp_url" => $prefix.$url_array["host"].$url_array["path"].'?amp=1',
+					"ampproject_url" => $prefix.$edited_host.$ampproject_domain.$url_array["host"].$url_array["path"].'?amp=1&amp_js_v=0.1',
 				);
 			}
 		}
 		else if(check_string_contains_needle_from_array($url_array["host"], array("www.o2.pl", "www.money.pl")))
 		{
-			$url = $prefix.$edited_host.$ampproject_domain.$url_array["host"].$url_array["path"].'?amp=1&amp_js_v=0.1';
-			$temp = "amp=1&amp_js_v=0.1";
-/*			echo "<br>getAmpData temp przed: $temp<br>";
-			hex_dump($temp);
-			$temp = html_entity_decode($temp);
-			echo "<br>getAmpData temp po: $temp<br>";
-			hex_dump($temp);
-
-			$temp2 = 'amp=1&amp_js_v=0.1';
-			echo "<br>getAmpData temp2 przed: $temp2<br>";
-			hex_dump($temp2);
-			$temp2 = html_entity_decode($temp2);
-			echo "<br>getAmpData temp2 po: $temp2<br>";
-			hex_dump($temp2);
-
-			$temp3 = 'amp=1&amp_js_v=0.1';
-			echo "<br>getAmpData temp3 1: $temp3<br>";
-			hex_dump($temp3);
-
-//			$temp3 = htmlspecialchars_decode($temp3);
-			$temp3 = htmlspecialchars($temp3);
-			echo "<br>getAmpData temp3 2: $temp3<br>";
-			hex_dump($temp3);
-			
-			$temp3 = htmlspecialchars($temp3);
-			echo "<br>getAmpData temp3 3: $temp3<br>";
-			hex_dump($temp3);
-*/
-
-			echo "<br>getAmpData temp przed: $temp<br>";
-			hex_dump($temp);
-
-			$temp1 = htmlspecialchars($temp);
-			echo "<br>getAmpData htmlspecialchars: $temp1<br>";
-			hex_dump($temp1);
-
-			$temp1 = htmlspecialchars_decode($temp);
-			echo "<br>getAmpData htmlspecialchars_decode: $temp1<br>";
-			hex_dump($temp1);
-
-			$temp1 = html_entity_decode($temp);
-			echo "<br>getAmpData html_entity_decode: $temp1<br>";
-			hex_dump($temp1);
-
-			
-
 			return array(
 				"type" => "wp_pl",
 				"canonical_url" => $prefix.$url_array["host"].$url_array["path"],
-				//"ampproject_url" => html_entity_decode($prefix.$edited_host.$ampproject_domain.$url_array["host"].$url_array["path"].'?amp=1&amp_js_v=0.1'),
-				"ampproject_url" => htmlspecialchars($url),
-				//"ampproject_url" => $url,
+				"ampproject_url" => $prefix.$edited_host.$ampproject_domain.$url_array["host"].$url_array["path"].'?amp=1&amp_js_v=0.1',
 			);
 		}
 		else if(check_string_contains_needle_from_array($url_array["host"], array("parenting.pl", "abczdrowie.pl")))
@@ -605,7 +556,7 @@ class MagazynWPBridge extends BridgeAbstract {
 			return array(
 				"type" => "wp_pl",
 				"canonical_url" => $prefix.$url_array["host"].$url_array["path"],
-				"ampproject_url" => htmlspecialchars($prefix.$edited_host.$ampproject_domain.$url_array["host"].$url_array["path"].'?amp=1&amp_js_v=0.1'),
+				"ampproject_url" => $prefix.$edited_host.$ampproject_domain.$url_array["host"].$url_array["path"].'?amp=1&amp_js_v=0.1',
 			);
 		}
 		else
@@ -675,14 +626,11 @@ class MagazynWPBridge extends BridgeAbstract {
 			{
 				break;
 			}
-			//DIV.teasersListing A[class][title][href][data-reactid]
-			$html_articles_list = $returned_array['html'];
-			if (200 !== $returned_array['code'])
-			{
-				break;
-			}
 			else
 			{
+				$html_articles_list = $returned_array['html'];
+				$GLOBALS['author_name'] = get_text_plaintext($html_articles_list, 'ARTICLE H1', $GLOBALS['author_name']);
+				$GLOBALS['author_name'] = str_replace("Archiwum artykułów autora ", "", $GLOBALS['author_name']);
 				$content = $html_articles_list->find('DIV[data-st-area="st-page_content"]', 0);
 				if (is_null($content))
 				{
@@ -710,9 +658,6 @@ class MagazynWPBridge extends BridgeAbstract {
 						}
 					}
 				}
-
-				$GLOBALS['author_name'] = get_text_plaintext($html_articles_list, 'ARTICLE H1.author--name', $GLOBALS['author_name']);
-				$GLOBALS['author_name'] = str_replace("Archiwum artykułów autora ", "", $GLOBALS['author_name']);
 			}
 			$url_articles_list = $this->getNextPageUrl_money($url_articles_list);
 		}
