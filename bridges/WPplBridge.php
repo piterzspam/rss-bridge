@@ -110,7 +110,6 @@ class WPplBridge extends BridgeAbstract {
 				$found_urls = $this->getArticlesUrls_money();
 				break;
 		}
-		$found_urls[] = "https://msp.money.pl/wiadomosci/sztuczna-inteligencja-w-unijnym-wydaniu-problemy-jednak-dotkna-polakow-6635631816583840a.html";
 
 		$amp_urls_data = array();
 		foreach($found_urls as $url)
