@@ -37,10 +37,10 @@ class GazetaplBridge extends BridgeAbstract {
 		}
 		$this->setGlobalArticlesParams();
 		$found_urls = $this->getArticlesUrls();
-//		print_var_dump($found_urls);
+		print_var_dump($found_urls, "found_urls");
 		foreach($found_urls as $url)
 		{
-			$this->addArticle($url);
+//			$this->addArticle($url);
 		}
     }
 
@@ -91,7 +91,7 @@ class GazetaplBridge extends BridgeAbstract {
 //			echo "url_articles_list :$url_articles_list<br>";
 			$returned_array = my_get_html($url_articles_list);
 			$html_articles_list = $returned_array['html'];
-			if (200 !== $returned_array['code'] || 0 === count($found_hrefs = $html_articles_list->find('UL.list_tiles LI.entry ARTICLE.article A[href]')))
+			if (200 !== $returned_array['code'] || 0 === count($found_hrefs = $html_articles_list->find('DIV.index_body ARTICLE.news UL.list_tiles LI.entry ARTICLE.article H2 A[href]')))
 			{
 				break;
 			}
