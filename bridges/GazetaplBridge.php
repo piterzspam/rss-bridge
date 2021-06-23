@@ -188,6 +188,7 @@ class GazetaplBridge extends BridgeAbstract {
 		$article = replace_tag_and_class($article, 'DIV.author IMG', 'multiple', 'IMG', 'author photo');
 		$article = replace_tag_and_class($article, 'DIV.author STRONG', 'multiple', 'STRONG', 'author name');
 		$article = replace_tag_and_class($article, 'H1.font', 'single', 'H1', 'title');
+		$article = replace_tag_and_class($article, 'H4.art_interview_question', 'multiple', 'H3', 'art_interview_question');
 
 		$article = replace_tag_and_class($article, 'DIV.part.lead', 'single', 'STRONG', 'lead');
 		$article = replace_tag_and_class($article, 'DIV.quote', 'multiple', 'BLOCKQUOTE', NULL);
