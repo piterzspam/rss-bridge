@@ -1632,21 +1632,37 @@ function getArray($array, $index) {
 		{
 			if (FALSE === is_null($date_element = $main_element->find($date_element_selector, 0)))
 			{
-				$new_date_outertext = '<DIV class="dates">';
-				$text_published = localStrftime('%d %F %Y, %H:%M', strtotime($date_published));
-				$text_published = "Data publikacji: ".$text_published;
-				$new_date_outertext = $new_date_outertext.'<DIV class="date published">'.$text_published.'</DIV>';
 				if(isset($date_modified) && 1 < strlen($date_modified) && $date_published !== $date_modified)
 				{
-					$text_modified = localStrftime('%d %F %Y, %H:%M', strtotime($date_modified));
-					$text_modified = "Data aktualizacji: ".$text_modified;
-					$new_date_outertext = $new_date_outertext.'<DIV class="date modified">'.$text_modified.'</DIV>';
+					$new_date_outertext = get_date_outertext($date_published, $date_modified);
 				}
-				$new_date_outertext = $new_date_outertext.'</DIV>';
+				else
+				{
+					$new_date_outertext = get_date_outertext($date_published, NULL);
+				}
 				$main_element_str = str_replace($date_element->outertext, $new_date_outertext, $main_element_str);
 			}
 		}
 		return str_get_html($main_element_str);
+	}
+	
+	function get_date_outertext($date_published, $date_modified = NULL)
+	{
+		if(isset($date_published) && 1 < strlen($date_published))
+		{
+			$new_date_outertext = '<DIV class="dates">';
+			$text_published = localStrftime('%d %F %Y, %H:%M', strtotime($date_published));
+			$text_published = "Data publikacji: ".$text_published;
+			$new_date_outertext = $new_date_outertext.'<DIV class="date published">'.$text_published.'</DIV>';
+			if(isset($date_modified) && 1 < strlen($date_modified) && $date_published !== $date_modified)
+			{
+				$text_modified = localStrftime('%d %F %Y, %H:%M', strtotime($date_modified));
+				$text_modified = "Data aktualizacji: ".$text_modified;
+				$new_date_outertext = $new_date_outertext.'<DIV class="date modified">'.$text_modified.'</DIV>';
+			}
+			$new_date_outertext = $new_date_outertext.'</DIV>';
+		}
+		return $new_date_outertext;
 	}
 	
 	function localStrftime($format, $timestamp = 0)

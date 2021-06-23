@@ -37,10 +37,15 @@ class GazetaplBridge extends BridgeAbstract {
 		}
 		$this->setGlobalArticlesParams();
 		$found_urls = $this->getArticlesUrls();
-		print_var_dump($found_urls, "found_urls");
+		
 		foreach($found_urls as $url)
 		{
-//			$this->addArticle($url);
+			$amp_urls_data[] = $this->getAmpData($url);
+		}
+
+		foreach($amp_urls_data as $amp_url_data)
+		{
+			$this->addArticle($amp_url_data);
 		}
     }
 
@@ -82,13 +87,26 @@ class GazetaplBridge extends BridgeAbstract {
 		$GLOBALS['amp_host_name'] = $amp_host_name;
 	}
 
+	private function getAmpData($url)
+	{
+		$url_array = parse_url($url);
+		$edited_host = str_replace(".", "-", $url_array["host"]);
+		$prefix = $url_array["scheme"].'://';
+		$ampproject_domain = ".cdn.ampproject.org/c/s/";
+		$new_path = str_replace(".html", ".amp", $url_array["path"]);
+		return array(
+			"canonical_url" => $prefix.$url_array["host"].$url_array["path"],
+			"amp_url" => $prefix.$url_array["host"].$new_path,
+			"ampproject_url" => $prefix.$edited_host.$ampproject_domain.$url_array["host"].$new_path,
+		);
+	}
+
 	private function getArticlesUrls()
 	{
 		$articles_urls = array();
 		$url_articles_list = $this->getInput('url');
 		while (count($articles_urls) < $GLOBALS['limit'] && "empty" != $url_articles_list)
 		{
-//			echo "url_articles_list :$url_articles_list<br>";
 			$returned_array = my_get_html($url_articles_list);
 			$html_articles_list = $returned_array['html'];
 			if (200 !== $returned_array['code'] || 0 === count($found_hrefs = $html_articles_list->find('DIV.index_body ARTICLE.news UL.list_tiles LI.entry ARTICLE.article H2 A[href]')))
@@ -101,7 +119,9 @@ class GazetaplBridge extends BridgeAbstract {
 				foreach($found_hrefs as $href_element)
 				{
 					if(isset($href_element->href))
+					{
 						$articles_urls[] = $href_element->href;
+					}
 				}
 			}
 			$url_articles_list = $this->getNextPageUrl($html_articles_list);
@@ -120,113 +140,82 @@ class GazetaplBridge extends BridgeAbstract {
 			return "empty";
 	}
 
-	private function addArticle($url_article)
+	private function addArticle($amp_url_data)
 	{
+		$url_article = $amp_url_data['ampproject_url'];
 		$returned_array = my_get_html($url_article);
 		if (200 !== $returned_array['code'])
 		{
 			return;
 		}
 		$article_html = $returned_array['html'];
-		$url = $returned_array['url'];
-		$article_html = replace_attribute($article_html, 'IMG[src$="/image_placeholder_small.svg"][data-src]', 'src', 'data-src');
-		$article_html = str_get_html(prepare_article($article_html));
-/*
-		$article_html_str = $article_html->save();
-		$article_html_str = mb_convert_encoding($article_html_str, "UTF-8", "ISO-8859-2");
-		$article_html = str_get_html($article_html_str);
-*/
 		
-		$article = $article_html->find('SECTION#article_wrapper', 0);
-		$article->tag = 'DIV';
+		$article_html = str_get_html(prepare_article($article_html));
+		$date_published = get_json_value($article_html, 'SCRIPT[type="application/ld+json"]', 'datePublished');
+		$date_modified = get_json_value($article_html, 'SCRIPT[type="application/ld+json"]', 'dateModified');
+		$article = $article_html->find('DIV#article', 0);
+		$article = replace_tag_and_class($article, 'DIV.part', 'single', 'ARTICLE', "");
+		$article = $article->find('ARTICLE', 0);
 
 
-		$title = get_text_plaintext($article, 'H1#article_title', $url_article);
-//		$title = trim($article->find('H1#article_title', 0)->plaintext);
-		$timestamp = get_text_from_attribute($article, 'TIME', 'datetime', "");
-//		$timestamp = trim($article->find('TIME', 0)->getAttribute('datetime'));
-//		$author = trim($article->find('A[rel="author"]', 0)->plaintext);
-		$author = return_authors_as_string($article, 'DIV.author_and_date SPAN.article_author');
-		$tags = return_tags_array($article, 'LI.tags_item');
-		$tags = mb_convert_encoding($tags, "ISO-8859-2", "UTF-8");
-
+		$tags = return_tags_array($article_html, 'DIV.tags A[href]');
+		
+		$selectors_array = array();
 		$selectors_array[] = 'comment';
 		$selectors_array[] = 'SCRIPT';
-		$selectors_array[] = 'DIV[id^="banC"]';
-		$selectors_array[] = 'DIV#sitePath';
-		$selectors_array[] = 'DIV.left_aside';
-		$selectors_array[] = 'DIV.ban000_wrapper';
-		$selectors_array[] = 'DIV.ban001_wrapper';
-		$selectors_array[] = 'DIV.right_aside';
-		$selectors_array[] = 'DIV.top_section_bg';
-		$selectors_array[] = 'DIV.bottom_section_bg';
-		$selectors_array[] = 'DIV#adUnit-007-CONTENTBOARD';
-		$selectors_array[] = 'DIV.related_image_number_of_photo';
-		$selectors_array[] = 'DIV.related_image_open';
-		$selectors_array[] = 'SECTION.tags';
-		//https://next.gazeta.pl/next/7,151003,26558939,europa-nam-to-zapamieta-wsciekli-nie-beda-eurokraci-tylko.html
-		$selectors_array[] = 'P.art_embed.relatedBox';
+		$selectors_array[] = 'DIV.breadcrumbs';
+		$selectors_array[] = 'DIV.banner';
+		$selectors_array[] = 'DIV.button';
 		$article = foreach_delete_element_array($article, $selectors_array);
-
-		$article = clear_paragraphs_from_taglinks($article, 'P.art_paragraph', array('/\?tag=/'));
-		$article = foreach_delete_element_containing_text_from_array($article, 'div.art_embed', array('Zobacz wideo'));
-		$article = foreach_replace_outertext_with_subelement_innertext($article, 'DIV.bottom_section', 'SECTION.art_content');
-
-		$article = replace_tag_and_class($article, 'SPAN.article_data', 'single', 'DIV', NULL);
-		$article = replace_tag_and_class($article, 'SPAN.article_date', 'single', 'DIV', NULL);
 		
-		$article = move_element($article, 'DIV.author_and_date .article_date', '.author_and_date', 'outertext', 'after');
-		$article = move_element($article, 'DIV.author_and_date', 'DIV#article_wrapper', 'outertext', 'after');
-		$article = insert_html($article, 'DIV.author_and_date', '<HR>', '');
+		$article = foreach_delete_element_containing_elements_hierarchy($article, array('P', 'amp-date-display'));
 		
 		foreach ($article->find('DIV.art_embed') as $embed)
 		{
-			$url = "";
-			$attribute = "";
-			if (FALSE === is_null($youtube_element = $embed->find('DIV.youtube-player[data-id]', 0)))
+			if (FALSE === is_null($video_title = $embed->find("SPAN.video-head", 0)))
 			{
-				$attribute = $youtube_element->getAttribute('data-id');
-				$url = 'https://www.youtube.com/watch?v='.$attribute;
-			}
-			else if (FALSE === is_null($generic_element = $embed->find('A[href]', 0)))
-			{
-				$attribute = $generic_element->getAttribute('href');
-				$url = $attribute;
-			}
-			if ("" !== $url)
-			{
-				$proxy_url = get_proxy_url($url);
-				if ($proxy_url !== $url)
+				if(check_string_contains_needle_from_array($video_title->plaintext, array("Zobacz wideo")))
 				{
-					$embed->outertext = 
-						'<strong><br>'
-						.'<a href='.$url.'>'
-						."Ramka - ".$url.'<br>'
-						.'</a>'
-						.'<a href='.$proxy_url.'>'
-						."Ramka - ".$proxy_url.'<br>'
-						.'</a>'
-						.'<br></strong>';
-				}
-				else
-				{
-					$embed->outertext = 
-						'<strong><br>'
-						.'<a href='.$url.'>'
-						."Ramka - ".$url.'<br>'
-						.'</a>'
-						.'<br></strong>';
+					$embed->outertext = "";
 				}
 			}
 		}
 		$article = str_get_html($article->save());
-		$article = format_article_photos($article, 'DIV.related_images', TRUE, 'src', 'P.desc');
-		//https://wiadomosci.gazeta.pl/wiadomosci/7,114884,26873712,sondazowe-eldorado-polski-2050-i-szymona-holowni-trwa-to-oni.html
-		$article = format_article_photos($article, 'DIV.art_embed', FALSE, 'src', 'P.desc');
+		
+		$article = str_get_html($article->save());
+		$article = foreach_replace_outertext_with_innertext($article, 'DIV.gallery A.photo.from.amp');
+		$article = replace_tag_and_class($article, 'DIV.author.hasPhoto', 'single', 'DIV', 'author');
+		$article = replace_tag_and_class($article, 'DIV.author IMG', 'multiple', 'IMG', 'author photo');
+		$article = replace_tag_and_class($article, 'DIV.author STRONG', 'multiple', 'STRONG', 'author name');
+		$article = replace_tag_and_class($article, 'H1.font', 'single', 'H1', 'title');
 
-//		$article = add_style($article, 'H4.art_interview_question, DIV#gazeta_article_lead', array('font-weight: bold;'));
-		$article = replace_tag_and_class($article, 'DIV#gazeta_article_lead', 'single', 'STRONG', 'lead');
-		$article = replace_tag_and_class($article, 'H4', 'multiple', 'H3');
+		$article = replace_tag_and_class($article, 'DIV.part.lead', 'single', 'STRONG', 'lead');
+		$article = replace_tag_and_class($article, 'DIV.quote', 'multiple', 'BLOCKQUOTE', NULL);
+		
+		$selectors_array = array();
+		$selectors_array[] = 'BLOCKQUOTE SPAN';
+		$article = foreach_delete_element_array($article, $selectors_array);
+		$article = foreach_replace_outertext_with_innertext($article, 'DIV.part');
+		
+		$title = get_text_plaintext($article, 'H1.title', NULL);
+		$author = return_authors_as_string($article, "DIV.author STRONG.author.name");
+
+		foreach ($article->find('P SPAN.imageUOM SPAN.photoAuthor SPAN') as $image_description)
+		{
+			$image_description->innertext = $image_description->innertext."; ";
+		}
+		$article = foreach_replace_outertext_with_subelement_outertext($article, 'P', 'SPAN.imageUOM');
+		$article = format_article_photos($article, 'SPAN.imageUOM', FALSE, 'src', 'SPAN.photoAuthor');
+		$article = format_article_photos($article, 'DIV.gallery', TRUE, 'src', 'DIV.gallery_copyright');
+
+		$article = move_element($article, 'FIGURE.photoWrapper.mainPhoto', 'ARTICLE', 'innertext', 'before');
+		$article = move_element($article, 'STRONG.lead', 'ARTICLE', 'innertext', 'before');
+		$article = insert_html($article, 'ARTICLE', '', '', get_date_outertext($date_published, $date_modified));
+		$article = move_element($article, 'DIV.dates', 'ARTICLE', 'innertext', 'before');
+		$article = move_element($article, 'H1.title', 'ARTICLE', 'innertext', 'before');
+		$article = move_element($article, 'DIV.author', 'ARTICLE', 'innertext', 'after');
+		$article = insert_html($article, 'DIV.author', '', '', '<HR>');
+
 		$article = add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
 		$article = add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
 		$article = add_style($article, 'FIGCAPTION', getStylePhotoCaption());
@@ -235,10 +224,10 @@ class GazetaplBridge extends BridgeAbstract {
 		$this->items[] = array(
 			'uri' => $url_article,
 			'title' => getChangedTitle($title),
-			'timestamp' => $timestamp,
+			'timestamp' => $date_published,
 			'author' => $author,
+			'categories' => $tags,
 			'content' => $article,
-			'categories' => $tags
 		);
 	}
 }
