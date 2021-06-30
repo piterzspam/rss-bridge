@@ -125,6 +125,28 @@ class DziennikBridge extends BridgeAbstract {
 
 	private function getArticlesUrls()
 	{
+		/*
+		$test_urls = array(
+			"https://gospodarka.dziennik.pl/news/artykuly/8197181,rzad-finanse-fundusze-unia-europejska.html",
+			"https://wiadomosci.dziennik.pl/opinie/artykuly/8195023,cyberprzestepcy-michal-dworczyk-atak-haker-afera-mailowa.html",
+			"https://film.dziennik.pl/recenzje/artykuly/8137058,wytepic-cale-to-bydlo-czego-nauczyla-mnie-osmiornica-maggie-vod-piec-smakow-netflix-hbo-dobrycynk.html",
+			"https://technologia.dziennik.pl/sprzet/artykuly/8198866,surface-laptop-4-microsoft.html",
+			"https://wiadomosci.dziennik.pl/historia/aktualnosci/artykuly/8199454,odkrycie-mamerki-odznaka-wermacht.html",
+			"https://wiadomosci.dziennik.pl/historia/aktualnosci/artykuly/8197938,sowieci-wywiad-dezinformacja.html",
+			"https://wiadomosci.dziennik.pl/opinie/artykuly/8183873,antysemityzm.html",
+			"https://wiadomosci.dziennik.pl/opinie/artykuly/8136820,liberal-polityka-zagranica-cywilizacja-spoleczenstwo.html",
+			"https://wiadomosci.dziennik.pl/opinie/artykuly/8182317,czechy-rosja-wybory.html",
+			"https://wiadomosci.dziennik.pl/opinie/artykuly/8143430,dzieci-spadek-dzietnosci-zjawisko-kara-za-dziecko.html",
+			"https://wiadomosci.dziennik.pl/opinie/artykuly/8138497,sedziowie-lubia-sanki.html",
+			"https://wiadomosci.dziennik.pl/opinie/artykuly/8179759,kultura-gierek-magazyn.html",
+			"https://wiadomosci.dziennik.pl/opinie/artykuly/8179724,perspektywy-i-zastosowania-kryptografii-kwantowej.html",
+			"https://wiadomosci.dziennik.pl/opinie/artykuly/8129369,mobbing-szkola-filmowa-przemoc-aktor-studia-piotr-bartuszek.html",
+			"https://wiadomosci.dziennik.pl/opinie/artykuly/8179764,aktywnosc-zawodowa-kobiety-gender-mezczyzni-plec.html",
+			"https://wiadomosci.dziennik.pl/opinie/artykuly/8197169,koronawirus-covid-19-wladza.html",
+			"https://wiadomosci.dziennik.pl/opinie/artykuly/8137603,wojna-antoni-macierewicz-katastrofa-smolenska.html",
+			"https://wiadomosci.dziennik.pl/opinie/artykuly/8127257,andzelika-borys-zatrzymanie-bialorus-wywiad-dgp.html",
+			"https://wiadomosci.dziennik.pl/opinie/artykuly/8137333,transplciowe-dziecko-krystyna-pawlowicz-titanic-dzieci-kody-kulturowe-iii-rp-pis-po-donald-tusk-zbigniew-ziobro.html",
+		);*/
 		$GLOBALS['author_name'] = "";
 		$articles_urls = array();
 		$articles_titles = array();
@@ -154,6 +176,7 @@ class DziennikBridge extends BridgeAbstract {
 					{
 						$title = trim($title_element->plaintext);
 						$url = $href_element->href;
+//						$url = $test_urls[count($articles_data)];
 //						$url = "https://wiadomosci.dziennik.pl/opinie/artykuly/8129369,mobbing-szkola-filmowa-przemoc-aktor-studia-piotr-bartuszek.html";
 //						$url = "https://film.dziennik.pl/recenzje/artykuly/8137058,wytepic-cale-to-bydlo-czego-nauczyla-mnie-osmiornica-maggie-vod-piec-smakow-netflix-hbo-dobrycynk.html";
 //						if (FALSE === in_array($title, $articles_titles) && FALSE === strpos($url, '/dgp/') && FALSE !== strpos($title, 'linii'))
@@ -209,6 +232,8 @@ class DziennikBridge extends BridgeAbstract {
 		//https://www.gazetaprawna.pl/magazyn-na-weekend/artykuly/8123606,marek-kajs-wilki-jak-sie-zachowac-odstrzal-gdos.html
 		$main_element = foreach_combine_two_elements($main_element, 'DIV.frameWrap DIV.articleImageAuthor', 1, 1, 'DIV', 'frameWrap', 'DIV.articleImageDescription', 'innertext', 'innertext', 'DIV', 'frameWrap');
 		$main_element = foreach_combine_two_elements($main_element, 'DIV.image DIV.imageCaptionWrapper', 1, 1, 'DIV', 'frameWrap', 'DIV.articleImageAuthor, DIV.articleImageDescription', 'outertext', 'outertext', 'DIV', 'intext_photo');
+		//https://gospodarka.dziennik.pl/news/artykuly/8197181,rzad-finanse-fundusze-unia-europejska.html - DIV.frameArea.articleImageDescription
+		//https://wiadomosci.dziennik.pl/opinie/artykuly/8195023,cyberprzestepcy-michal-dworczyk-atak-haker-afera-mailowa.html - DIV.frameArea.articleImageDescription
 		foreach($main_element->find('DIV.intext_photo DIV.frameWrap') as $element_frameWrap)
 		{
 			$next_element = $element_frameWrap->find('.frameArea', 0);
@@ -268,16 +293,17 @@ class DziennikBridge extends BridgeAbstract {
 		$selectors_array[] = 'DIV#widgetStop';
 		$selectors_array[] = 'SOURCE[srcset]';
 		$selectors_array[] = 'DIV.inforAdsRectSrod';
-		$selectors_array[] = 'DIV.articleHeading DIV.authBox';
 		$selectors_array[] = 'DIV.articleHeading DIV.source';
 		$selectors_array[] = 'DIV.authorSourceProfile DIV.clear';
 		$selectors_array[] = 'DIV.licenceInfo';
 		$selectors_array[] = 'DIV.articleFooter';
 		$selectors_array[] = 'SPAN.dateModified';
-		
-//		$selectors_array[] = 'comment';
-//		$selectors_array[] = 'comment';
+		$selectors_array[] = 'IMG.photo[src="https://ocdn.eu/pulscms-transforms/1/reck9kuTURBXy81Y2ViZjVlNy03MjZhLTRjN2QtOWFkOS0yNmExZTljNGIyMDcuanBlZ5GTBWRkgaEwAQ"]';
+		//https://wiadomosci.dziennik.pl/historia/aktualnosci/artykuly/8197938,sowieci-wywiad-dezinformacja.html
+		$selectors_array[] = 'DIV.FrameQuotation SVG';
+		//$selectors_array[] = 'comment';
 		foreach_delete_element_array($main_element, $selectors_array);
+		$main_element = remove_empty_elements($main_element, "DIV.authorProfile UL.socials");
 		$main_element = foreach_delete_element_containing_subelement($main_element, 'DIV.frameWrap', 'DIV.promoFrame.pulse2PromoFrame.withDescription.article');
 		$main_element = clear_paragraphs_from_taglinks($main_element, 'P.hyphenate, DIV.frameArea', array(
 			'/dziennik\.pl\/tagi\//',
@@ -287,37 +313,37 @@ class DziennikBridge extends BridgeAbstract {
 		$attributes_array[] = "data-text-len";
 		$attributes_array[] = "data-scroll";
 		$attributes_array[] = "data-async-ad-slot";
+		$attributes_array[] = "data-read-time";
+		$attributes_array[] = "data-read-time-text";
+		$attributes_array[] = "itemprop";
 		$main_element = remove_multiple_attributes($main_element, $attributes_array);
 		return str_get_html($main_element->save());
 	}
 
+
+
 	private function addArticleCanonical($article_html, $url_article_link)
 	{
-//		$article_html = str_get_html(prepare_article($article_html));
 		//https://film.dziennik.pl/recenzje/artykuly/8137058,wytepic-cale-to-bydlo-czego-nauczyla-mnie-osmiornica-maggie-vod-piec-smakow-netflix-hbo-dobrycynk.html
 		$article_html = replace_attribute($article_html, 'IMG[data-original^="http"][src^="data:image/"]', 'src', 'data-original');
 		$datePublished = get_json_value($article_html, 'SCRIPT[type="application/ld+json"]', 'datePublished');
 		$dateModified = get_json_value($article_html, 'SCRIPT[type="application/ld+json"]', 'dateModified');
+		//tags
+		$tags = return_tags_array($article_html, 'DIV.relatedTopicWrapper SPAN.relatedTopic');
 		$article_html = $this->remove_useless_elements($article_html);
 		$price_param = $this->getArticlePriceParam($article_html);
-		$article_html = $this->edit_gazetaprawna_article($article_html);
 		$article_html = str_get_html(prepare_article($article_html));
-		$article_html = move_element($article_html, 'DIV#page DIV.tags', 'DIV#page ARTICLE', 'innertext', 'after');
 		$article = $article_html->find('ARTICLE.articleDetail', 0);
 		$article = replace_date($article, 'SPAN.datePublished', $datePublished, $dateModified);
-//title
+		//title
 		$title = get_text_plaintext($article, 'H1.mainTitle', $url_article_link);
 		$title = getChangedTitle($title);
 		$title = $this->getChangedTitle($title, $price_param);
-//tags
-		$tags = return_tags_array($article, 'DIV.relatedTopicWrapper SPAN.relatedTopic');
-//authors
+		//authors
 		$author = return_authors_as_string($article, 'DIV.authBox SPAN.name');
-//date
+		$article = foreach_delete_element($article, 'DIV.authBox');
+		//date
 		$date = get_text_from_attribute($article_html, 'META[property="article:published_time"][content]', 'content', "");
-
-
-		
 		foreach($article->find('DIV.embeddedApp') as $embeddedApp)
 		{
 			if (!is_null($params_element = $embeddedApp->find("DIV[data-params]", 0)))
@@ -329,14 +355,51 @@ class DziennikBridge extends BridgeAbstract {
 			}
 		}
 		$article = format_article_photos($article, 'FIGURE.mainPhoto', TRUE, 'src', 'FIGCAPTION');
+		foreach($article->find('DIV.image') as $image)
+		{
+			//https://gospodarka.dziennik.pl/news/artykuly/8197181,rzad-finanse-fundusze-unia-europejska.html - DIV.frameArea.articleImageDescription
+			//https://wiadomosci.dziennik.pl/opinie/artykuly/8195023,cyberprzestepcy-michal-dworczyk-atak-haker-afera-mailowa.html - DIV.frameArea.articleImageDescription
+			if (!is_null($image_title_element = $image->find("SPAN.caption SPAN.title", 0)))
+			{
+				$titles_innertexts = array();
+				$next_element = $image->next_sibling();
+				while (!is_null($next_element))
+				{
+					if (!is_null($title_element = $next_element->find('DIV[class^="frameArea articleImage"]', 0)))
+					{
+						$next_element->outertext = "";
+						$titles_innertexts[] = trim($title_element->innertext);
+					}
+					else
+					{
+						break;
+					}
+					$next_element = $next_element->next_sibling();
+				}
+				if (0 < count($titles_innertexts))
+				{
+					$image_title_element->innertext = implode("; ", $titles_innertexts);
+				}
+			}
+		}
+		$article = str_get_html($article->save());
+		$article = format_article_photos($article, 'DIV.image', FALSE, 'src', 'SPAN.caption SPAN.title');
 
-		$article = replace_part_of_class($article, '.adSlotSibling', 'multiple', ' adSlotSibling', '');
-		$article = replace_tag_and_class($article, 'DIV#lead', 'single', 'STRONG', NULL);
-		$article = replace_tag_and_class($article, 'SPAN.readingTime', 'single', 'DIV', 'readingTime');
-		$article = replace_tag_and_class($article, 'P.hyphenate', 'multiple', 'P', "");
 
-		$article = move_element($article, 'STRONG.lead', 'DIV.readingTime', 'outertext', 'before');
-//		$article = foreach_replace_outertext_with_innertext($article, 'DIV.authorSourceProfile HEADER');
+		$article = replace_tag_and_class($article, 'DIV.frameArea.tresc', 'multiple', 'P', 'tresc');
+		//https://wiadomosci.dziennik.pl/historia/aktualnosci/artykuly/8197938,sowieci-wywiad-dezinformacja.html
+		$article = replace_tag_and_class($article, 'DIV.frameArea.srodtytul', 'multiple', 'H2', 'srodtytul');
+		//https://wiadomosci.dziennik.pl/opinie/artykuly/8183873,antysemityzm.html
+		$article = replace_tag_and_class($article, 'DIV.frameArea.autor', 'multiple', 'STRONG', 'autor');
+		//https://wiadomosci-dziennik-pl.cdn.ampproject.org/v/s/wiadomosci.dziennik.pl/opinie/artykuly/8179724,perspektywy-i-zastosowania-kryptografii-kwantowej.html
+		//https://wiadomosci-dziennik-pl.cdn.ampproject.org/v/s/wiadomosci.dziennik.pl/opinie/artykuly/8129369,mobbing-szkola-filmowa-przemoc-aktor-studia-piotr-bartuszek.html
+		$article = replace_tag_and_class($article, 'DIV.frameArea.pytanie', 'multiple', 'STRONG', 'pytanie');
+		$article = foreach_replace_outertext_with_innertext($article, 'DIV.frameWrap');
+		//https://film.dziennik.pl/recenzje/artykuly/8137058,wytepic-cale-to-bydlo-czego-nauczyla-mnie-osmiornica-maggie-vod-piec-smakow-netflix-hbo-dobrycynk.html
+		$article = replace_tag_and_class($article, 'P.hyphenate.adSlotSibling', 'multiple', 'P', 'hyphenate');
+		//https://wiadomosci.dziennik.pl/historia/aktualnosci/artykuly/8197938,sowieci-wywiad-dezinformacja.html
+		$article = foreach_replace_outertext_with_innertext($article, 'DIV.FrameQuotation');
+
 		$article = foreach_replace_outertext_with_innertext($article, 'DIV#detail');
 		$article = foreach_replace_outertext_with_innertext($article, 'DIV.detailContent');
 		$article = foreach_replace_outertext_with_innertext($article, 'DIV.detailContentWrapper');
@@ -344,22 +407,28 @@ class DziennikBridge extends BridgeAbstract {
 		$article = foreach_replace_outertext_with_innertext($article, 'DIV.dateWrapper');
 		$article = foreach_replace_outertext_with_innertext($article, 'DIV.articleHeading');
 		$article = foreach_replace_outertext_with_innertext($article, 'HEADER.articleTop');
-		$article = foreach_replace_outertext_with_innertext($article, 'qqqqqqqqqqqqqqqqqq');
-		$article = foreach_replace_outertext_with_innertext($article, 'qqqqqqqqqqqqqqqqqq');
-		$article = foreach_replace_outertext_with_innertext($article, 'qqqqqqqqqqqqqqqqqq');
-		$article = foreach_replace_outertext_with_innertext($article, 'qqqqqqqqqqqqqqqqqq');
-		$article = foreach_replace_outertext_with_innertext($article, 'qqqqqqqqqqqqqqqqqq');
-		$article = foreach_replace_outertext_with_innertext($article, 'qqqqqqqqqqqqqqqqqq');
-		$article = foreach_replace_outertext_with_innertext($article, 'qqqqqqqqqqqqqqqqqq');
-		$article = foreach_replace_outertext_with_innertext($article, 'qqqqqqqqqqqqqqqqqq');
-		$article = foreach_replace_outertext_with_innertext($article, 'qqqqqqqqqqqqqqqqqq');
-		$article = insert_html($article, 'DIV.authorSourceProfile', '<HR>');
-		$attributes_array = array();
-		$attributes_array[] = "id";
-		$attributes_array[] = "data-read-time";
-		$attributes_array[] = "data-read-time-text";
-		$attributes_array[] = "itemprop";
-		$article = remove_multiple_attributes($article, $attributes_array);
+		//$article = foreach_replace_outertext_with_innertext($article, 'DIV.authorProfile HEADER');//https://wiadomosci-dziennik-pl.cdn.ampproject.org/v/s/wiadomosci.dziennik.pl/polityka/artykuly/8199161,atak-hakerzy-cyberbezpieczenstwo-michal-dworczyk.html.amp?amp_js_v=0.1
+		
+
+		
+
+//		$article = replace_part_of_class($article, '.adSlotSibling', 'multiple', ' adSlotSibling', '');
+		$article = replace_tag_and_class($article, 'H1.mainTitle', 'single', 'H1', 'title');
+		$article = replace_tag_and_class($article, 'DIV.lead', 'single', 'STRONG', 'lead');
+		$article = replace_tag_and_class($article, 'SPAN.readingTime', 'single', 'DIV', 'readingTime');
+		$article = replace_tag_and_class($article, 'DIV.authorProfileMulti, DIV.authorProfile', 'single', 'DIV', 'authors');
+		
+//		$article = replace_tag_and_class($article, 'P.hyphenate', 'multiple', 'P', "");
+
+
+		$article = move_element($article, 'DIV.dates', 'H1.title', 'outertext', 'after');
+		$article = move_element($article, 'STRONG.lead', 'DIV.dates', 'outertext', 'after');
+		$article = move_element($article, 'DIV.readingTime', 'STRONG.lead', 'outertext', 'after');
+		$article = move_element($article, 'FIGURE.photoWrapper.mainPhoto', 'DIV.readingTime', 'outertext', 'after');
+		$article = move_element($article, 'DIV.authors', 'ARTICLE', 'innertext', 'after');
+		$article = insert_html($article, 'DIV.authors', '', '', '<HR>');
+
+		$article = remove_multiple_attributes($article, array("id"));
 
 
 		$article = add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
@@ -384,8 +453,15 @@ class DziennikBridge extends BridgeAbstract {
 
 	private function getCustomizedLink($url)
 	{
-		preg_match('/https?:\/\/(([^\.]*)\..*)/', $url, $output_array);
-		return ('https://'.$output_array[2].'-dziennik-pl.cdn.ampproject.org/v/s/'.$output_array[1].'.amp?amp_js_v=0.1');
+		$url_array = parse_url($url);
+		$edited_host = str_replace(".", "-", $url_array["host"]);
+		$prefix = $url_array["scheme"].'://';
+		$ampproject_domain = ".cdn.ampproject.org/v/s/";
+		
+		$ampproject_url = $prefix.$edited_host.$ampproject_domain.$url_array["host"].$url_array["path"].'.amp?amp_js_v=0.1';
+//		preg_match('/https?:\/\/(([^\.]*)\..*)/', $url, $output_array);
+//		return ('https://'.$output_array[2].'-dziennik-pl.cdn.ampproject.org/v/s/'.$output_array[1].'.amp?amp_js_v=0.1');
+		return $ampproject_url;
 	}
 
 	private function getChangedTitle($title, $price_param)
@@ -465,13 +541,17 @@ class DziennikBridge extends BridgeAbstract {
 		if (!is_null($detail = $article_html->find("DIV#detail", 0)))
 		{
 			//https://wiadomosci.dziennik.pl/opinie/artykuly/8179759,kultura-gierek-magazyn.html
-			foreach($detail->find('DIV.frameWrap') as $frameArea_tresc)
+			//https://wiadomosci.dziennik.pl/opinie/artykuly/8183873,antysemityzm.html
+			
+			if (!is_null($last_paragraph = $detail->find('DIV.frameWrap DIV.frameArea.tresc, DIV.frameWrap DIV.frameArea.srodtytul, P.hyphenate', -1)))
 			{
-				if (!is_null($maybe_premium_element = $frameArea_tresc->find('A[href*="gazetaprawna.pl"], STRONG', 0)))
+//				echo "last_paragraph=$last_paragraph<br>";
+//				print_element($last_paragraph, "last_paragraph");
+				if (!is_null($maybe_premium_element = $last_paragraph->find('A[href*="gazetaprawna.pl"], STRONG', 0)))
 				{
 					$maybe_premium_text = $maybe_premium_element->plaintext;
 					$maybe_premium_text_decoded = html_entity_decode($maybe_premium_text);
-/*					echo "maybe_premium_element=$maybe_premium_element<br>";
+				/*	echo "maybe_premium_element=$maybe_premium_element<br>";
 					print_element($maybe_premium_element, "maybe_premium_element-element");
 //					$last_link_text = $maybe_premium_element->plaintext;
 					//https://wiadomosci.dziennik.pl/opinie/artykuly/8182317,czechy-rosja-wybory.html
@@ -483,9 +563,24 @@ class DziennikBridge extends BridgeAbstract {
 					hex_dump($maybe_premium_text);
 					hex_dump($maybe_premium_text_decoded);
 					hex_dump(">>>");*/
+					/*if (FALSE !== strpos($maybe_premium_text_decoded, ">>>"))
+					{
+						echo "Zwracam premium 1<br>";
+						return "premium";
+					}
+					else
+					{
+						echo "Nie zwracam premium 1<br>";
+					}*/
+					//if(check_string_contains_needle_from_array($maybe_premium_text_decoded, array("CZYTAJ CAŁOŚĆ", "CZYTAJ WIĘCEJ", "Czytaj więcej", "CAŁY WYWIAD", "Cały wywiad", "CAŁY TEKST")))
 					if(check_string_contains_needle_from_array($maybe_premium_text_decoded, array("CZYTAJ CAŁOŚĆ", "CZYTAJ WIĘCEJ", "Czytaj więcej", "CAŁY WYWIAD", "Cały wywiad", "CAŁY TEKST", ">>>")))
 					{
+//						echo "Zwracam premium 2<br>";
 						return "premium";
+					}
+					else
+					{
+//						echo "Nie zwracam premium 2<br>";
 					}
 				}
 			}
@@ -495,6 +590,7 @@ class DziennikBridge extends BridgeAbstract {
 				$last_child = $last_child->prev_sibling();
 			}*/
 		}
+//		echo "Zwracam free<br>";
 		return "free";
 	}
 
