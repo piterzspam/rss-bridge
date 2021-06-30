@@ -166,7 +166,7 @@ class TygodnikInteriaBridge extends BridgeAbstract {
 			$photo_script->outertext = '<img src="'.$photo_url.'">';
 		}
 		//lead
-		foreach_delete_element($article, 'SPAN.article-lead-bg-letter');
+		$article = foreach_delete_element($article, 'SPAN.article-lead-bg-letter');
 		$lead = $article->find('P.article-lead', 0);
 		$new_lead_text_part1 = trim($article->find('SPAN.article-lead-first-letter', 0)->plaintext);
 		$new_lead_text_part2 = trim($article->find('SPAN.article-lead-without-first-letter', 0)->plaintext);
@@ -198,6 +198,7 @@ class TygodnikInteriaBridge extends BridgeAbstract {
 		$selectors_array[] = 'SPAN.embed-photo-img-container';
 		$selectors_array[] = 'SPAN.embed-photo-square';
 		$selectors_array[] = 'comment';
+		$selectors_array[] = 'script';
 		$selectors_array[] = 'SPAN.page-header';
 		$selectors_array[] = 'DIV#nav-bar';
 		$selectors_array[] = 'SPAN.top-bg';
@@ -212,7 +213,6 @@ class TygodnikInteriaBridge extends BridgeAbstract {
 		$selectors_array[] = 'FOOTER.article-footer';
 		$selectors_array[] = 'HEADER.article-header';
 		$article = foreach_delete_element_array($article, $selectors_array);
-		foreach_delete_element($article, 'script');
 
 		//Przesunięcie artykułu wyżej w drzewie
 		if (FALSE === is_null($container_outer = $article->find('DIV.container-outer', 0)) && FALSE === is_null($article_body = $article->find('DIV.article-body', 0)))

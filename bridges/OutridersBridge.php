@@ -180,7 +180,7 @@ class OutridersBridge extends FeedExpander {
 		//tagi
 		$tags = return_tags_array($article, 'DIV.categories A[href]');
 		$tags = array_merge(array($brief_number), $tags);
-		foreach_delete_element($article, 'DIV.categories');
+		$article = foreach_delete_element($article, 'DIV.categories');
 
 		$this->items[] = array(
 			'uri' => $url,

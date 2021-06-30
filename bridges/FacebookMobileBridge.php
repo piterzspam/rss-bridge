@@ -257,8 +257,8 @@ class FacebookMobileBridge extends BridgeAbstract {
 		$article_html = foreach_replace_outertext_with_subelement_outertext($article_html, 'A[rel="theater"]', 'IMG.scaledImageFitWidth.img, IMG.scaledImageFitHeight.img');
 		$article_html = str_get_html($this->remove_useless_classes($article_html->save()));
 		$article_html = str_get_html($this->remove_useless_classes($article_html->save()));
-		$article_html = str_get_html(remove_empty_elements($article_html->save(), "DIV"));
-		$article_html = str_get_html(remove_empty_elements($article_html->save(), "SPAN"));
+		$article_html = remove_empty_elements($article_html, "DIV");
+		$article_html = remove_empty_elements($article_html, "SPAN");
 
 		$tags_array[] = "DIV=>DIV";
 		$tags_array[] = "SPAN=>SPAN";

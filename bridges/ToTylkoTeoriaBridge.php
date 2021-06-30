@@ -132,11 +132,7 @@
 				$ancestor->outertext = '';
 	}
 
-	private function foreach_delete_element($ancestor, $descendant_string)
-	{
-		foreach($ancestor->find($descendant_string) as $descendant)
-			$descendant->outertext = '';
-	}
+
 
 	private function get_proxy_url($social_url)
 	{

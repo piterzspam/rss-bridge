@@ -97,7 +97,7 @@ class OnetBridge extends BridgeAbstract {
 			else
 			{
 				$html_articles_list = $returned_array['html'];
-				foreach_delete_element($html_articles_list, 'DIV.breadcrumbs');
+				$html_articles_list = foreach_delete_element($html_articles_list, 'DIV.breadcrumbs');
 				if (0 === count($found_hrefs = $html_articles_list->find('DIV.listItem A[href][title]')))
 				{
 					break;

@@ -109,7 +109,7 @@ class InteriaBridge extends BridgeAbstract {
 			else
 			{
 				$html_articles_list = $returned_array['html'];
-				foreach_delete_element($html_articles_list, 'LI.has-mixerAdTopRight');
+				$html_articles_list = foreach_delete_element($html_articles_list, 'LI.has-mixerAdTopRight');
 				$html_articles_list = str_get_html($html_articles_list->save());
 //				print_element($html_articles_list, "html_articles_list");
 				if (0 === count($found_leads = $html_articles_list->find('DIV.tile-magazine A.tile-magazine-title-url[href]')))
@@ -269,7 +269,7 @@ class InteriaBridge extends BridgeAbstract {
 		$title = get_text_plaintext($article, 'H1.article-title', $url_article_link);
 //tags
 		$tags = return_tags_array($article, 'DIV.article-info DIV.article-category');
-		foreach_delete_element($article, 'DIV.article-category');
+		$article = foreach_delete_element($article, 'DIV.article-category');
 //authors
 		$author = return_authors_as_string($article, 'DIV.article-info A.article-author-name');
 //date

@@ -95,10 +95,10 @@
 
 	function convert_amp_photos($main_element)
 	{
-		foreach_delete_element($main_element, 'amp-analytics');
-		foreach_delete_element($main_element, 'amp-ad');
-		foreach_delete_element($main_element, 'i-amphtml-sizer');
-		foreach_delete_element($main_element, 'amp-image-lightbox');
+		$main_element = foreach_delete_element($main_element, 'amp-analytics');
+		$main_element = foreach_delete_element($main_element, 'amp-ad');
+		$main_element = foreach_delete_element($main_element, 'i-amphtml-sizer');
+		$main_element = foreach_delete_element($main_element, 'amp-image-lightbox');
 		foreach($main_element->find('amp-img, img') as $photo_element)
 		{
 			if(isset($photo_element->width)) $photo_element->width = NULL;
@@ -269,6 +269,7 @@
 		{
 			$element->outertext = '';
 		}
+		return str_get_html($main_element->save());
 	}
 
 	function single_delete_subelement($element, $subelement_search_string)
@@ -401,8 +402,12 @@
 		return str_get_html($main_element->save());
 	}
 	
-	function hex_dump($data, $newline='<br>')
+	function hex_dump($data, $name = NULL, $newline='<br>')
 	{
+		if (isset($name))
+		{
+			echo "hex_dump zmiennej $name: <br>";
+		}
 		static $from = '';
 		static $to = '';
 	
@@ -1064,7 +1069,7 @@ function getArray($array, $index) {
 //				print_html($photo_element, 'photo_element przed');
 				$img_srcset = $photo_element->getAttribute($attribute_name);
 				$photo_sizes_data = array();
-//				$multiple_sizes_array  = explode(',', $img_srcset);
+				$multiple_sizes_array  = explode(',', $img_srcset);
 				$multiple_sizes_array = preg_split('/( [0-9]+w),?/', $img_srcset, -1, PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY);
 
 //				print_var_dump($img_srcset, 'img_srcset');
@@ -1110,30 +1115,41 @@ function getArray($array, $index) {
 	{
 		foreach ($main_element->find($element_to_stay_selector) as $element_to_stay)
 		{
+			//echo "test 001<br>";
 			for ($i = 0; $i < $up_counter; $i++)
 			{
+				//echo "test 002<br>";
 				$element_to_stay = $element_to_stay->parent;
 			}
 			$next_element = $element_to_stay->next_sibling();
 			if (!is_null($next_element))
 			{
+				//echo "test 003<br>";
 				for ($i = 0; $i < $forward_counter-1; $i++)
 				{
+					//echo "test 004<br>";
 					$next_element = $next_element->next_sibling();
 					if (is_null($next_element))
 						break;
 				}
 				if (!is_null($next_element))
 				{
+					//echo "test 005<br>";
 					$element_to_move_tag = strtolower($element_to_move_tag);
 					$element_to_move_class = strtolower($element_to_move_class);
 					$next_element_tag = strtolower($next_element->tag);
 					$next_element_class = strtolower($next_element->class);
+					//print_var_dump($element_to_move_tag, 'element_to_move_tag');
+					//print_var_dump($element_to_move_class, 'element_to_move_class');
+					//print_var_dump($next_element_tag, 'next_element_tag');
+					//print_var_dump($next_element_class, 'next_element_class');
 					if (FALSE !== strpos($element_to_move_tag, $next_element_tag) && FALSE !== strpos($element_to_move_class, $next_element_class))
 					{
+						//echo "test 006<br>";
 						$element_to_move_child = $next_element->find($element_to_move_child_selector, 0);
 						if (FALSE === is_null($element_to_move_child))
 						{
+							//echo "test 007<br>";
 							if ('outertext' === $element_to_stay_code)
 							{
 								$element_to_stay_html = $element_to_stay->outertext;
@@ -1578,20 +1594,29 @@ function getArray($array, $index) {
 		foreach($main_element->find($tag) as $empty_element)
 		{
 /*			print_html($empty_element->outertext, "empty_element->outertext");
+			print_html(trim($empty_element->outertext), "trim(empty_element->outertext)");
 			print_html($empty_element->innertext, "empty_element->innertext");
+			print_html(trim($empty_element->innertext), "trim(empty_element->innertext)");
 			print_html($empty_element->plaintext, "empty_element->plaintext");
+			print_html(trim($empty_element->plaintext), "trim(empty_element->plaintext)");
 			print_var_dump($empty_element->outertext, "empty_element->outertext");
+			print_var_dump(trim($empty_element->outertext), "trim(empty_element->outertext)");
 			print_var_dump($empty_element->innertext, "empty_element->innertext");
+			print_var_dump(trim($empty_element->innertext), "trim(empty_element->innertext)");
 			print_var_dump($empty_element->plaintext, "empty_element->plaintext");
-			hex_dump($empty_element->outertext);
-			hex_dump($empty_element->innertext);
-			hex_dump($empty_element->plaintext);*/
-			if (0 === strlen($empty_element->innertext) && 0 === strlen($empty_element->plaintext))
+			print_var_dump(trim($empty_element->plaintext), "trim(empty_element->plaintext)");
+			hex_dump($empty_element->outertext, "empty_element->outertext");
+			hex_dump(trim($empty_element->outertext), "trim(empty_element->outertext)");
+			hex_dump($empty_element->innertext, "empty_element->innertext");
+			hex_dump(trim($empty_element->innertext), "trim(empty_element->innertext)");
+			hex_dump($empty_element->plaintext, "empty_element->plaintext");
+			hex_dump(trim($empty_element->plaintext), "trim(empty_element->plaintext)");*/
+			if (0 === strlen(trim($empty_element->innertext)) && 0 === strlen(trim($empty_element->plaintext)))
 			{
 				$main_element_str = str_replace($empty_element->outertext, "", $main_element_str);
 			}
 		}
-		return $main_element_str;
+		return str_get_html($main_element_str);
 	}
 
 	function getChangedTitle($title)
