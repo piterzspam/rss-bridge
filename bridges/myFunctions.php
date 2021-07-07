@@ -141,6 +141,7 @@
 			else
 				$ampimg->outertext = $img_new_element;
 		}
+		return str_get_html($main_element->save());
 	}
 
 	function convert_amp_frames_to_links($main_element)
@@ -1057,6 +1058,7 @@ function getArray($array, $index) {
 				}
 			}
 		}
+		return str_get_html($main_element->save());
 	}
 	
 	function set_biggest_photo_size_from_attribute($main_element, $string_selector, $attribute_name)
@@ -1109,6 +1111,7 @@ function getArray($array, $index) {
 //				print_element($photo_element, 'photo_element po');
 			}
 		}
+		return str_get_html($main_element->save());
 	}
 
 	function foreach_combine_two_elements($main_element, $element_to_stay_selector, $up_counter, $forward_counter, $element_to_move_tag, $element_to_move_class, $element_to_move_child_selector, $element_to_stay_code = 'outertext', $element_to_move_code = 'outertext', $parent_tag = NULL, $parent_class = NULL)
@@ -1766,17 +1769,13 @@ function getArray($array, $index) {
 			$main_element_str = str_replace('  ', ' ', $main_element_str);
 		}
 		$main_element = str_get_html($main_element_str);
-		set_biggest_photo_size_from_sources($main_element);
-		$main_element = str_get_html($main_element->save());
-		set_biggest_photo_size_from_attribute($main_element, 'IMG[data-srcset]', 'data-srcset');
-		$main_element = str_get_html($main_element->save());
-		set_biggest_photo_size_from_attribute($main_element, 'IMG[data-src]', 'data-src');
-		$main_element = str_get_html($main_element->save());
-		set_biggest_photo_size_from_attribute($main_element, 'IMG[srcset]', 'srcset');
-		$main_element = str_get_html($main_element->save());
-		convert_amp_photos($main_element);
-		$main_element = str_get_html($main_element->save());
-		fix_all_photos_attributes($main_element);
+		$main_element = set_biggest_photo_size_from_sources($main_element);
+		//$main_element = str_get_html($main_element->save());
+		$main_element = set_biggest_photo_size_from_attribute($main_element, 'IMG[data-srcset]', 'data-srcset');
+		$main_element = set_biggest_photo_size_from_attribute($main_element, 'IMG[data-src]', 'data-src');
+		$main_element = set_biggest_photo_size_from_attribute($main_element, 'IMG[srcset]', 'srcset');
+		$main_element = convert_amp_photos($main_element);
+		$main_element = fix_all_photos_attributes($main_element);
 		$main_element = convert_amp_frames_to_links($main_element);
 		$main_element = convert_iframes_to_links($main_element);
 		if (isset($page_url))
