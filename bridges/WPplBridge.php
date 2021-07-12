@@ -97,6 +97,19 @@ class WPplBridge extends BridgeAbstract {
 	public function collectData()
 	{
 		include 'myFunctions.php';
+		switch($this->queriedContext)
+		{
+			case 'Magazyn WP':
+				$GLOBALS["url"] = "https://magazyn.wp.pl/";
+				break;
+			case 'WP':
+				$GLOBALS["url"] = $this->getInput('url');
+				break;
+			case 'Money':
+				$GLOBALS["url"] = $this->getInput('url');
+				break;
+		}
+
 		$this->setGlobalArticlesParams();
 		switch($this->queriedContext)
 		{
@@ -129,7 +142,7 @@ class WPplBridge extends BridgeAbstract {
 	{
 		//https://opinie-wp-pl.cdn.ampproject.org/c/s/opinie.wp.pl/kataryna-hackowanie-systemu-rzadowych-obostrzen-zabawa-w-kotka-i-myszke-opinia-6628299841584000a?amp=1
 		$GLOBALS['limit'] = intval($this->getInput('limit'));
-//		$GLOBALS['my_debug'] = TRUE;
+		//$GLOBALS['my_debug'] = TRUE;
 		$GLOBALS['my_debug'] = FALSE;
 		$GLOBALS['url_articles_list'] = $this->getInput('url');
 		if (TRUE === $GLOBALS['my_debug'])
@@ -137,11 +150,11 @@ class WPplBridge extends BridgeAbstract {
 			$GLOBALS['all_articles_time'] = 0;
 			$GLOBALS['all_articles_counter'] = 0;
 		}
-		$url_array = parse_url($this->getInput('url'));
+		$url_array = parse_url($GLOBALS["url"]);
+		//print_var_dump($url_array, "url_array");
 		$GLOBALS['prefix'] = $url_array["scheme"].'://'.$url_array["host"];
 		$GLOBALS['host'] = str_replace('www.', "", $url_array["host"]);
 		$GLOBALS['host'] = ucfirst($GLOBALS["host"]);
-
 	}
 
 	private function addArticle($amp_url_data)
