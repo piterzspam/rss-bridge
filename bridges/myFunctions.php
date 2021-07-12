@@ -317,6 +317,18 @@
 		return str_get_html($main_element->save());
 	}
 
+	function foreach_replace_outertext_with_single_child_outertext($main_element, $element_search_string, $subelement_search_string)
+	{
+		foreach($main_element->find($element_search_string) as $element)
+		{
+			if (1 === count($element->children()) && !is_null($subelement = $element->find($subelement_search_string, 0)) && $element === $subelement->parent())
+			{
+				$element->outertext = $subelement->outertext;
+			}
+		}
+		return str_get_html($main_element->save());
+	}
+
 	function foreach_replace_outertext_with_innertext($main_element, $element_search_string)
 	{
 /*
@@ -594,6 +606,9 @@
 
 	function format_article_photos($main_element, $element_search_string, $is_main = FALSE, $str_photo_url_attribute = 'src', $str_selector_photo_caption = NULL)
 	{
+		//Zdjęcia stąd: https://klubjagiellonski.pl/2021/03/19/polacy-nie-chca-wegla-a-co-trzeci-jest-gotow-placic-wiecej-za-transformacje-energetyczna/
+		//miały link: https://klubjagiellonski.pl/temat/zielony-konserwatyzm/
+		//$article = format_article_photos($article, 'IMG[class*="wp-image-"]', FALSE);
 		$main_element_str = $main_element->save();
 		$array_allowed_attributes = array_merge(get_photo_attributes_caption(), get_photo_attributes_img());
 		if ($GLOBALS['my_debug']) $counter = 0;
@@ -632,6 +647,7 @@
 					continue;
 				}
 				if ($GLOBALS['my_debug']) print_var_dump($img_src, "element img_src nr $counter");
+				$old_photo_wrapper = str_get_html($old_photo_wrapper->save());
 				if (isset($str_selector_photo_caption) && !is_null($caption_element = $old_photo_wrapper->find($str_selector_photo_caption, 0)))
 				{
 					$caption_text_temp = trim($caption_element->plaintext);
@@ -642,6 +658,8 @@
 						$caption_innertext = $caption_element->innertext;
 					}
 				}
+				
+				$old_photo_wrapper = str_get_html($old_photo_wrapper->save());
 				if ($GLOBALS['my_debug']) print_html($old_photo_wrapper, "element old_photo_wrapper nr $counter");
 
 				if (!is_null($href_element = $old_photo_wrapper->find('A[href]', 0)))

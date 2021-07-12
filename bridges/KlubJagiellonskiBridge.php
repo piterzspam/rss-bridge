@@ -36,7 +36,9 @@ class KlubJagiellonskiBridge extends FeedExpander {
 
 	private function setGlobalArticlesParams()
 	{
-		if (TRUE === $this->getInput('include_not_downloaded'))
+		$GLOBALS['my_debug'] = FALSE;
+		//$GLOBALS['my_debug'] = TRUE;
+		if ($this->getInput('include_not_downloaded'))
 			$GLOBALS['include_not_downloaded'] = TRUE;
 		else
 			$GLOBALS['include_not_downloaded'] = FALSE;
@@ -56,8 +58,19 @@ class KlubJagiellonskiBridge extends FeedExpander {
 				return;
 			}
 		}
-		$article_html = getSimpleHTMLDOMCached($item['uri'], 86400 * 14);
-
+		//$item['uri'] = 'https://klubjagiellonski.pl/2021/03/19/polacy-nie-chca-wegla-a-co-trzeci-jest-gotow-placic-wiecej-za-transformacje-energetyczna/';
+		$returned_array = my_get_html($item['uri']);
+		if (200 === $returned_array['code'])
+		{
+			$article_html = $returned_array['html'];
+		}
+		else
+		{
+			return $item;
+		}
+		$article_html = str_get_html(prepare_article($article_html));
+		//$article_html = getSimpleHTMLDOMCached($item['uri'], 86400 * 14);
+/*
 		foreach($article_html->find('DIV.pix') as $photo_element)
 		{
 			$background_element = $photo_element->find('[style^="background-image:"]', 0);
@@ -67,10 +80,14 @@ class KlubJagiellonskiBridge extends FeedExpander {
 				$background_element->outertext = '';
 			}
 		}
+*/
 		$article_html = str_get_html(prepare_article($article_html));
 		$article = $article_html->find('ARTICLE', 0);
+		$article = str_get_html('<div class="article">'.$article->save().'</div>');
 
 
+		$selectors_array[] = 'comment';
+		$selectors_array[] = 'SCRIPT';
 		$selectors_array[] = 'DIV.cat';
 		$selectors_array[] = 'SECTION.block-content_breaker_sharer';
 		$selectors_array[] = 'DIV[data-source="ramka-newsletter"]';
@@ -79,6 +96,7 @@ class KlubJagiellonskiBridge extends FeedExpander {
 		$selectors_array[] = 'DIV.meta_mobile.desktop-hide';
 		$selectors_array[] = 'DIV.block-wyimki DIV.col.c1';
 		$selectors_array[] = 'DIV.inject_placeholder.shortcode[data-source="ramka-publikacje"]';
+		$selectors_array[] = 'DIV.meta2 DIV.meta_desktop.mobile-hide SPAN.block-jag_meta SPAN.data';
 		$article = foreach_delete_element_array($article, $selectors_array);
 		$article = foreach_delete_element_containing_subelement($article, 'DIV.block-content_breaker.block-content_breaker_ramka', 'A[href*="/temat/"]');
 		//https://klubjagiellonski.pl/2021/03/12/egzotyczny-sojusz-przeciwko-500-najbardziej-krytyczni-zwolennicy-konfederacji-lewica-i-najbogatsi/
@@ -97,33 +115,41 @@ class KlubJagiellonskiBridge extends FeedExpander {
 		}
 		$article = str_get_html($article->save());
 
+		$article = foreach_replace_outertext_with_single_child_outertext($article, 'P', 'IMG');
+		$article = format_article_photos($article, 'IMG[class*="wp-image-"]', FALSE);
 		$article = format_article_photos($article, 'DIV.pix', TRUE, 'src', 'SPAN.pix_source');
 		//Zdjęcia w treści
 		//https://klubjagiellonski.pl/2021/03/19/polacy-nie-chca-wegla-a-co-trzeci-jest-gotow-placic-wiecej-za-transformacje-energetyczna/
 
-		if (!is_null($meta_element = $article->find('DIV.meta2', 0)))
-		{
-			$date_string = get_text_plaintext($article, 'SPAN.data', '');
-			$reading_time_string = get_text_plaintext($article, 'SPAN.colored.time', '');
-			$lead_string = get_text_plaintext($article, 'SPAN.block-jag_meta', '');
-			$lead_string = trim(str_replace($date_string, '', $lead_string));
-			$lead_string = trim($lead_string);
-			$new_metadata_outertext = '<DIV class="meta_data">';
-			if (strlen($date_string) > 0)
-			{
-				$new_metadata_outertext = $new_metadata_outertext.'<DIV class="publication_date">'.$date_string.'</DIV>';
-			}
-			if (strlen($lead_string) > 0)
-			{
-				$new_metadata_outertext = $new_metadata_outertext.'<STRONG class="lead">'.$lead_string.'</STRONG>';
-			}
-			if (strlen($reading_time_string) > 0)
-			{
-				$new_metadata_outertext = $new_metadata_outertext.'<DIV class="reading_time">'.'Przeczytanie zajmie: '.$reading_time_string.'</DIV>';
-			}
-			$new_metadata_outertext = $new_metadata_outertext.'</DIV>';
-			$meta_element->outertext = $new_metadata_outertext;
-		}
+		$article = replace_tag_and_class($article, 'DIV.meta2 DIV.meta_desktop.mobile-hide SPAN.block-jag_meta SPAN.autor A.imienazwisko', 'single', 'STRONG', 'lead');
+		$article = replace_attribute($article, "STRONG.lead", "href", NULL);
+		$article = move_element($article, 'STRONG.lead', 'H1.title', 'outertext', 'after');
+		$article = replace_tag_and_class($article, 'DIV.meta2', 'single', 'DIV', 'reading_time');
+		$article = foreach_replace_innertext_with_plaintext($article, "DIV.reading_time");
+		
+		$article = replace_tag_and_class($article, 'DIV.content.stdtxt', 'single', 'DIV', 'article body');
+		$article = replace_tag_and_class($article, 'DIV.content_col.r', 'single', 'DIV', 'authors');
+
+		
+
+
+		$date = date_format(date_timestamp_set(new DateTime(), $item['timestamp'])->setTimezone(new DateTimeZone('Europe/Warsaw')), 'c');
+		$article = insert_html($article, 'H1.title', '', get_date_outertext($date));
+		$article = move_element($article, 'DIV.dates', 'H1.title', 'outertext', 'after');
+		$article = move_element($article, 'STRONG.lead', 'DIV.dates', 'outertext', 'after');
+		$article = move_element($article, 'DIV.reading_time', 'STRONG.lead', 'outertext', 'after');
+		$article = move_element($article, 'DIV.article.body', 'HEADER', 'outertext', 'after');
+		$article = move_element($article, 'DIV.authors', 'DIV.article.body', 'outertext', 'after');
+		$article = replace_attribute($article, "ARTICLE", "class", NULL);
+		$article = replace_attribute($article, "HEADER", "class", NULL);
+
+		$selectors_array = array();
+		$selectors_array[] = 'DIV.content_col.m';
+		$selectors_array[] = 'DIV.content_colset';
+		$article = foreach_delete_element_array($article, $selectors_array);		
+		$article = insert_html($article, 'DIV.authors', '', '', '<HR>');
+		
+		$article = $article->find('ARTICLE', 0);
 
 		$article = add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
 		$article = add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
