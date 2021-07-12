@@ -36,6 +36,7 @@ class ZaufanaTrzeciaStronaBridge extends FeedExpander {
 
 	private function setGlobalArticlesParams()
 	{
+		$GLOBALS['my_debug'] = FALSE;
 		if (TRUE === $this->getInput('include_not_downloaded'))
 			$GLOBALS['include_not_downloaded'] = TRUE;
 		else
@@ -56,45 +57,59 @@ class ZaufanaTrzeciaStronaBridge extends FeedExpander {
 				return;
 			}
 		}
-		$article_html = getSimpleHTMLDOMCached($newsItem->link, 86400 * 14);
-		$article_html = str_get_html(prepare_article($article_html));
+		$returned_array = my_get_html($item['uri']);
+		if (200 === $returned_array['code'])
+		{
+			$article_html = $returned_array['html'];
+		}
+		else
+		{
+			return $item;
+		}
+		$article_html = str_get_html(prepare_article($article_html, "https://zaufanatrzeciastrona.pl"));
+		$date_published = get_text_from_attribute($article_html, 'META[property="article:published_time"][content]', 'content', "");
+		$date_modified = get_text_from_attribute($article_html, 'META[property="article:modified_time"][content]', 'content', "");
+
 		$article = $article_html->find('DIV#main DIV.postcontent', 0);
 		$tags = return_tags_array($article, 'DIV.dolna-ramka A[href*="/tag/"][rel="tag"]');
-		foreach ($article->find('IMG[src^="/"]') as $image_with_bad_source)
-		{
-			$img_src = $image_with_bad_source->getAttribute('src');
-			$image_with_bad_source->setAttribute('src', 'https://zaufanatrzeciastrona.pl'.$img_src);
-		}
 		
 		$selectors_array[] = 'comment';
 		$selectors_array[] = 'script';
 		$selectors_array[] = 'DIV.thumbnail-wrap P';
+		$selectors_array[] = 'DIV.dolna-ramka';
 		$article = foreach_delete_element_array($article, $selectors_array);
 
+		$article = format_article_photos($article, 'DIV.thumbnail-wrap', TRUE, 'src', 'FIGCAPTION');
 		$article = format_article_photos($article, '.wp-block-image', FALSE, 'src', 'FIGCAPTION');
-		$article = replace_tag_and_class($article, 'P', 'single', 'STRONG', 'lead');
 
-/*
-		foreach($article->find('DIV.wp-block-embed__wrapper') as $embed)
-		{
-			$embed_innertext = $embed->innertext;
-			preg_match('/title="([^"]*)"/', $embed_innertext, $output_array);
-			$title = $output_array[1];
-			preg_match('/src="([^"]*)"/', $embed_innertext, $output_array);
-			$src = $output_array[1];
-			$embed->outertext = 
-				'<strong><br>'
-				.'<a href='.$src.'>'
-				."Ramka - ".$title.'<br>'
-				.'</a>'
-				.'<br></strong>';
-		}
-*/	
-		$article = add_style($article, 'DIV.thumbnail-wrap', array('float: left;', 'margin-right: 15px;'));
+		
+		$article = insert_html($article, 'DIV.authors IMG.author.photo', '<div class="author photo holder">', '</div>');
+		$article = str_get_html('<div class="article"><ARTICLE>'.$article->save().'</ARTICLE></div>');
+
+
+		//https://zaufanatrzeciastrona.pl/post/wygraj-darmowa-wejsciowke-na-swietna-konferencje-black-hat-usa-2021/
+		$article = replace_tag_and_class($article, 'PRE', 'multiple', 'BLOCKQUOTE', NULL);
+		
+		$article = replace_tag_and_class($article, 'H1', 'single', 'H1', 'title');
+		$article = replace_tag_and_class($article, 'P', 'single', 'STRONG', 'lead');
+		$article = replace_tag_and_class($article, 'DIV.postcontent', 'single', 'DIV', 'article body');
+		
+		
+		$article = move_element($article, 'H1.title', 'ARTICLE', 'innertext', 'before');
+		$article = insert_html($article, 'H1.title', '', get_date_outertext($date_published, $date_modified));
+		$article = move_element($article, 'DIV.article.body', 'DIV.dates', 'outertext', 'after');
+		$article = insert_html($article, 'DIV.article.body', '', '<div class="authors">'.$item['author'].'</div>');
+		$article = insert_html($article, 'DIV.authors', '', '', '<HR>');
+
+		$article = $article->find('ARTICLE', 0);
+
+		$article = foreach_replace_outertext_with_innertext($article, 'FIGURE.photoWrapper A[href*="zaufanatrzeciastrona.pl/wp-content/uploads/"]');
+		$article = add_style($article, 'FIGURE.photoWrapper.mainPhoto', array('float: left;', 'margin-right: 15px;'));
 		$article = add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
 		$article = add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
 		$article = add_style($article, 'FIGCAPTION', getStylePhotoCaption());
 		$article = add_style($article, 'BLOCKQUOTE', getStyleQuote());
+
 		$item['content'] = $article;
 		$item['categories'] = $tags;
 		if (FALSE === in_array("konferencja", $item['categories']))

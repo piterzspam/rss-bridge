@@ -36,6 +36,7 @@ class TygodnikPowszechnyBridge extends FeedExpander {
 	
 	private function setGlobalArticlesParams()
 	{
+		$GLOBALS['my_debug'] = FALSE;
 		if (TRUE === $this->getInput('include_not_downloaded'))
 			$GLOBALS['include_not_downloaded'] = TRUE;
 		else
@@ -56,10 +57,18 @@ class TygodnikPowszechnyBridge extends FeedExpander {
 				return;
 			}
 		}
-		$article_html = getSimpleHTMLDOMCached($item['uri'], 86400 * 14);
-		$article_html = str_get_html(prepare_article($article_html));
+		$returned_array = my_get_html($item['uri']);
+		if (200 === $returned_array['code'])
+		{
+			$article_html = $returned_array['html'];
+		}
+		else
+		{
+			return $item;
+		}
+		$article_html = str_get_html(prepare_article($article_html, "https://www.tygodnikpowszechny.pl"));
 		//https://www.tygodnikpowszechny.pl/muzeum-roznych-rzeczy-166924
-		foreach ($article_html->find('IMG[src^="/"]') as $image_with_bad_source)
+/*		foreach ($article_html->find('IMG[src^="/"]') as $image_with_bad_source)
 		{
 			$img_src = $image_with_bad_source->getAttribute('src');
 			$image_with_bad_source->setAttribute('src', 'https://www.tygodnikpowszechny.pl'.$img_src);
@@ -68,7 +77,7 @@ class TygodnikPowszechnyBridge extends FeedExpander {
 		{
 			$href = $link_with_bad_href->getAttribute('href');
 			$link_with_bad_href->setAttribute('href', 'https://www.tygodnikpowszechny.pl'.$href);
-		}
+		}*/
 		$tags = return_tags_array($article_html, 'DIV#breadcrumb SPAN[typeof="v:Breadcrumb"]');
 		$tags = array_diff($tags, array('Strona główna', $item['title']));
 		$date_published = get_text_from_attribute($article_html, 'META[property="article:published_time"][content]', 'content', "");
@@ -129,11 +138,12 @@ class TygodnikPowszechnyBridge extends FeedExpander {
 		$article = foreach_replace_outertext_with_innertext($article, 'DIV.views-row');
 		$article = foreach_replace_outertext_with_innertext($article, 'DIV.view-content');
 		$article = foreach_replace_outertext_with_innertext($article, 'DIV.view-full-article');
-		$article = foreach_replace_outertext_with_innertext($article, 'FIGURE.photoWrapper A');
+		$article = foreach_replace_outertext_with_innertext($article, 'FIGURE.photoWrapper A[href*="tygodnikpowszechny.pl/files/styles/"]');
 
+		$recommended = array("CZYTAJ TAKŻE", "Czytaj także:", "CZYTAJ WIĘCEJ", "Polecamy:");
+/*
 		//Pętla, bo po usunięciu przesuwają się elementy
 		$strong_counter = 0;
-		$recommended = array("CZYTAJ TAKŻE", "Czytaj także:", "CZYTAJ WIĘCEJ", "Polecamy:");
 		foreach($article->find('ARTICLE P') as $paragraph)
 		{
 			if (!is_null($strong_element = $paragraph->find('STRONG', 0)))
@@ -144,9 +154,9 @@ class TygodnikPowszechnyBridge extends FeedExpander {
 				}
 			}
 		}
-
-		for ($i = 0; $i < $strong_counter; $i++)
-		{
+*/
+//		for ($i = 0; $i < $strong_counter; $i++)
+//		{
 			foreach($article->find('ARTICLE P') as $paragraph)
 			{
 				if (!is_null($strong_element = $paragraph->find('STRONG', 0)))
@@ -160,19 +170,19 @@ class TygodnikPowszechnyBridge extends FeedExpander {
 							$paragraph->outertext = "";
 							$previous_element->outertext = "";
 							$next_element->outertext = "";
-							$article = str_get_html($article->save());
+//							$article = str_get_html($article->save());
 						}
 						else if (!is_null($previous_element) && "hr" === strtolower($previous_element->tag))
 						{
 							$paragraph->outertext = "";
 							$previous_element->outertext = "";
 							$next_element->outertext = "";
-							$article = str_get_html($article->save());
 						}
 					}
 				}
 			}
-		}
+//		}
+		$article = str_get_html($article->save());
 
 		$article = $article->find('ARTICLE', 0);
 
