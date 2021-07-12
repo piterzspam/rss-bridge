@@ -592,13 +592,17 @@
 		return str_get_html($main_element->save());
 	}
 
-	function format_article_photos($main_element, $element_search_string, $is_main = FALSE, $str_photo_url_attribute = 'src', $str_selectror_photo_caption = NULL)
+	function format_article_photos($main_element, $element_search_string, $is_main = FALSE, $str_photo_url_attribute = 'src', $str_selector_photo_caption = NULL)
 	{
 		$main_element_str = $main_element->save();
 		$array_allowed_attributes = array_merge(get_photo_attributes_caption(), get_photo_attributes_img());
-
+		if ($GLOBALS['my_debug']) $counter = 0;
 		foreach($main_element->find($element_search_string) as $old_photo_wrapper)
 		{
+			if ($GLOBALS['my_debug']) echo "<br><br><br><br><br><br><br><br><br><br>";
+			if ($GLOBALS['my_debug']) $counter++;
+			//if ($GLOBALS['my_debug']) print_element($old_photo_wrapper, "element nr $counter");
+			if ($GLOBALS['my_debug']) print_html($old_photo_wrapper, "element nr $counter, old_photo_wrapper");
 			$img_src = NULL;
 			$img_src_temp = NULL;
 			$href = NULL;
@@ -613,17 +617,22 @@
 			{
 				$old_photo_element = $old_photo_wrapper->find('IMG', 0);
 			}
-			if (FALSE === is_null($old_photo_element))
+			if (!is_null($old_photo_element))
 			{
+				if ($GLOBALS['my_debug']) echo "element nr $counter, old_photo_element nie jest nullem<br>";
 				$img_src_temp = trim($old_photo_element->getAttribute($str_photo_url_attribute));
+				if ($GLOBALS['my_debug']) print_var_dump($img_src_temp, "element img_src_temp nr $counter");
 				
 				if (FALSE !== strpos($img_src_temp, '//'))
 				{
 					$img_src = $img_src_temp;
+				}
+				else
+				{
 					continue;
 				}
-				//print_html($old_photo_wrapper, "old_photo_wrapper 1");
-				if (isset($str_selectror_photo_caption) && !is_null($caption_element = $old_photo_wrapper->find($str_selectror_photo_caption, 0)))
+				if ($GLOBALS['my_debug']) print_var_dump($img_src, "element img_src nr $counter");
+				if (isset($str_selector_photo_caption) && !is_null($caption_element = $old_photo_wrapper->find($str_selector_photo_caption, 0)))
 				{
 					$caption_text_temp = trim($caption_element->plaintext);
 					//na nauka o klimacie w opisach są linki
@@ -633,12 +642,15 @@
 						$caption_innertext = $caption_element->innertext;
 					}
 				}
-				//print_html($old_photo_wrapper, "old_photo_wrapper 2");
+				if ($GLOBALS['my_debug']) print_html($old_photo_wrapper, "element old_photo_wrapper nr $counter");
+
 				if (!is_null($href_element = $old_photo_wrapper->find('A[href]', 0)))
 				{
+					if ($GLOBALS['my_debug']) echo "element nr $counter jest href<br>";
 					$href_temp = trim($href_element->getAttribute('href'));
 					if (FALSE !== strpos($href_temp, '//'))
 					{
+						if ($GLOBALS['my_debug']) echo "element nr $counter href jest ok<br>";
 						$href = $href_temp;
 					}
 				}
@@ -654,50 +666,45 @@
 				}
 				if (isset($href) && isset($caption_innertext))
 				{
-					//echo 'if (isset($href) && isset($caption_text))'."<br>";
+					if ($GLOBALS['my_debug']) echo 'if (isset($href) && isset($caption_text))'."<br>";
 					$new_photo_wrapper_outertext = '<figure class="'.$class_string.'"><a href="'.$href.'"><img src="'.$img_src.'" ></a><figcaption>'.$caption_innertext.'</figcaption></figure>';
 					$new_photo_wrapper = str_get_html($new_photo_wrapper_outertext);
-					//print_html($new_photo_wrapper_outertext, "new_photo_wrapper_outertext");
+					if ($GLOBALS['my_debug']) print_html($new_photo_wrapper_outertext, "new_photo_wrapper_outertext");
 				}
 				else if (isset($href) && !isset($caption_innertext))
 				{
-//					$new_photo_wrapper = str_get_html('<figure class="'.$class_string.'"><a href="'.$href.'"><img src="'.$img_src.'" ></a></figure>');
-					//echo 'else if (isset($href) && !isset($caption_text))'."<br>";
+					if ($GLOBALS['my_debug']) echo 'else if (isset($href) && !isset($caption_text))'."<br>";
 					$new_photo_wrapper_outertext = '<figure class="'.$class_string.'"><a href="'.$href.'"><img src="'.$img_src.'" ></a></figure>';
 					$new_photo_wrapper = str_get_html($new_photo_wrapper_outertext);
-					//print_html($new_photo_wrapper_outertext, "new_photo_wrapper_outertext");
+					if ($GLOBALS['my_debug']) print_html($new_photo_wrapper_outertext, "new_photo_wrapper_outertext");
 				}
 				else if (!isset($href) && isset($caption_innertext))
 				{
-//					$new_photo_wrapper = str_get_html('<figure class="'.$class_string.'"><img src="'.$img_src.'" ><figcaption>'.$caption_innertext.'</figcaption></figure>');
-					//echo 'else if (!isset($href) && isset($caption_text))'."<br>";
+					if ($GLOBALS['my_debug']) echo 'else if (!isset($href) && isset($caption_text))'."<br>";
 					$new_photo_wrapper_outertext = '<figure class="'.$class_string.'"><img src="'.$img_src.'" ><figcaption>'.$caption_innertext.'</figcaption></figure>';
 					$new_photo_wrapper = str_get_html($new_photo_wrapper_outertext);
-					//print_html($new_photo_wrapper_outertext, "new_photo_wrapper_outertext");
+					if ($GLOBALS['my_debug']) print_html($new_photo_wrapper_outertext, "new_photo_wrapper_outertext");
 				}
 				else if (!isset($href) && !isset($caption_innertext))
 				{
-//					$new_photo_wrapper = str_get_html('<figure class="'.$class_string.'"><img src="'.$img_src.'" ></figure>');
-					//echo 'else if (!isset($href) && !isset($caption_text))'."<br>";
+					if ($GLOBALS['my_debug']) echo 'else if (!isset($href) && !isset($caption_text))'."<br>";
 					$new_photo_wrapper_outertext = '<figure class="'.$class_string.'"><img src="'.$img_src.'" ></figure>';
 					$new_photo_wrapper = str_get_html($new_photo_wrapper_outertext);
-					//print_html($new_photo_wrapper_outertext, "new_photo_wrapper_outertext");
+					if ($GLOBALS['my_debug']) print_html($new_photo_wrapper_outertext, "new_photo_wrapper_outertext");
 				}
 				else
 				{
 					echo "Coś nie pykło<br>";
 				}
 				$new_element_img = $new_photo_wrapper->find('IMG', 0);
+				
+				if ($GLOBALS['my_debug']) print_var_dump($href, "element href nr $counter");
+				if ($GLOBALS['my_debug']) print_var_dump($caption_innertext, "element caption_innertext nr $counter");
+				if ($GLOBALS['my_debug']) print_var_dump($img_src, "element img_src nr $counter");
 				$new_element_img_before_changes = $new_element_img->outertext;
-/*				if (TRUE === $is_main)
-				{
-					print_element($old_photo_wrapper, "old_photo_wrapper");
-					print_element($old_photo_element, "old_photo_element");
-					print_element($new_photo_wrapper, "new_photo_wrapper");
-					print_element($href_element, "href_element");
-				}
-*/
-				//print_var_dump($old_photo_element->getAllAttributes(), "old_photo_element->getAllAttributes()");
+				
+				if ($GLOBALS['my_debug']) print_html($new_element_img_before_changes, "new_element_img_before_changes");
+
 				//dla atrybutu bez wartosci zwracane jest true
 				foreach($old_photo_element->getAllAttributes() as $attribute => $value)
 				{
@@ -709,10 +716,16 @@
 					}
 				}
 				$new_element_img_after_changes = $new_element_img->outertext;
+				if ($GLOBALS['my_debug']) print_html($new_element_img_after_changes, "new_element_img_after_changes");
 				$new_photo_wrapper_outertext = str_replace($new_element_img_before_changes, $new_element_img_after_changes, $new_photo_wrapper_outertext);
+				if ($GLOBALS['my_debug']) print_html($new_photo_wrapper_outertext, "new_photo_wrapper_outertext");
 
 				$main_element_str = str_replace($old_photo_wrapper->outertext, $new_photo_wrapper_outertext, $main_element_str);
 //				$old_photo_wrapper->outertext = $new_photo_wrapper;
+			}
+			else
+			{
+				if ($GLOBALS['my_debug']) echo "element nr $counter, old_photo_element jest nullem<br>";
 			}
 		}
 		return str_get_html($main_element_str);

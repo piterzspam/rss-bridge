@@ -37,6 +37,7 @@ class NiebezpiecznikBridge extends FeedExpander {
 	private function setGlobalArticlesParams()
 	{
 		$GLOBALS['my_debug'] = FALSE;
+		//$GLOBALS['my_debug'] = TRUE;
 		if (TRUE === $this->getInput('include_not_downloaded'))
 			$GLOBALS['include_not_downloaded'] = TRUE;
 		else
@@ -57,6 +58,9 @@ class NiebezpiecznikBridge extends FeedExpander {
 				return;
 			}
 		}
+		//$url_parts = explode("?utm_source=", $item['uri']);
+		//$item['uri'] = $url_parts[0];
+		//print_var_dump($item['uri'], '$item[\'uri\']');
 		$returned_array = my_get_html($item['uri']);
 		if (200 === $returned_array['code'])
 		{
@@ -85,7 +89,7 @@ class NiebezpiecznikBridge extends FeedExpander {
 			}
 			$article = str_get_html($article->save());
 		}
-		
+
 		$new_url = get_text_from_attribute($article, 'DIV.title A[href]', 'href', NULL);
 		if (isset($new_url))
 		{
@@ -114,15 +118,15 @@ class NiebezpiecznikBridge extends FeedExpander {
 		$article = foreach_replace_outertext_with_subelement_outertext($article, 'A[href*="niebezpiecznik.pl/wp-content/uploads/"]', 'IMG[class*="wp-image-"]');
 		//najpierw zamiana A na IMG, potem formatowanie, inaczej nie działało
 		$article = format_article_photos($article, 'IMG[class*="wp-image-"]', FALSE, 'src', 'FIGCAPTION');
-		//$article = foreach_replace_outertext_with_innertext($article, 'FIGURE.photoWrapper A[href*="niebezpiecznik.pl/wp-content/uploads/"]');
-		//$article = foreach_replace_outertext_with_subelement_outertext($article, 'FIGURE.photoWrapper A[href]', 'IMG');
+		$article = foreach_replace_outertext_with_innertext($article, 'FIGURE.photoWrapper A[href*="niebezpiecznik.pl/wp-content/uploads/"]');
+		$article = foreach_replace_outertext_with_subelement_outertext($article, 'FIGURE.photoWrapper A[href]', 'IMG');
 
 
 
-//		$article = foreach_replace_outertext_with_subelement_outertext($article, 'A[href*="niebezpiecznik.pl/wp-content/uploads/"]', 'IMG[class*="wp-image-"]');
+		//$article = foreach_replace_outertext_with_subelement_outertext($article, 'A[href*="niebezpiecznik.pl/wp-content/uploads/"]', 'IMG[class*="wp-image-"]');
 		//$article = foreach_replace_outertext_with_innertext($article, 'A[href*="niebezpiecznik.pl/wp-content/uploads/"]');
 
-		//$article = str_get_html($article->save());
+		$article = str_get_html($article->save());
 		//$article = foreach_replace_outertext_with_innertext($article, 'FIGURE.photoWrapper A');
 		//$article = foreach_replace_outertext_with_innertext($article, 'FIGURE');
 		//$article = str_get_html($article->save());

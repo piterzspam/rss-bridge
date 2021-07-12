@@ -127,7 +127,6 @@ class TygodnikPowszechnyBridge extends FeedExpander {
 		$selectors_array[] = 'comment';
 		$selectors_array[] = 'SPAN.field-content.initial_char.initial';
 		$selectors_array[] = 'DIV.article-heading';
-		
 		$article = foreach_delete_element_array($article, $selectors_array);
 		$article = combine_two_elements($article, 'DIV.views-field-field-zdjecia', 'DIV.views-field-field-zdjecia-2', 'DIV', 'super_photo');
 
