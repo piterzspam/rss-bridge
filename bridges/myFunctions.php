@@ -319,6 +319,23 @@
 
 	function foreach_replace_outertext_with_innertext($main_element, $element_search_string)
 	{
+/*
+		$main_element_str = $main_element->save();
+		$counter = 0;
+		if ($GLOBALS['my_debug']) print_element($main_element, "cały artykuł nr 1");
+		foreach($main_element->find($element_search_string) as $element)
+		{
+			if ($GLOBALS['my_debug']) print_element($element, "element nr $counter");
+			if ($GLOBALS['my_debug']) print_html($element, "element nr $counter");
+			if ($GLOBALS['my_debug']) echo "Przed zamianą<br> <br><pre>".htmlspecialchars($main_element_str)."</pre><br>";
+			$counter++;
+			$main_element_str = str_replace($element->outertext, $element->innertext, $main_element_str);
+			if ($GLOBALS['my_debug']) echo "Po zamianie<br> <br><pre>".htmlspecialchars($main_element_str)."</pre><br>";
+		}
+		$main_element = str_get_html($main_element_str);
+		if ($GLOBALS['my_debug']) print_element($main_element, "cały artykuł nr 2");
+		return str_get_html($main_element_str);
+*/
 		foreach($main_element->find($element_search_string) as $element)
 		{
 			$element->outertext = $element->innertext;
@@ -575,13 +592,19 @@
 		return str_get_html($main_element->save());
 	}
 
-	function format_article_photos($main_element, $element_search_string, $is_main = FALSE, $str_photo_url_attribute = 'src', $str_selectror_photo_caption = '')
+	function format_article_photos($main_element, $element_search_string, $is_main = FALSE, $str_photo_url_attribute = 'src', $str_selectror_photo_caption = NULL)
 	{
 		$main_element_str = $main_element->save();
 		$array_allowed_attributes = array_merge(get_photo_attributes_caption(), get_photo_attributes_img());
 
 		foreach($main_element->find($element_search_string) as $old_photo_wrapper)
 		{
+			$img_src = NULL;
+			$img_src_temp = NULL;
+			$href = NULL;
+			$href_temp = NULL;
+			$caption_text_temp = NULL;
+			$caption_innertext = NULL;
 			if ('img' === strtolower($old_photo_wrapper->tag))
 			{
 				$old_photo_element = $old_photo_wrapper;
@@ -592,29 +615,31 @@
 			}
 			if (FALSE === is_null($old_photo_element))
 			{
-				$img_src = "";
-				$img_src = $old_photo_element->getAttribute($str_photo_url_attribute);
-				if (TRUE === $img_src || 0 === strlen($img_src))
+				$img_src_temp = trim($old_photo_element->getAttribute($str_photo_url_attribute));
+				
+				if (FALSE !== strpos($img_src_temp, '//'))
 				{
+					$img_src = $img_src_temp;
 					continue;
 				}
-				$caption_text = '';
 				//print_html($old_photo_wrapper, "old_photo_wrapper 1");
-				if (0 !== strlen($str_selectror_photo_caption) && FALSE === is_null($caption_element = $old_photo_wrapper->find($str_selectror_photo_caption, 0)))
+				if (isset($str_selectror_photo_caption) && !is_null($caption_element = $old_photo_wrapper->find($str_selectror_photo_caption, 0)))
 				{
-					$caption_text = trim($caption_element->plaintext);
+					$caption_text_temp = trim($caption_element->plaintext);
 					//na nauka o klimacie w opisach są linki
 					//https://naukaoklimacie.pl/aktualnosci/jak-nam-idzie-realizacja-porozumienia-paryskiego-jak-pokazuje-raport-emissions-gap-bardzo-zle-460
-					$caption_innertext = $caption_element->innertext;
-				}
-				$href = '';
-				//print_html($old_photo_wrapper, "old_photo_wrapper 2");
-				if (FALSE === is_null($href_element = $old_photo_wrapper->getElementByTagName('A[href]')))
-				{
-					$href = $href_element->getAttribute('href');
-					if (TRUE === $href)
+					if (0 < strlen($caption_text_temp))
 					{
-						$href = '';
+						$caption_innertext = $caption_element->innertext;
+					}
+				}
+				//print_html($old_photo_wrapper, "old_photo_wrapper 2");
+				if (!is_null($href_element = $old_photo_wrapper->find('A[href]', 0)))
+				{
+					$href_temp = trim($href_element->getAttribute('href'));
+					if (FALSE !== strpos($href_temp, '//'))
+					{
+						$href = $href_temp;
 					}
 				}
 
@@ -627,33 +652,33 @@
 				{
 					$class_string = 'photoWrapper photo';
 				}
-				if (0 !== strlen($href) && 0 !== strlen($caption_text))
+				if (isset($href) && isset($caption_innertext))
 				{
-					//echo 'if (0 !== strlen($href) && 0 !== strlen($caption_text))'."<br>";
+					//echo 'if (isset($href) && isset($caption_text))'."<br>";
 					$new_photo_wrapper_outertext = '<figure class="'.$class_string.'"><a href="'.$href.'"><img src="'.$img_src.'" ></a><figcaption>'.$caption_innertext.'</figcaption></figure>';
 					$new_photo_wrapper = str_get_html($new_photo_wrapper_outertext);
 					//print_html($new_photo_wrapper_outertext, "new_photo_wrapper_outertext");
 				}
-				else if (0 !== strlen($href) && 0 === strlen($caption_text))
+				else if (isset($href) && !isset($caption_innertext))
 				{
 //					$new_photo_wrapper = str_get_html('<figure class="'.$class_string.'"><a href="'.$href.'"><img src="'.$img_src.'" ></a></figure>');
-					//echo 'else if (0 !== strlen($href) && 0 === strlen($caption_text))'."<br>";
+					//echo 'else if (isset($href) && !isset($caption_text))'."<br>";
 					$new_photo_wrapper_outertext = '<figure class="'.$class_string.'"><a href="'.$href.'"><img src="'.$img_src.'" ></a></figure>';
 					$new_photo_wrapper = str_get_html($new_photo_wrapper_outertext);
 					//print_html($new_photo_wrapper_outertext, "new_photo_wrapper_outertext");
 				}
-				else if (0 === strlen($href) && 0 !== strlen($caption_text))
+				else if (!isset($href) && isset($caption_innertext))
 				{
 //					$new_photo_wrapper = str_get_html('<figure class="'.$class_string.'"><img src="'.$img_src.'" ><figcaption>'.$caption_innertext.'</figcaption></figure>');
-					//echo 'else if (0 === strlen($href) && 0 !== strlen($caption_text))'."<br>";
+					//echo 'else if (!isset($href) && isset($caption_text))'."<br>";
 					$new_photo_wrapper_outertext = '<figure class="'.$class_string.'"><img src="'.$img_src.'" ><figcaption>'.$caption_innertext.'</figcaption></figure>';
 					$new_photo_wrapper = str_get_html($new_photo_wrapper_outertext);
 					//print_html($new_photo_wrapper_outertext, "new_photo_wrapper_outertext");
 				}
-				else if (0 === strlen($href) && 0 === strlen($caption_text))
+				else if (!isset($href) && !isset($caption_innertext))
 				{
 //					$new_photo_wrapper = str_get_html('<figure class="'.$class_string.'"><img src="'.$img_src.'" ></figure>');
-					//echo 'else if (0 === strlen($href) && 0 === strlen($caption_text))'."<br>";
+					//echo 'else if (!isset($href) && !isset($caption_text))'."<br>";
 					$new_photo_wrapper_outertext = '<figure class="'.$class_string.'"><img src="'.$img_src.'" ></figure>';
 					$new_photo_wrapper = str_get_html($new_photo_wrapper_outertext);
 					//print_html($new_photo_wrapper_outertext, "new_photo_wrapper_outertext");
