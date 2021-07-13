@@ -160,6 +160,7 @@ class SprawdzamAFPBridge extends BridgeAbstract {
 		$article = replace_tag_and_class($article, 'DIV.content-meta', 'single', 'DIV', 'authors');
 		$article = move_element($article, 'DIV.dates', 'H1.title', 'outertext', 'after');
 		$article = move_element($article, 'STRONG.lead', 'DIV.dates', 'outertext', 'after');
+			$article = insert_html($article, 'STRONG.lead', '<div class="lead">', '</div>');
 		$article = move_element($article, 'DIV.authors', 'DIV.article-entry', 'outertext', 'after');
 		$article = foreach_replace_outertext_with_innertext($article, 'SPAN.meta-author');
 		$article = foreach_replace_outertext_with_innertext($article, 'DIV.content-header-single');

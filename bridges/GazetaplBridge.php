@@ -211,6 +211,7 @@ class GazetaplBridge extends BridgeAbstract {
 
 		$article = move_element($article, 'FIGURE.photoWrapper.mainPhoto', 'ARTICLE', 'innertext', 'before');
 		$article = move_element($article, 'STRONG.lead', 'ARTICLE', 'innertext', 'before');
+		$article = insert_html($article, 'STRONG.lead', '<div class="lead">', '</div>');
 		$article = insert_html($article, 'ARTICLE', '', '', get_date_outertext($date_published, $date_modified));
 		$article = move_element($article, 'DIV.dates', 'ARTICLE', 'innertext', 'before');
 		$article = move_element($article, 'H1.title', 'ARTICLE', 'innertext', 'before');

@@ -140,6 +140,7 @@ class NoizzBridge extends FeedExpander {
 		$article = move_element($article, 'STRONG.lead', 'DIV.dates', 'outertext', 'after');
 		$article = move_element($article, 'DIV.dateAuthor', 'ARTICLE', 'innertext', 'after');
 		$article = insert_html($article, 'DIV.dateAuthor', '<HR>', '');
+			$article = insert_html($article, 'STRONG.lead', '<div class="lead">', '</div>');
 		$article = $article->find('ARTICLE', 0);
 
 		$article = add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());

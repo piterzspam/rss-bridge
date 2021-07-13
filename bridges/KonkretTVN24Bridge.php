@@ -186,6 +186,7 @@ class KonkretTVN24Bridge extends BridgeAbstract {
 		$article = move_element($article, 'STRONG.article-content__lead.article-content--bold', 'DIV.dates', 'outertext', 'after');
 		$article = replace_tag_and_class($article, 'STRONG.article-content__lead.article-content--bold', 'single', 'STRONG', 'lead');
 		$article = replace_tag_and_class($article, 'H2.article-content__title', 'single', 'H1', 'title');
+		$article = insert_html($article, 'STRONG.lead', '<div class="lead">', '</div>');
 
 		$next_data_array = get_json_variable_as_array($article_html, '__NEXT_DATA__', 'SCRIPT');
 		$next_data_subarrays = get_subarrays_by_key($next_data_array, "detail", NULL);

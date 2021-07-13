@@ -505,6 +505,8 @@ class WPplBridge extends BridgeAbstract {
 			$article = move_element($article, 'H1.title', 'ARTICLE', 'innertext', 'before');
 			$article = move_element($article, 'DIV.author', 'ARTICLE', 'innertext', 'after');
 			$article = insert_html($article, 'DIV.author', '', '', '<HR>');
+			$article = insert_html($article, 'STRONG.lead', '<div class="lead">', '</div>');
+
 		}
 
 		$article = add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());

@@ -175,6 +175,7 @@ class OnetBridge extends BridgeAbstract {
 		$article = format_article_photos($article, 'FIGURE.lead', TRUE, 'src', 'SPAN.source');
 		$article = format_article_photos($article, 'FIGURE[!class]', FALSE, 'src', 'SPAN.source');
 		$article = move_element($article, 'FIGURE.photoWrapper.mainPhoto', 'STRONG.lead', 'outertext', 'after');
+		$article = insert_html($article, 'STRONG.lead', '<div class="lead">', '</div>');
 		$article = move_element($article, 'DIV.dateAuthor', 'H1.headline', 'outertext', 'after');
 		$article = move_element($article, 'DIV.dateAuthor DIV.dates', 'DIV.dateAuthor', 'outertext', 'before');
 		$article = replace_tag_and_class($article, 'DIV.dates', 'single', 'DIV', NULL);

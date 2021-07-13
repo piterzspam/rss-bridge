@@ -214,6 +214,7 @@ class GazetaWeekendBridge extends BridgeAbstract {
 		$article = replace_tag_and_class($article, 'H4', 'multiple', 'H3');
 //		$article = add_style($article, 'H4.art_interview_question, DIV.article__lead', array('font-weight: bold;'));
 		$article = replace_tag_and_class($article, 'DIV.article__lead', 'single', 'STRONG', 'lead');
+		$article = insert_html($article, 'STRONG.lead', '<div class="lead">', '</div>');
 		$article = add_style($article, 'FIGURE.photoWrapper', getStylePhotoParent());
 		$article = add_style($article, 'FIGURE.photoWrapper IMG', getStylePhotoImg());
 		$article = add_style($article, 'FIGCAPTION', getStylePhotoCaption());

@@ -424,6 +424,7 @@ class DziennikBridge extends BridgeAbstract {
 		$article = move_element($article, 'DIV.dates', 'H1.title', 'outertext', 'after');
 		$article = move_element($article, 'STRONG.lead', 'DIV.dates', 'outertext', 'after');
 		$article = move_element($article, 'DIV.readingTime', 'STRONG.lead', 'outertext', 'after');
+		$article = insert_html($article, 'STRONG.lead', '<div class="lead">', '</div>');
 		$article = move_element($article, 'FIGURE.photoWrapper.mainPhoto', 'DIV.readingTime', 'outertext', 'after');
 		$article = move_element($article, 'DIV.authors', 'ARTICLE', 'innertext', 'after');
 		$article = insert_html($article, 'DIV.authors', '', '', '<HR>');

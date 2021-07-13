@@ -100,6 +100,7 @@ class ZaufanaTrzeciaStronaBridge extends FeedExpander {
 		$article = move_element($article, 'DIV.article.body', 'DIV.dates', 'outertext', 'after');
 		$article = insert_html($article, 'DIV.article.body', '', '<div class="authors">'.$item['author'].'</div>');
 		$article = insert_html($article, 'DIV.authors', '', '', '<HR>');
+		$article = insert_html($article, 'STRONG.lead', '<div class="lead">', '</div>');
 
 		$article = $article->find('ARTICLE', 0);
 

@@ -254,6 +254,7 @@ class DemagogBridge extends BridgeAbstract {
 		$article = replace_tag_and_class($article, 'DIV.lead.target-blank', 'single', 'STRONG', 'lead');
 		$article = move_element($article, 'FIGURE.photoWrapper.mainPhoto', 'STRONG.lead', 'outertext', 'after');
 
+		$article = insert_html($article, 'STRONG.lead', '<div class="lead">', '</div>');
 		$article = foreach_replace_outertext_with_innertext($article, 'DIV.row-custom.blue.mb-3.pb-2');
 		$article = foreach_replace_outertext_with_innertext($article, 'DIV.mb-5.pb-3.count-text');
 		$article = foreach_replace_outertext_with_innertext($article, 'DIV.content-editor.target-blank');

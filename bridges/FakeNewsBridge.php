@@ -110,6 +110,7 @@ class FakeNewsBridge extends FeedExpander {
 		$article = replace_tag_and_class($article, 'DIV.post-content P', 'single', 'STRONG', 'lead');
 		$article = insert_html($article, 'DIV.about-more-autor', '<hr>', '', '', '');
 		$article = move_element($article, 'STRONG.lead', 'DIV.dates', 'outertext', 'after');
+		$article = insert_html($article, 'STRONG.lead', '<div class="lead">', '</div>');
 		$article = foreach_replace_outertext_with_subelement_outertext($article, 'DIV.about-more-autor', 'DIV.autor-content');
 		$article = foreach_replace_innertext_with_plaintext($article, "DIV.autor-title");
 		$article = replace_tag_and_class($article, 'DIV.autor-title', 'multiple', 'STRONG', 'autor-title');

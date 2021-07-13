@@ -116,6 +116,7 @@ class TygodnikPowszechnyBridge extends FeedExpander {
 		$article = move_element($article, 'H1.title', 'ARTICLE', 'innertext', 'before');
 		$article = insert_html($article, 'H1.title', '', get_date_outertext($date_published, $date_modified));
 		$article = move_element($article, 'STRONG.lead', 'DIV.dates', 'outertext', 'after');
+		$article = insert_html($article, 'STRONG.lead', '<div class="lead">', '</div>');
 		$article = move_element($article, 'DIV.author', 'ARTICLE', 'innertext', 'after');
 		$article = insert_html($article, 'DIV.authors IMG.author.photo', '<div class="author photo holder">', '</div>');
 		$article = insert_html($article, 'DIV.authors', '', '', '<HR>');

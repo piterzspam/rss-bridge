@@ -148,6 +148,7 @@ class KlubJagiellonskiBridge extends FeedExpander {
 		$selectors_array[] = 'DIV.content_colset';
 		$article = foreach_delete_element_array($article, $selectors_array);		
 		$article = insert_html($article, 'DIV.authors', '', '', '<HR>');
+			$article = insert_html($article, 'STRONG.lead', '<div class="lead">', '</div>');
 		
 		$article = $article->find('ARTICLE', 0);
 
