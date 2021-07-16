@@ -118,6 +118,7 @@ class WPplBridge extends BridgeAbstract {
 				break;
 			case 'WP':
 				$found_urls = $this->getArticlesUrls_wp();
+				if ($GLOBALS['my_debug']) print_var_dump($found_urls, "found_urls");
 				break;
 			case 'Money':
 				$found_urls = $this->getArticlesUrls_money();
@@ -129,6 +130,7 @@ class WPplBridge extends BridgeAbstract {
 		{
 			$amp_urls_data[] = $this->getAmpData($url);
 		}
+		if ($GLOBALS['my_debug']) print_var_dump($amp_urls_data, "amp_urls_data");
 		//print_var_dump($amp_urls_data, "amp_urls_data");
 		foreach($amp_urls_data as $amp_url_data)
 		{
@@ -142,8 +144,8 @@ class WPplBridge extends BridgeAbstract {
 	{
 		//https://opinie-wp-pl.cdn.ampproject.org/c/s/opinie.wp.pl/kataryna-hackowanie-systemu-rzadowych-obostrzen-zabawa-w-kotka-i-myszke-opinia-6628299841584000a?amp=1
 		$GLOBALS['limit'] = intval($this->getInput('limit'));
-		//$GLOBALS['my_debug'] = TRUE;
 		$GLOBALS['my_debug'] = FALSE;
+		$GLOBALS['my_debug'] = TRUE;
 		$GLOBALS['url_articles_list'] = $this->getInput('url');
 		if (TRUE === $GLOBALS['my_debug'])
 		{
@@ -356,7 +358,13 @@ class WPplBridge extends BridgeAbstract {
 		}
 		else if ("wp_pl" === $amp_url_data["type"])
 		{
+			if ($GLOBALS['my_debug']) echo "wp_pl article 0<br>";
+			if ($GLOBALS['my_debug']) print_var_dump($amp_url_data["type"], '$amp_url_data["type"]');
+			if ($GLOBALS['my_debug']) echo "wp_pl article 1<br>";
 			$returned_array = my_get_html($amp_url_data["ampproject_url"]);
+			if ($GLOBALS['my_debug']) echo "wp_pl article 2<br>";
+			if ($GLOBALS['my_debug']) print_var_dump($returned_array['code'], 'returned_array[\'code\']');
+			if ($GLOBALS['my_debug']) print_html($returned_array['html'], 'returned_array[\'html\']');
 			if (200 !== $returned_array['code'])
 			{
 				//https://msp.money.pl/wiadomosci/sztuczna-inteligencja-w-unijnym-wydaniu-problemy-jednak-dotkna-polakow-6635631816583840a.html
@@ -376,9 +384,12 @@ class WPplBridge extends BridgeAbstract {
 				$url_article = $amp_url_data["ampproject_url"];
 			}
 			$article_html = str_get_html(prepare_article($returned_array['html']));
+			if ($GLOBALS['my_debug']) print_html($article_html, '$article_html');
 			//echo "<br>addArticle url przed: ".$amp_url_data["ampproject_url"]."<br>";
 			//hex_dump($amp_url_data["ampproject_url"]);
 			$article = $article_html->find('MAIN', 0);
+			//if ($GLOBALS['my_debug']) print_element($article, '$article');
+			if ($GLOBALS['my_debug']) print_html($article, '$article');
 			$title = get_text_plaintext($article, 'H1', NULL);
 			$datePublished = get_json_value($article_html, 'SCRIPT[type="application/ld+json"]', 'datePublished');
 			$dateModified = get_json_value($article_html, 'SCRIPT[type="application/ld+json"]', 'dateModified');
@@ -586,6 +597,8 @@ class WPplBridge extends BridgeAbstract {
 			}
 			//DIV.teasersListing A[class][title][href][data-reactid]
 			$html_articles_list = $returned_array['html'];
+			if ($GLOBALS['my_debug']) print_html($html_articles_list, "html_articles_list");
+			//if ($GLOBALS['my_debug']) print_element($html_articles_list, "html_articles_list");
 			if (200 !== $returned_array['code'] || 0 === count($found_hrefs = $html_articles_list->find('DIV.teasersListing A[class][title][href][data-reactid]')))
 			{
 				break;
