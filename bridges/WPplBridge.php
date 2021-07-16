@@ -145,7 +145,7 @@ class WPplBridge extends BridgeAbstract {
 		//https://opinie-wp-pl.cdn.ampproject.org/c/s/opinie.wp.pl/kataryna-hackowanie-systemu-rzadowych-obostrzen-zabawa-w-kotka-i-myszke-opinia-6628299841584000a?amp=1
 		$GLOBALS['limit'] = intval($this->getInput('limit'));
 		$GLOBALS['my_debug'] = FALSE;
-		$GLOBALS['my_debug'] = TRUE;
+		//$GLOBALS['my_debug'] = TRUE;
 		$GLOBALS['url_articles_list'] = $this->getInput('url');
 		if (TRUE === $GLOBALS['my_debug'])
 		{
@@ -425,6 +425,17 @@ class WPplBridge extends BridgeAbstract {
 					{
 						$previous_element->outertext = "";
 						$amp_video->outertext = "";
+					}
+					else if ("p" === strtolower($previous_element->tag))
+					{//https://opinie-wp-pl.cdn.ampproject.org/v/s/opinie.wp.pl/kolejna-przegrana-polskiego-rzadu-w-luksemburgu-ale-czy-moglo-byc-inaczej-6661567181544224a?amp=1&amp_js_v=0.1
+						if (!is_null($strong_element = $previous_element->find("STRONG", 0)))
+						{
+							if (check_string_contains_needle_from_array($strong_element->plaintext, array("Zobacz też:")))
+							{
+								$previous_element->outertext = "";
+								$amp_video->outertext = "";
+							}
+						}
 					}
 					else
 					{
